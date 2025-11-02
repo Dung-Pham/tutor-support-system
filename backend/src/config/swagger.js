@@ -10,32 +10,32 @@
  *   - Bearer token authentication đã được cấu hình
  */
 
-const swaggerJsdoc = require('swagger-jsdoc');
+import swaggerJsdoc from "swagger-jsdoc";
 
 const options = {
   definition: {
-    openapi: '3.0.0',
+    openapi: "3.0.0",
     info: {
-      title: 'Tutor Support System API',
-      version: '1.0.0',
-      description: 'API documentation cho hệ thống hỗ trợ gia sư',
+      title: "Tutor Support System API",
+      version: "1.0.0",
+      description: "API documentation cho hệ thống hỗ trợ gia sư",
       contact: {
-        name: 'API Support',
-        email: 'support@tutorsystem.com',
+        name: "API Support",
+        email: "support@tutorsystem.com",
       },
     },
     servers: [
       {
         url: `http://localhost:${process.env.PORT || 5000}`,
-        description: 'Development server',
+        description: "Development server",
       },
     ],
     components: {
       securitySchemes: {
         bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
         },
       },
     },
@@ -46,9 +46,9 @@ const options = {
     ],
   },
   // Đường dẫn đến các file chứa Swagger comments
-  apis: ['./src/routes/*.js', './src/models/*.js'],
+  apis: ["./src/routes/*.js"], // Removed models since they're empty
 };
 
 const swaggerSpec = swaggerJsdoc(options);
 
-module.exports = swaggerSpec;
+export default swaggerSpec;

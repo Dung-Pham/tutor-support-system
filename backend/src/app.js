@@ -12,57 +12,73 @@
  *   - Tất cả routes đều có prefix /api
  */
 
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const compression = require('compression');
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./config/swagger');
-const errorHandler = require('./middlewares/errorHandler');
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import compression from "compression";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./config/swagger.js";
+import cookieParser from "cookie-parser";
 
 // Import routes
-const userRoutes = require('./routes/users');
-const sessionRoutes = require('./routes/sessions');
+// TODO: Add your routes here
+import authRoute from "./routes/authRoute.js";
+import userRoute from "./routes/userRoute.js";
+import { protectedRoute } from "./middlewares/userMiddleWare.js";
 
 const app = express();
 
 // Security & Performance Middlewares
 app.use(helmet()); // Bảo vệ app khỏi các lỗ hổng web phổ biến
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "http://localhost:5000",
+    credentials: true,
+  })
+);
 app.use(compression()); // Nén response để tăng tốc
-app.use(morgan('dev')); // Log HTTP requests
+app.use(morgan("dev")); // Log HTTP requests
 app.use(express.json()); // Parse JSON body
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded body
+app.use(cookieParser()); // Parse cookies
 
 // API Documentation - Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Health check endpoint - Kiểm tra server còn sống
-app.get('/health', (req, res) => {
+app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'Server is running',
+    message: "Server is running",
     timestamp: new Date().toISOString(),
   });
 });
 
 // API Routes - Tất cả routes đều có prefix /api
-app.use('/api/users', userRoutes);
-app.use('/api/sessions', sessionRoutes);
+// TODO: Add your API routes here
+// public routes
+app.use("/api/auth", authRoute);
+
+//private routes
+app.use(protectedRoute);
+app.use("/api/users", userRoute);
 
 // 404 Handler - Route không tồn tại
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Route not found',
+    message: "Route not found",
   });
 });
 
-// Error Handler - Phải đặt cuối cùng
-app.use(errorHandler);
+// Basic Error Handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    message: "Internal Server Error",
+  });
+});
 
-module.exports = app;
+export default app;

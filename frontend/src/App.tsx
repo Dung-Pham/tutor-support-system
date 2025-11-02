@@ -16,6 +16,8 @@ import { Provider } from 'react-redux';
 import { store } from './store';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignUpPage';
+import { Toaster } from 'sonner';
 
 // Cấu hình React Query client
 const queryClient = new QueryClient({
@@ -31,10 +33,12 @@ function App() {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
+        <Toaster richColors />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
           </Routes>
         </BrowserRouter>
       </QueryClientProvider>

@@ -1,60 +1,29 @@
-/**
- * File: Session.js
- * Mục đích: Model Session cho SQL Server
- * Vai trò:
- *   - Định nghĩa schema cho table sessions
- *   - Quản lý thông tin buổi học giữa tutor và student
- * Lưu ý:
- *   - Sử dụng Sequelize ORM
- *   - tutorId và studentId là reference đến User (chưa setup foreign key)
- *   - Status enum phải match với logic ở frontend
- *   - Duration tính bằng phút
- */
+import mongoose from "mongoose";
 
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/sqlserver');
-
-const Session = sequelize.define(
-  'Session',
+const sessionSchema = new mongoose.Schema(
   {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
     },
-    tutorId: {
-      type: DataTypes.STRING,
-      allowNull: false,
+    refreshToken: {
+      type: String,
+      required: true,
+      unique: true,
     },
-    studentId: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    subject: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    scheduledAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    duration: {
-      type: DataTypes.INTEGER, // Duration in minutes
-      allowNull: false,
-    },
-    status: {
-      type: DataTypes.ENUM('scheduled', 'in-progress', 'completed', 'cancelled'),
-      defaultValue: 'scheduled',
-    },
-    notes: {
-      type: DataTypes.TEXT,
-      allowNull: true,
+    expiresAt: {
+      type: Date,
+      required: true,
     },
   },
-  {
-    tableName: 'sessions',
-    timestamps: true, // Tự động thêm createdAt và updatedAt
-  }
+  { timestamps: true }
 );
 
-module.exports = Session;
+// auto delete expired sessions
+sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+const Session = mongoose.model("Session", sessionSchema);
+
+export default Session;

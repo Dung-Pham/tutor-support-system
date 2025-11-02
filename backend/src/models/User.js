@@ -1,85 +1,43 @@
-/**
- * File: User.js
- * Mục đích: Model User cho MongoDB
- * Vai trò:
- *   - Định nghĩa schema và validation cho collection users
- *   - Lưu trữ thông tin người dùng (student, tutor, admin)
- * Lưu ý:
- *   - Password được select: false (không trả về mặc định)
- *   - Email phải unique và lowercase
- *   - Cần hash password trước khi lưu (chưa implement)
- *   - Swagger schema được định nghĩa cho API docs
- */
-
-const mongoose = require('mongoose');
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     User:
- *       type: object
- *       required:
- *         - email
- *         - password
- *         - name
- *       properties:
- *         id:
- *           type: string
- *           description: Auto-generated ID
- *         email:
- *           type: string
- *           description: User email
- *         password:
- *           type: string
- *           description: Hashed password
- *         name:
- *           type: string
- *           description: User name
- *         role:
- *           type: string
- *           enum: [student, tutor, admin]
- *           description: User role
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
- */
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    hashedPassword: {
+      type: String,
+      required: true,
+    },
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: true,
       unique: true,
+      trim: true,
       lowercase: true,
+    },
+    displayName: {
+      type: String,
+      required: true,
       trim: true,
     },
-    password: {
-      type: String,
-      required: [true, 'Password is required'],
-      minlength: 6,
-      select: false, // Không trả về password khi query
+    avatarUrl: {
+      type: String, // Link CDN lưu ảnh đại diện
     },
-    name: {
-      type: String,
-      required: [true, 'Name is required'],
-      trim: true,
+    avatarId: {
+      type: String, // Cloudinary public_id để quản lý ảnh
     },
-    role: {
+    bio: {
       type: String,
-      enum: ['student', 'tutor', 'admin'],
-      default: 'student',
+      maxlength: 500,
     },
-    avatar: {
+    phone: {
       type: String,
-      default: null,
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
+      sparse: true, // Cho phép null nhưng nếu có thì phải unique
     },
   },
   {
@@ -87,4 +45,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
+
+export default User;

@@ -37,7 +37,4 @@ const errorFormatter = (message, statusCode = 500) => {
   };
 };
 
-module.exports = {
-  responseFormatter,
-  errorFormatter,
-};
+export { responseFormatter, errorFormatter };

@@ -1,16 +1,4 @@
-/**
- * File: mongodb.js
- * Mục đích: Cấu hình và kết nối MongoDB
- * Vai trò:
- *   - Thiết lập kết nối đến MongoDB database
- *   - Sử dụng Mongoose ORM
- * Lưu ý:
- *   - Connection string lấy từ biến môi trường MONGODB_URI
- *   - Nếu kết nối thất bại, process sẽ exit
- *   - Mongoose options để tránh deprecation warnings
- */
-
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 /**
  * Hàm kết nối MongoDB
@@ -18,7 +6,7 @@ const mongoose = require('mongoose');
  */
 const connectMongoDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
@@ -30,4 +18,4 @@ const connectMongoDB = async () => {
   }
 };
 
-module.exports = connectMongoDB;
+export default connectMongoDB;

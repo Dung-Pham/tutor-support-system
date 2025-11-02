@@ -11,7 +11,7 @@
  *   - Logging chỉ bật ở development mode
  */
 
-const { Sequelize } = require('sequelize');
+import { Sequelize } from "sequelize";
 
 // Khởi tạo Sequelize instance với cấu hình SQL Server
 const sequelize = new Sequelize(
@@ -21,14 +21,15 @@ const sequelize = new Sequelize(
   {
     host: process.env.MSSQL_HOST,
     port: parseInt(process.env.MSSQL_PORT) || 1433,
-    dialect: 'mssql',
+    dialect: "mssql",
     dialectOptions: {
       options: {
-        encrypt: process.env.MSSQL_ENCRYPT === 'true',
-        trustServerCertificate: process.env.MSSQL_TRUST_SERVER_CERTIFICATE === 'true',
+        encrypt: process.env.MSSQL_ENCRYPT === "true",
+        trustServerCertificate:
+          process.env.MSSQL_TRUST_SERVER_CERTIFICATE === "true",
       },
     },
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    logging: process.env.NODE_ENV === "development" ? console.log : false,
   }
 );
 
@@ -39,11 +40,11 @@ const sequelize = new Sequelize(
 const connectSQLServer = async () => {
   try {
     await sequelize.authenticate();
-    console.log('✅ SQL Server Connected successfully');
+    console.log("✅ SQL Server Connected successfully");
   } catch (error) {
-    console.error('❌ SQL Server Connection Error:', error.message);
+    console.error("❌ SQL Server Connection Error:", error.message);
     process.exit(1);
   }
 };
 
-module.exports = { sequelize, connectSQLServer };
+export { sequelize, connectSQLServer };
