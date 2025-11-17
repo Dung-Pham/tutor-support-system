@@ -14,22 +14,29 @@
 const { Sequelize } = require('sequelize');
 
 // Khởi tạo Sequelize instance với cấu hình SQL Server
+const config = {
+  host: process.env.MSSQL_HOST,
+  dialect: 'mssql',
+  dialectOptions: {
+    options: {
+      encrypt: process.env.MSSQL_ENCRYPT === 'true',
+      trustServerCertificate: process.env.MSSQL_TRUST_SERVER_CERTIFICATE === 'true',
+      // For named instances, instanceName is automatically parsed from host
+    },
+  },
+  logging: process.env.NODE_ENV === 'development' ? console.log : false,
+};
+
+// Only add port if it's defined (for named instances, don't use port)
+if (process.env.MSSQL_PORT) {
+  config.port = parseInt(process.env.MSSQL_PORT);
+}
+
 const sequelize = new Sequelize(
   process.env.MSSQL_DATABASE,
   process.env.MSSQL_USER,
   process.env.MSSQL_PASSWORD,
-  {
-    host: process.env.MSSQL_HOST,
-    port: parseInt(process.env.MSSQL_PORT) || 1433,
-    dialect: 'mssql',
-    dialectOptions: {
-      options: {
-        encrypt: process.env.MSSQL_ENCRYPT === 'true',
-        trustServerCertificate: process.env.MSSQL_TRUST_SERVER_CERTIFICATE === 'true',
-      },
-    },
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
-  }
+  config
 );
 
 /**

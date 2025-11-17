@@ -18,6 +18,10 @@ const {
   createUser,
   updateUser,
   deleteUser,
+  getTutorProfile,
+  getStudentProfile,
+  getParentProfile,
+  getAllTutors,
 } = require('../controllers/userController');
 
 /**
@@ -32,7 +36,7 @@ const {
  * /api/users:
  *   get:
  *     summary: Get all users
- *     tags: [Users]
+ *     tags: [UserAccount]
  *     responses:
  *       200:
  *         description: List of users
@@ -57,7 +61,7 @@ router.get('/', getUsers);
  * /api/users/{id}:
  *   get:
  *     summary: Get user by ID
- *     tags: [Users]
+ *     tags: [UserAccount]
  *     parameters:
  *       - in: path
  *         name: id
@@ -70,14 +74,15 @@ router.get('/', getUsers);
  *       404:
  *         description: User not found
  */
-router.get('/:id', getUserById);
+// Place generic ID route after specific routes to avoid collisions (e.g., /tutors)
+// router.get('/:id', getUserById) moved below
 
 /**
  * @swagger
  * /api/users:
  *   post:
  *     summary: Create new user
- *     tags: [Users]
+ *     tags: [UserAccount]
  *     requestBody:
  *       required: true
  *       content:
@@ -108,7 +113,7 @@ router.post('/', createUser);
  * /api/users/{id}:
  *   put:
  *     summary: Update user
- *     tags: [Users]
+ *     tags: [UserAccount]
  *     parameters:
  *       - in: path
  *         name: id
@@ -125,14 +130,14 @@ router.post('/', createUser);
  *       200:
  *         description: User updated
  */
-router.put('/:id', updateUser);
+// router.put('/:id', updateUser) moved below
 
 /**
  * @swagger
  * /api/users/{id}:
  *   delete:
  *     summary: Delete user
- *     tags: [Users]
+ *     tags: [UserAccount]
  *     parameters:
  *       - in: path
  *         name: id
@@ -143,6 +148,97 @@ router.put('/:id', updateUser);
  *       200:
  *         description: User deleted
  */
+// router.delete('/:id', deleteUser) moved below
+
+/**
+ * @swagger
+ * /api/users/tutors:
+ *   get:
+ *     summary: Get all tutors with profiles
+ *     tags: [UserAccount]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: subjects
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: minRating
+ *         schema:
+ *           type: number
+ *     responses:
+ *       200:
+ *         description: List of tutors
+ */
+router.get('/tutors', getAllTutors);
+
+/**
+ * @swagger
+ * /api/users/tutor/{id}:
+ *   get:
+ *     summary: Get tutor profile by user ID
+ *     tags: [UserAccount]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Tutor profile
+ */
+router.get('/tutor/:id', getTutorProfile);
+
+/**
+ * @swagger
+ * /api/users/student/{id}:
+ *   get:
+ *     summary: Get student profile by user ID
+ *     tags: [UserAccount]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Student profile
+ */
+router.get('/student/:id', getStudentProfile);
+
+/**
+ * @swagger
+ * /api/users/parent/{id}:
+ *   get:
+ *     summary: Get parent profile by user ID
+ *     tags: [UserAccount]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Parent profile
+ */
+router.get('/parent/:id', getParentProfile);
+
+// Generic ID routes must come after specific routes to prevent matching conflicts
+router.get('/:id', getUserById);
+router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
 
 module.exports = router;

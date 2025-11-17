@@ -12,11 +12,18 @@
 
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
+import sessionsReducer from './slices/sessionsSlice';
+import assignmentsReducer from './slices/assignmentsSlice';
+import submissionsReducer from './slices/submissionsSlice';
+import documentsReducer from './slices/documentsSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    // Thêm reducers khác ở đây
+    sessions: sessionsReducer,
+    assignments: assignmentsReducer,
+    submissions: submissionsReducer,
+    documents: documentsReducer,
   },
 });
 

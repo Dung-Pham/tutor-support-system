@@ -46,7 +46,13 @@ const options = {
     ],
   },
   // Đường dẫn đến các file chứa Swagger comments
-  apis: ['./src/routes/*.js', './src/models/*.js'],
+  // Scan cả .js và .ts files
+  apis: [
+    './src/routes/*.js',
+    './src/routes/*.ts',
+    './src/models/*.js',
+    './src/models/*.ts'
+  ],
 };
 
 const swaggerSpec = swaggerJsdoc(options);

@@ -22,8 +22,70 @@ const swaggerSpec = require('./config/swagger');
 const errorHandler = require('./middlewares/errorHandler');
 
 // Import routes
-const userRoutes = require('./routes/users');
-const sessionRoutes = require('./routes/sessions');
+let userRoutes = null;
+let sessionRoutes = null;
+let classRoutes = null;
+let authRoutes = null;
+let scheduleRoutes = null;
+let attendanceRoutes = null;
+let evaluationRoutes = null;
+let documentRoutes = null;
+
+try {
+  const userModule = require('./routes/users');
+  userRoutes = userModule.default || userModule;
+} catch (e) {
+  console.warn('User routes not available:', e.message);
+}
+
+try {
+  const sessionModule = require('./routes/sessions');
+  sessionRoutes = sessionModule.default || sessionModule;
+} catch (e) {
+  console.warn('Session routes not available:', e.message);
+}
+
+try {
+  const classModule = require('./routes/classes');
+  classRoutes = classModule.default || classModule;
+} catch (e) {
+  console.warn('Class routes not available:', e.message);
+}
+
+try {
+  const authModule = require('./routes/auth');
+  authRoutes = authModule.default || authModule;
+} catch (e) {
+  console.warn('Auth routes not available:', e.message);
+}
+
+try {
+  const scheduleModule = require('./routes/schedules');
+  scheduleRoutes = scheduleModule.default || scheduleModule;
+} catch (e) {
+  console.warn('Schedule routes not available:', e.message);
+}
+
+try {
+  const attendanceModule = require('./routes/attendance');
+  attendanceRoutes = attendanceModule.default || attendanceModule;
+} catch (e) {
+  console.warn('Attendance routes not available:', e.message);
+}
+
+try {
+  const evaluationModule = require('./routes/evaluations');
+  evaluationRoutes = evaluationModule.default || evaluationModule;
+} catch (e) {
+  console.warn('Evaluation routes not available:', e.message);
+}
+
+try {
+  const documentModule = require('./routes/documents');
+  documentRoutes = documentModule.default || documentModule;
+} catch (e) {
+  console.warn('Document routes not available:', e.message);
+}
 
 const app = express();
 
@@ -51,8 +113,16 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes - Tất cả routes đều có prefix /api
-app.use('/api/users', userRoutes);
-app.use('/api/sessions', sessionRoutes);
+if (authRoutes) app.use('/api/auth', authRoutes);
+if (userRoutes) app.use('/api/users', userRoutes);
+if (sessionRoutes) app.use('/api/sessions', sessionRoutes);
+if (classRoutes) app.use('/api/classes', classRoutes);
+
+// Module VI Routes - Teaching & Learning Support
+if (scheduleRoutes) app.use('/api/schedules', scheduleRoutes);
+if (attendanceRoutes) app.use('/api/attendance', attendanceRoutes);
+if (evaluationRoutes) app.use('/api/evaluations', evaluationRoutes);
+if (documentRoutes) app.use('/api/documents', documentRoutes);
 
 // 404 Handler - Route không tồn tại
 app.use((req, res) => {
