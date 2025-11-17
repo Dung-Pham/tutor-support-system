@@ -2,13 +2,6 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    username: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-      lowercase: true,
-    },
     hashedPassword: {
       type: String,
       required: true,
@@ -19,6 +12,16 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
+    },
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
     },
     displayName: {
       type: String,
@@ -38,6 +41,11 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       sparse: true, // Cho phép null nhưng nếu có thì phải unique
+    },
+    role: {
+      type: String,
+      enum: ["student", "tutor", "admin"],
+      required: true, // Make role required for registration
     },
   },
   {

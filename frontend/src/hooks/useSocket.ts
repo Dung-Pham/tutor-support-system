@@ -21,7 +21,7 @@ import socketService from '@/services/socketService';
 export const useSocket = () => {
   useEffect(() => {
     // Connect khi component mount
-    const socket = socketService.connect();
+    socketService.connect();
 
     // Cleanup: disconnect khi component unmount
     return () => {

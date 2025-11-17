@@ -1,14 +1,23 @@
 import express from "express";
-import { signUp } from "../controllers/authController.js";
-import { signIn } from "../controllers/authController.js";
-import { signOut } from "../controllers/authController.js";
+import {
+  registerStudent,
+  registerTutor,
+  signIn,
+  signOut,
+  refreshToken,
+} from "../controllers/authController.js";
 
 const router = express.Router();
 
-router.post("/signup", signUp);
+// Separate registration endpoints for each role
+router.post("/register/student", registerStudent);
+router.post("/register/tutor", registerTutor);
 
+// Universal login endpoint
 router.post("/signin", signIn);
 
 router.post("/signout", signOut);
+
+router.post("/refresh", refreshToken);
 
 export default router;
