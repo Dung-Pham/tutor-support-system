@@ -1,30 +1,20 @@
-/**
- * File: components/tutor/Sidebar.tsx
- * Purpose: Tutor dashboard sidebar navigation
- * Features:
- *   - User profile section with avatar
- *   - Navigation menu items
- *   - TẤT THÔNG BÁO button
- *   - Expandable menu items
- */
-
 import {
   Home,
   List,
   BookOpen,
-  Share2,
-  DollarSign,
   FolderOpen,
   Users,
-  MessageCircle,
   Settings,
   ChevronDown,
   User,
   AlertCircle,
-  Gift,
   LogOut,
+  BarChart3,
 } from 'lucide-react';
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { logout } from '@/store/slices/authSlice';
 
 interface SidebarProps {
   userName?: string;
@@ -33,6 +23,13 @@ interface SidebarProps {
 export default function Sidebar({ userName = 'Dang Le Hai' }: SidebarProps) {
   const [isPolicyExpanded, setIsPolicyExpanded] = useState(false);
   const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/');
+  };
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col">
@@ -51,83 +48,93 @@ export default function Sidebar({ userName = 'Dang Le Hai' }: SidebarProps) {
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           <li>
-            <a
-              href="#"
+            <Link
+              to="/tutor"
               className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
             >
               <Home className="w-5 h-5" />
               <span>Quản lý chung</span>
-            </a>
+            </Link>
           </li>
 
           <li>
-            <a
-              href="#"
+            <Link
+              to="/tutor/classes"
               className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
             >
               <List className="w-5 h-5 text-blue-600" />
               <span>Danh sách lớp mới</span>
-            </a>
+            </Link>
           </li>
 
           <li>
-            <a
-              href="#"
+            <Link
+              to="/tutor/classes"
               className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
             >
               <BookOpen className="w-5 h-5" />
               <span>Quản lý lớp</span>
-            </a>
+            </Link>
           </li>
 
           <li>
-            <a
-              href="#"
-              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
-            >
-              <Share2 className="w-5 h-5" />
-              <span>Giới thiệu lớp</span>
-            </a>
-          </li>
-
-          <li>
-            <a
-              href="#"
-              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
-            >
-              <DollarSign className="w-5 h-5" />
-              <span>Quản lí Bits</span>
-            </a>
-          </li>
-
-          <li>
-            <a
-              href="#"
+            <Link
+              to="/tutor/documents"
               className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
             >
               <FolderOpen className="w-5 h-5" />
               <span>Thư viện tài liệu</span>
-            </a>
+            </Link>
           </li>
 
           <li>
-            <a
-              href="#"
+            <Link
+              to="/tutor/students"
               className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
             >
               <Users className="w-5 h-5" />
               <span>Giới thiệu gia sư</span>
-            </a>
+            </Link>
           </li>
 
           <li>
-            <a
-              href="#"
+            <Link
+              to="/tutor/assignments"
               className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
             >
-              <MessageCircle className="w-5 h-5" />
-              <span>Chat online</span>
-            </a>
+              <BookOpen className="w-5 h-5" />
+              <span>Bài tập</span>
+            </Link>
+          </li>
+
+          <li>
+            <Link
+              to="/tutor/statistics"
+              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
+            >
+              <BarChart3 className="w-5 h-5" />
+              <span>Thống kê</span>
+            </Link>
+          </li>
+
+          <li>
+            <Link
+              to="/tutor/global-posts"
+              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
+            >
+              <BookOpen className="w-5 h-5" />
+              <span>Bài viết chung</span>
+            </Link>
+          </li>
+
+          <li>
+            <Link
+              to="/tutor/posts"
+              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
+            >
+              <BookOpen className="w-5 h-5" />
+              <span>Bài viết của tôi</span>
+            </Link>
           </li>
 
           {/* Chính sách & điều khoản - Expandable */}
@@ -148,33 +155,23 @@ export default function Sidebar({ userName = 'Dang Le Hai' }: SidebarProps) {
             {isPolicyExpanded && (
               <ul className="ml-8 mt-2 space-y-1">
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    to="/tutor"
                     className="block p-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
                   >
                     Chính sách & điều khoản chung
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    to="/tutor"
                     className="block p-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
                   >
                     Hợp đồng kết nối gia sư
-                  </a>
+                  </Link>
                 </li>
               </ul>
             )}
-          </li>
-
-          <li>
-            <a
-              href="#"
-              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
-            >
-              <Gift className="w-5 h-5" />
-              <span>Khuyến mại</span>
-            </a>
           </li>
 
           {/* Cài đặt - Expandable */}
@@ -195,33 +192,33 @@ export default function Sidebar({ userName = 'Dang Le Hai' }: SidebarProps) {
             {isSettingsExpanded && (
               <ul className="ml-8 mt-2 space-y-1">
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    to="/tutor/settings"
                     className="block p-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
                   >
                     Cài đặt tài khoản
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    to="/tutor/settings"
                     className="block p-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
                   >
                     Cài đặt thông báo
-                  </a>
+                  </Link>
                 </li>
               </ul>
             )}
           </li>
 
           <li>
-            <a
-              href="#"
-              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-50 text-red-600 transition-colors w-full text-left"
             >
               <LogOut className="w-5 h-5" />
               <span>Đăng xuất</span>
-            </a>
+            </button>
           </li>
         </ul>
       </nav>

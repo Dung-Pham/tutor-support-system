@@ -37,6 +37,8 @@ export const registerStudent = async (req, res) => {
     await User.create({
       email,
       hashedPassword,
+      firstName,
+      lastName,
       displayName: `${firstName} ${lastName}`,
       role: "student", // Auto-set role for student registration
     });
@@ -84,6 +86,8 @@ export const registerTutor = async (req, res) => {
     await User.create({
       email,
       hashedPassword,
+      firstName,
+      lastName,
       displayName: `${firstName} ${lastName}`,
       role: "tutor", // Auto-set role for tutor registration
     });
@@ -94,63 +98,6 @@ export const registerTutor = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in registerTutor:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
-
-export const signUp = async (req, res) => {
-  try {
-    // Lấy basic fields từ frontend: email, password, firstName, lastName, role
-    const { email, password, firstName, lastName, role } = req.body;
-
-    // Validate required fields
-    if (!email || !password || !firstName || !lastName || !role) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required",
-      });
-    }
-
-    // Validate role (chỉ cho phép student hoặc tutor)
-    if (!["student", "tutor"].includes(role)) {
-      return res.status(400).json({
-        success: false,
-        message: "Role must be either 'student' or 'tutor'",
-      });
-    }
-
-    // Check if email already exists
-    const duplicate = await User.findOne({ email });
-    if (duplicate) {
-      return res.status(409).json({
-        success: false,
-        message: "Email already exists",
-      });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user với basic fields + role
-    await User.create({
-      email,
-      hashedPassword,
-      displayName: `${firstName} ${lastName}`,
-      role, // Set role cho user (student hoặc tutor)
-    });
-
-    // Return success response
-    return res.status(201).json({
-      success: true,
-      message: `${
-        role.charAt(0).toUpperCase() + role.slice(1)
-      } account created successfully`,
-    });
-  } catch (error) {
-    console.error("Error in signUp:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -224,6 +171,13 @@ export const signIn = async (req, res) => {
       success: true,
       message: `Welcome back, ${user.displayName}!`,
       token: accessToken,
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      },
     });
   } catch (error) {
     console.error("Error in signIn:", error);

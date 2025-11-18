@@ -14,9 +14,9 @@ import { toast } from 'sonner';
 
 const studentSchema = z
   .object({
-    fullName: z.string().min(1, 'Họ và tên là bắt buộc'),
+    firstName: z.string().min(1, 'Tên là bắt buộc'),
+    lastName: z.string().min(1, 'Họ là bắt buộc'),
     email: z.string().email('Email không hợp lệ'),
-    phone: z.string().min(10, 'Số điện thoại phải có ít nhất 10 chữ số'),
     password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
     confirmPassword: z.string(),
   })
@@ -45,14 +45,13 @@ export default function StudentRegistrationPage(): JSX.Element {
       setIsLoading(true);
 
       const registrationData = {
-        fullName: data.fullName,
+        firstName: data.firstName,
+        lastName: data.lastName,
         email: data.email,
-        phone: data.phone,
         password: data.password,
-        role: 'student',
       };
 
-      await apiClient.post('/auth/register', registrationData);
+      await apiClient.post('/auth/register/student', registrationData);
 
       toast.success('Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.');
       reset();
@@ -80,22 +79,41 @@ export default function StudentRegistrationPage(): JSX.Element {
         {/* Form Container */}
         <div className="bg-white rounded-lg shadow-xl p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Full Name */}
+            {/* Last Name */}
             <div>
               <div className="flex items-center text-gray-700 mb-2">
                 <span className="text-purple-600 mr-2">👤</span>
-                <label className="font-semibold">Họ và tên</label>
+                <label className="font-semibold">Họ</label>
               </div>
               <input
                 type="text"
-                placeholder="Nguyễn Văn A"
-                {...register('fullName')}
+                placeholder="Nguyễn"
+                {...register('lastName')}
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
-                  errors.fullName ? 'border-red-500' : 'border-gray-300'
+                  errors.lastName ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
-              {errors.fullName && (
-                <p className="text-red-500 text-sm mt-1">{errors.fullName.message}</p>
+              {errors.lastName && (
+                <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
+              )}
+            </div>
+
+            {/* First Name */}
+            <div>
+              <div className="flex items-center text-gray-700 mb-2">
+                <span className="text-purple-600 mr-2">👤</span>
+                <label className="font-semibold">Tên</label>
+              </div>
+              <input
+                type="text"
+                placeholder="Văn A"
+                {...register('firstName')}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
+                  errors.firstName ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+              {errors.firstName && (
+                <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
               )}
             </div>
 
@@ -114,23 +132,6 @@ export default function StudentRegistrationPage(): JSX.Element {
                 }`}
               />
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
-            </div>
-
-            {/* Phone */}
-            <div>
-              <div className="flex items-center text-gray-700 mb-2">
-                <span className="text-purple-600 mr-2">📱</span>
-                <label className="font-semibold">Số điện thoại</label>
-              </div>
-              <input
-                type="tel"
-                placeholder="0123456789"
-                {...register('phone')}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
-                  errors.phone ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
             </div>
 
             {/* Password */}

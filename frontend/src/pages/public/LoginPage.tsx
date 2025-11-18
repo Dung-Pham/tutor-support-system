@@ -4,14 +4,14 @@
  * Thiết kế: Nền trắng với header/footer có màu
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { setCredentials } from '@/store/slices/authSlice';
-import { getBaseRouteByRole } from '@/routes/routeConstants';
+import { useDispatch, useSelector } from 'react-redux';
+import { signIn } from '../../store/slices/authSlice';
+import type { RootState, AppDispatch } from '../../store';
 import { toast } from 'sonner';
 
 const loginSchema = z.object({
@@ -24,8 +24,16 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage(): JSX.Element {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const baseRoute = user.role === 'tutor' ? '/tutor' : '/student';
+      navigate(baseRoute);
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const {
     register,
@@ -38,50 +46,10 @@ export default function LoginPage(): JSX.Element {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      // Mock login for testing
-      console.log('Login attempt:', data);
-
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mock successful login response
-      const mockUser = {
-        id: '1',
-        name: 'Dang Le Hai',
-        email: data.email,
-        role: 'tutor', // Change this to 'admin', 'student', etc. for testing
-      };
-
-      const mockToken = 'mock-jwt-token';
-
-      // Store credentials in Redux
-      dispatch(setCredentials({ user: mockUser, token: mockToken }));
-
-      // Store token in localStorage if remember me is checked
-      if (data.rememberMe) {
-        localStorage.setItem('token', mockToken);
-      }
-
-      toast.success(`Chào mừng ${mockUser.name}!`);
-
-      // Role-based redirect
-      const redirectPath = getBaseRouteByRole(mockUser.role);
-      navigate(redirectPath); // TODO: Replace with actual API call
-      /*
-      const response = await apiClient.post('/auth/login', {
-        email: data.email,
-        password: data.password,
-      });
-
-      if (response.data.success) {
-        const { user, token } = response.data.data;
-        // ... rest of the logic
-      }
-      */
-    } catch (err: any) {
-      console.error('Login error', err);
-      const message = err?.response?.data?.message || 'Đăng nhập thất bại';
-      toast.error(message);
+      await dispatch(signIn({ email: data.email, password: data.password })).unwrap();
+      toast.success('Đăng nhập thành công!');
+    } catch (error: any) {
+      toast.error(error || 'Đăng nhập thất bại');
     } finally {
       setIsLoading(false);
     }

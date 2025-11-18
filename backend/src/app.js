@@ -25,6 +25,7 @@ import cookieParser from "cookie-parser";
 // TODO: Add your routes here
 import authRoute from "./routes/authRoute.js";
 import userRoute from "./routes/userRoute.js";
+import postRoute from "./routes/postRoute.js";
 import { protectedRoute } from "./middlewares/userMiddleWare.js";
 
 const app = express();
@@ -33,7 +34,7 @@ const app = express();
 app.use(helmet()); // Bảo vệ app khỏi các lỗ hổng web phổ biến
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5000",
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
     credentials: true,
   })
 );
@@ -63,6 +64,7 @@ app.use("/api/auth", authRoute);
 //private routes
 app.use(protectedRoute);
 app.use("/api/users", userRoute);
+app.use("/api/posts", postRoute);
 
 // 404 Handler - Route không tồn tại
 app.use((req, res) => {

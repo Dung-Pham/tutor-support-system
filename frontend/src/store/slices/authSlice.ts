@@ -10,12 +10,15 @@
  *   - Có thể thêm async thunks cho login/register actions
  */
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { apiClient } from '@/services/api';
 
 interface User {
   id: string;
   email: string;
   name: string;
+  firstName: string;
+  lastName: string;
   role: string;
 }
 
@@ -31,6 +34,22 @@ const initialState: AuthState = {
   isAuthenticated: false,
 };
 
+// Async thunk for sign in
+export const signIn = createAsyncThunk(
+  'auth/signIn',
+  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post('/auth/signin', { email, password });
+      const { token, user } = response.data;
+      // Store token in localStorage for persistence
+      localStorage.setItem('token', token);
+      return { user, token };
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Login failed');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -40,13 +59,28 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
+      localStorage.setItem('token', action.payload.token);
     },
     // Clear credentials khi logout
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      localStorage.removeItem('token');
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(signIn.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+      })
+      .addCase(signIn.rejected, (state) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+      });
   },
 });
 
