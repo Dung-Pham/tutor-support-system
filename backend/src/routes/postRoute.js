@@ -4,19 +4,26 @@ import {
   getPosts,
   getPostById,
   updatePost,
-  deletePost,
+  uploadImage,
 } from "../controllers/postController.js";
 import { protectedRoute } from "../middlewares/userMiddleWare.js";
+import multer from "multer";
 
 const router = express.Router();
 
-// Tất cả routes cần auth
+// Multer config
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// Public routes
+router.get("/", getPosts);
+router.get("/:id", getPostById);
+
+// Protected routes
 router.use(protectedRoute);
 
 router.post("/", createPost);
-router.get("/", getPosts);
-router.get("/:id", getPostById);
+router.post("/upload", upload.single("image"), uploadImage);
 router.put("/:id", updatePost);
-router.delete("/:id", deletePost);
 
 export default router;

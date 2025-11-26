@@ -6,7 +6,7 @@ interface Post {
   _id: string;
   title: string;
   content: string;
-  author: { firstName: string; lastName: string };
+  author: { _id: string; firstName: string; lastName: string };
   images: string[];
   createdAt: string;
   tags: string[];

@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch } from '../store';
-import { fetchPosts } from '../store/slices/postSlice';
-import PostList from '../Components/PostList';
+import type { AppDispatch } from '../../store';
+import { fetchPosts } from '../../store/slices/postSlice';
+import PostList from '../../Components/PostList';
 
 export default function GlobalPostPage() {
   const dispatch = useDispatch<AppDispatch>();

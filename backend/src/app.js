@@ -26,6 +26,8 @@ import cookieParser from "cookie-parser";
 import authRoute from "./routes/authRoute.js";
 import userRoute from "./routes/userRoute.js";
 import postRoute from "./routes/postRoute.js";
+import friendRoute from "./routes/friendRoute.js";
+import messageRoute from "./routes/messageRoute.js";
 import { protectedRoute } from "./middlewares/userMiddleWare.js";
 
 const app = express();
@@ -60,11 +62,14 @@ app.get("/health", (req, res) => {
 // TODO: Add your API routes here
 // public routes
 app.use("/api/auth", authRoute);
+app.use("/api/posts", postRoute); // Move posts before protectedRoute
 
 //private routes
 app.use(protectedRoute);
 app.use("/api/users", userRoute);
-app.use("/api/posts", postRoute);
+app.use("/api/posts", postRoute); // Keep posts route for protected as well
+app.use("/api/friends", friendRoute);
+app.use("/api/messages", messageRoute);
 
 // 404 Handler - Route không tồn tại
 app.use((req, res) => {

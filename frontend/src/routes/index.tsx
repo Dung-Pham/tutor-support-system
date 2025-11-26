@@ -23,7 +23,7 @@ import { StudentLayout } from '@/Components/student/StudentLayout';
 import { TutorLayout } from '@/Components/tutor/TutorLayout';
 
 // Post components
-import GlobalPostPage from '../pages/GlobalPostPage';
+import GlobalPostPage from '../pages/public/GlobalPostPage';
 import TutorPostPage from '../pages/TutorPostPage';
 import PostForm from '../Components/PostForm';
 import PostDetail from '../Components/PostDetail';

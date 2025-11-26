@@ -78,6 +78,8 @@ export default function PostForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting formData:', formData);
+    console.log('Token:', localStorage.getItem('token'));
     try {
       if (isEdit && id) {
         await (dispatch as any)(updatePost({ id, postData: formData }));
