@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 // Each participant has a reference to a User and a timestamp of when they joined
 const participantsSchema = new mongoose.Schema(
   {
-    user: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // Reference to User model
       required: true,
@@ -83,7 +83,7 @@ const conversationSchema = new mongoose.Schema(
       type: lastMessageSchema, // Details of the most recent message
       ref: "Message", // Reference to Message model
     },
-    unreadCount: {
+    unreadCounts: {
       type: Map, // Map of user IDs to their unread message count
       of: Number,
       default: {}, // Initialize as empty object
@@ -95,7 +95,7 @@ const conversationSchema = new mongoose.Schema(
 // Database index for efficient querying
 // Indexes participants and sorts by last message timestamp
 conversationSchema.index({
-  "participants.userId": 1, // Index on participant user IDs
+  "participant.userId": 1, // Index on participant user IDs
   lastMessageAt: -1, // Sort by most recent messages first
 });
 

@@ -24,14 +24,14 @@ const friendSchema = new mongoose.Schema(
 // Pre-save middleware to ensure consistent ordering of user IDs
 // This prevents duplicate friend relationships by always storing users in alphabetical order by ID
 // For example: if userA's ID > userB's ID, they get swapped before saving
-friendSchema.pre("save", async function (next) {
+friendSchema.pre("save", function (next) {
   const a = this.userA.toString(); // Convert ObjectId to string for comparison
   const b = this.userB.toString();
 
   // If userA's ID is greater than userB's ID, swap them for consistent ordering
   if (a > b) {
-    this.userA = mongoose.Types.ObjectId(b); // Note: This should be 'new mongoose.Types.ObjectId(b)' in newer Mongoose versions
-    this.userB = mongoose.Types.ObjectId(a);
+    this.userA = new mongoose.Types.ObjectId(b);
+    this.userB = new mongoose.Types.ObjectId(a);
   }
 
   next(); // Continue with the save operation

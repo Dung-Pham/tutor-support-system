@@ -1,40 +1,43 @@
 /**
  * File: responseFormatter.js
- * Mục đích: Utility functions để format API responses
- * Vai trò:
- *   - Chuẩn hóa format response trả về cho client
- *   - Đảm bảo consistency trong toàn bộ API
- * Lưu ý:
- *   - Hiện chưa được sử dụng trong controllers
- *   - Có thể integrate vào response để có format thống nhất
+ * Purpose: Utility functions to format API responses in a consistent way
+ * Role:
+ *   - Standardize the format of responses sent to the client
+ *   - Ensure consistency across the entire API
+ * Note:
+ *   - Not currently used in controllers
+ *   - Can be integrated into controllers for unified response formatting
  */
 
 /**
- * Format successful response
- * @param {*} data - Data to return
- * @returns {Object} Formatted response object
+ * Formats a successful API response.
+ * @param {*} data - The data to return to the client (can be any type)
+ * @returns {Object} Formatted response object with success flag, data, and timestamp
+ * Usage: return responseFormatter(userData)
  */
 const responseFormatter = (data) => {
   return {
-    success: true,
-    data,
-    timestamp: new Date().toISOString(),
+    success: true, // Indicates the request was successful
+    data, // The actual data payload
+    timestamp: new Date().toISOString(), // When the response was generated
   };
 };
 
 /**
- * Format error response
- * @param {string} message - Error message
- * @param {number} statusCode - HTTP status code
- * @returns {Object} Formatted error object
+ * Formats an error API response.
+ * @param {string} message - Error message to return to the client
+ * @param {number} statusCode - HTTP status code (default: 500)
+ * @returns {Object} Formatted error object with success flag, message, status code, and timestamp
+ * Usage: return errorFormatter('User not found', 404)
  */
 const errorFormatter = (message, statusCode = 500) => {
   return {
-    success: false,
-    message,
-    statusCode,
-    timestamp: new Date().toISOString(),
+    success: false, // Indicates the request failed
+    message, // Error message for the client
+    statusCode, // HTTP status code
+    timestamp: new Date().toISOString(), // When the error was generated
   };
 };
 
+// Export the formatter functions for use in controllers and routes
 export { responseFormatter, errorFormatter };

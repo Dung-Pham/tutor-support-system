@@ -17,9 +17,9 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import compression from "compression";
-import swaggerUi from "swagger-ui-express";
-import swaggerSpec from "./config/swagger.js";
 import cookieParser from "cookie-parser";
+import swaggerUi from "swagger-ui-express";
+import fs from "fs";
 
 // Import routes
 // TODO: Add your routes here
@@ -28,6 +28,7 @@ import userRoute from "./routes/userRoute.js";
 import postRoute from "./routes/postRoute.js";
 import friendRoute from "./routes/friendRoute.js";
 import messageRoute from "./routes/messageRoute.js";
+import conversationRoute from "./routes/conversationRoute.js";
 import { protectedRoute } from "./middlewares/userMiddleWare.js";
 
 const app = express();
@@ -46,8 +47,12 @@ app.use(express.json()); // Parse JSON body
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded body
 app.use(cookieParser()); // Parse cookies
 
-// API Documentation - Swagger UI
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Swagger Documentation Setup
+const swaggerDocument = JSON.parse(
+  fs.readFileSync("./src/config/swagger.json", "utf-8")
+);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Health check endpoint - Kiểm tra server còn sống
 app.get("/health", (req, res) => {
@@ -70,6 +75,7 @@ app.use("/api/users", userRoute);
 app.use("/api/posts", postRoute); // Keep posts route for protected as well
 app.use("/api/friends", friendRoute);
 app.use("/api/messages", messageRoute);
+app.use("/api/conversations", conversationRoute);
 
 // 404 Handler - Route không tồn tại
 app.use((req, res) => {
