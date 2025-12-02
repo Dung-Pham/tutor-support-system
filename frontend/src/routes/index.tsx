@@ -19,15 +19,12 @@ import TutorRegistrationPage from '../pages/public/TutorRegistrationPage';
 // Role-based components
 import { ProtectedRoute } from './ProtectedRoute';
 import { RoleBasedRoute } from './RoleBasedRoute';
-import { StudentLayout } from '@/Components/student/StudentLayout';
-import { TutorLayout } from '@/Components/tutor/TutorLayout';
+import { StudentLayout } from '@/components/student/StudentLayout';
+//import { TutorLayout } from '@/components/tutor/TutorLayout';
 
 // Post components
 import GlobalPostPage from '../pages/public/GlobalPostPage';
 import TutorPostPage from '../pages/TutorPostPage';
-import PostForm from '../Components/PostForm';
-import PostDetail from '../Components/PostDetail';
-
 // Home pages
 
 export const AppRoutes = () => {
@@ -58,30 +55,21 @@ export const AppRoutes = () => {
       </Route>
 
       {/* Protected Routes cho Tutor */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<RoleBasedRoute allowedRoles={['tutor']} />}>
-          {/* TUTOR LAYOUT */}
-          <Route path="/tutor" element={<TutorLayout />}>
-            {/* ROUTE CON TRONG LAYOUT */}
-            <Route index element={<div>Dashboard Tutor</div>} />
-            <Route path="documents" element={<div>Tài liệu</div>} />
-            <Route path="classes" element={<div>Lớp học của tôi</div>} />
-            <Route path="students" element={<div>Quản lý học sinh</div>} />
-            <Route path="assignments" element={<div>Bài tập</div>} />
-            <Route path="statistics" element={<div>Thống kê</div>} />
-            <Route path="settings" element={<div>Cài đặt</div>} />
-            <Route path="posts" element={<TutorPostPage />} />
-            <Route path="global-posts" element={<GlobalPostPage />} />
-            <Route path="posts/new" element={<PostForm />} />
-            <Route path="posts/:id/edit" element={<PostForm />} />
-          </Route>
+      {/* 
+        <Route path="/tutor" element={<TutorLayout />}>
+          <Route index element={<div>Dashboard Tutor</div>} />
+          <Route path="documents" element={<div>Tài liệu</div>} />
+          <Route path="classes" element={<div>Lớp học của tôi</div>} />
+          <Route path="students" element={<div>Quản lý học sinh</div>} />
+          <Route path="assignments" element={<div>Bài tập</div>} />
+          <Route path="statistics" element={<div>Thống kê</div>} />
+          <Route path="settings" element={<div>Cài đặt</div>} />
+          <Route path="posts" element={<TutorPostPage />} />
+          <Route path="global-posts" element={<GlobalPostPage />} />
+          <Route path="posts/new" element={<PostForm />} />
+          <Route path="posts/:id/edit" element={<PostForm />} />
         </Route>
-      </Route>
-
-      {/* Post Detail - Protected */}
-      <Route element={<ProtectedRoute />}>
-        <Route path="/posts/:id" element={<PostDetail />} />
-      </Route>
+      */}
 
       {/* Unauthorized page */}
       <Route

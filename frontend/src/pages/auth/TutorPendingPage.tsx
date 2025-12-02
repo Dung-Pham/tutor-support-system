@@ -4,8 +4,8 @@
  */
 
 import { Link } from 'react-router-dom';
-import Header from '@/Components/public/Header';
-import Footer from '@/Components/public/Footer';
+import Header from '@/components/public/GlobalHeader';
+import Footer from '@/components/public/GlobalFooter';
 
 export default function TutorPendingPage() {
   return (

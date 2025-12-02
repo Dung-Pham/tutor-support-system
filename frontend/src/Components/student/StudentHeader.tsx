@@ -1,7 +1,7 @@
 // src/components/layout/StudentHeader.tsx
-import { Button } from '@/Components/ui/button';
-import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
-import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
 import { StudentSidebar } from './StudentSidebar';
 import { useDispatch, useSelector } from 'react-redux';
