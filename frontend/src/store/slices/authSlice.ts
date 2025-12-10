@@ -28,11 +28,36 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
-const initialState: AuthState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
+// Restore auth state from localStorage on app init
+const getInitialState = (): AuthState => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        return {
+          user,
+          token,
+          isAuthenticated: true,
+        };
+      } catch (error) {
+        // Clear invalid data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+  }
+
+  return {
+    user: null,
+    token: null,
+    isAuthenticated: false,
+  };
 };
+
+const initialState: AuthState = getInitialState();
 
 // Async thunk for sign in
 export const signIn = createAsyncThunk(
@@ -41,8 +66,15 @@ export const signIn = createAsyncThunk(
     try {
       const response = await apiClient.post('/auth/signin', { email, password });
       const { token, user } = response.data;
-      // Store token in localStorage for persistence
+
+      if (!token || !user) {
+        return rejectWithValue('Invalid response: missing token or user');
+      }
+
+      // Store token and user in localStorage for persistence
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
       return { user, token };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
@@ -60,6 +92,7 @@ const authSlice = createSlice({
       state.token = action.payload.token;
       state.isAuthenticated = true;
       localStorage.setItem('token', action.payload.token);
+      localStorage.setItem('user', JSON.stringify(action.payload.user));
     },
     // Clear credentials khi logout
     logout: (state) => {
@@ -67,6 +100,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
   },
   extraReducers: (builder) => {

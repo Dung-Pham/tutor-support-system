@@ -19,24 +19,33 @@ export const protectedRoute = async (req, res, next) => {
     // Decode token to get user info
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
       if (err) {
-        return res.status(403).json({
+        return res.status(401).json({
           success: false,
           message: "Invalid or expired access token",
         });
       }
-      // Find user by ID from token
-      const user = await User.findById(decoded.userId).select(
-        "-hashedPassword"
-      );
-      if (!user) {
-        return res.status(404).json({
+
+      try {
+        // Find user by ID from token
+        const user = await User.findById(decoded.userId).select(
+          "-hashedPassword"
+        );
+        if (!user) {
+          return res.status(404).json({
+            success: false,
+            message: "User not found",
+          });
+        }
+        // Attach user info to req object
+        req.user = user;
+        next();
+      } catch (dbError) {
+        console.error("Database error in protectedRoute:", dbError);
+        return res.status(500).json({
           success: false,
-          message: "User not found",
+          message: "Internal server error",
         });
       }
-      // Attach user info to req object
-      req.user = user;
-      next();
     });
   } catch (error) {
     console.error("Error in protectedRoute middleware:", error);

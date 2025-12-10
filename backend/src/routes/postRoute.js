@@ -1,29 +1,42 @@
+/**
+ * File: src/routes/postRoute.js
+ * Mục đích: Routes cho Post/Blog feature
+ */
+
 import express from "express";
 import {
+  getApprovedPosts,
+  getPostDetail,
   createPost,
-  getPosts,
-  getPostById,
   updatePost,
-  uploadImage,
+  deletePost,
+  getMyPosts,
+  getPendingPosts,
+  approvePost,
+  rejectPost,
 } from "../controllers/postController.js";
-import { protectedRoute } from "../middlewares/userMiddleWare.js";
-import multer from "multer";
+import { protectedRoute } from "../middlewares/userMiddleware.js";
+import { sanitizePostContent } from "../middlewares/sanitizeHtml.js";
 
 const router = express.Router();
 
-// Multer config
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+// Public routes - không cần authentication
+router.get("/", getApprovedPosts);
 
-// Public routes
-router.get("/", getPosts);
-router.get("/:id", getPostById);
+// Protected routes - cần authentication (phải đặt TRƯỚC /:id)
+router.get("/my", protectedRoute, getMyPosts);
+router.get("/pending", protectedRoute, getPendingPosts);
 
-// Protected routes
-router.use(protectedRoute);
+// Public routes - chi tiết post
+router.get("/:id", getPostDetail);
 
-router.post("/", createPost);
-router.post("/upload", upload.single("image"), uploadImage);
-router.put("/:id", updatePost);
+// Post modification routes
+router.post("/", protectedRoute, sanitizePostContent, createPost);
+router.patch("/:id", protectedRoute, sanitizePostContent, updatePost);
+router.delete("/:id", protectedRoute, deletePost);
+
+// Admin routes
+router.patch("/:id/approve", protectedRoute, approvePost);
+router.patch("/:id/reject", protectedRoute, rejectPost);
 
 export default router;

@@ -1,7 +1,7 @@
 /**
  * File: pages/public/LoginPage.tsx
  * Mục đích: Trang đăng nhập thống nhất với thiết kế đẹp
- * Thiết kế: Nền trắng với header/footer có màu
+ * Thiết kế: Sử dụng shadcn/ui và theme variables từ index.css
  */
 
 import { useState, useEffect } from 'react';
@@ -13,11 +13,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { signIn } from '../../store/slices/authSlice';
 import type { RootState, AppDispatch } from '../../store';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const loginSchema = z.object({
   email: z.string().email('Email không hợp lệ'),
   password: z.string().min(1, 'Mật khẩu là bắt buộc'),
-  rememberMe: z.boolean().optional(),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -43,120 +45,131 @@ export default function LoginPage(): JSX.Element {
     resolver: zodResolver(loginSchema),
   });
 
+  const onInvalid = () => {
+    // Form validation failed
+  };
+
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
       await dispatch(signIn({ email: data.email, password: data.password })).unwrap();
       toast.success('Đăng nhập thành công!');
     } catch (error: any) {
-      toast.error(error || 'Đăng nhập thất bại');
+      const errorMsg = typeof error === 'string' ? error : error?.message || 'Đăng nhập thất bại';
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <div className="inline-block p-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mb-4">
-              <span className="text-2xl text-white">🚀</span>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Đăng nhập</h1>
-            <p className="text-gray-600">Chào mừng bạn trở lại GiaSuOnline.vn</p>
-          </div>
+    <div className="flex items-center justify-center min-h-screen bg-background p-4">
+      <div className="w-full max-w-md">
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Đăng nhập</CardTitle>
+            <CardDescription>Chào mừng bạn trở lại GiaSuOnline.vn</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
+              <div className="flex flex-col gap-4">
+                <Button variant="outline" className="w-full" type="button">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className="mr-2 h-4 w-4"
+                  >
+                    <path
+                      d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  Đăng nhập với Apple
+                </Button>
+                <Button variant="outline" className="w-full" type="button">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className="mr-2 h-4 w-4"
+                  >
+                    <path
+                      d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  Đăng nhập với Google
+                </Button>
+              </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                {...register('email')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors"
-                placeholder="Nhập email của bạn"
-              />
-              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
-            </div>
+              <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+                <span className="relative z-10 bg-card px-2 text-muted-foreground">
+                  Hoặc tiếp tục với
+                </span>
+              </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Mật khẩu
-              </label>
-              <input
-                type="password"
-                id="password"
-                {...register('password')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-colors"
-                placeholder="Nhập mật khẩu của bạn"
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
-            </div>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                    Email
+                  </label>
+                  <Input
+                    type="email"
+                    id="email"
+                    autoComplete="email"
+                    {...register('email')}
+                    placeholder="m@example.com"
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-destructive">{errors.email.message}</p>
+                  )}
+                </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  {...register('rememberMe')}
-                  className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                />
-                <span className="ml-2 text-sm text-gray-600">Ghi nhớ đăng nhập</span>
-              </label>
-              <Link to="/forgot-password" className="text-sm text-purple-600 hover:text-purple-800">
-                Quên mật khẩu?
-              </Link>
-            </div>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label htmlFor="password" className="text-sm font-medium text-foreground">
+                      Mật khẩu
+                    </label>
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm text-primary hover:text-primary/80 font-medium"
+                    >
+                      Quên mật khẩu?
+                    </Link>
+                  </div>
+                  <Input
+                    type="password"
+                    id="password"
+                    autoComplete="current-password"
+                    {...register('password')}
+                    placeholder="Nhập mật khẩu của bạn"
+                  />
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-destructive">{errors.password.message}</p>
+                  )}
+                </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white py-3 px-4 rounded-lg font-semibold hover:from-purple-600 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              {isLoading ? '🔄 Đang đăng nhập...' : '🚀 Đăng nhập'}
-            </button>
+                <Button type="submit" disabled={isLoading} className="w-full">
+                  {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                </Button>
+              </div>
 
-            <div className="text-center">
-              <p className="text-gray-600">
-                Chưa có tài khoản?{' '}
-                <Link
-                  to="/register"
-                  className="text-purple-600 hover:text-purple-800 font-semibold"
-                >
-                  Đăng ký ngay
-                </Link>
-              </p>
-            </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Button asChild variant="outline" className="text-sm">
+                  <Link to="/register/student">📚 Đăng ký Học viên</Link>
+                </Button>
+                <Button asChild variant="outline" className="text-sm">
+                  <Link to="/register/tutor">🎓 Đăng ký Gia sư</Link>
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
 
-            {/* Quick Register Buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                to="/register/student"
-                className="text-center py-2 px-3 border border-blue-300 text-blue-700 rounded-lg text-sm hover:bg-blue-50 transition-colors"
-              >
-                📚 Đăng ký Học viên
-              </Link>
-              <Link
-                to="/register/tutor"
-                className="text-center py-2 px-3 border border-green-300 text-green-700 rounded-lg text-sm hover:bg-green-50 transition-colors"
-              >
-                🎓 Đăng ký Gia sư
-              </Link>
-            </div>
-          </form>
-
-          {/* Back to Home */}
-          <div className="text-center mt-6">
-            <Link to="/" className="text-gray-500 hover:text-gray-700 text-sm">
-              ← Về trang chủ
-            </Link>
-          </div>
+        <div className="text-balance text-center text-xs text-muted-foreground mt-4 [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
+          Bằng cách tiếp tục, bạn đồng ý với <a href="#">Điều khoản dịch vụ</a> và{' '}
+          <a href="#">Chính sách quyền riêng tư</a> của chúng tôi.
         </div>
-      </main>
+      </div>
     </div>
   );
 }

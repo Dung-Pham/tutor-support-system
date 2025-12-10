@@ -47,6 +47,10 @@ const userSchema = new mongoose.Schema(
       enum: ["student", "tutor", "admin"],
       required: true, // Make role required for registration
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true, // Tự động thêm createdAt và updatedAt

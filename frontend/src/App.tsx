@@ -57,7 +57,7 @@ function App() {
       <AuthInitializer />
       <QueryClientProvider client={queryClient}>
         <Toaster richColors />
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AppRoutes />
         </BrowserRouter>
       </QueryClientProvider>

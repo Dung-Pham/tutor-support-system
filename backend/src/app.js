@@ -25,19 +25,35 @@ import fs from "fs";
 // TODO: Add your routes here
 import authRoute from "./routes/authRoute.js";
 import userRoute from "./routes/userRoute.js";
-import postRoute from "./routes/postRoute.js";
 import friendRoute from "./routes/friendRoute.js";
 import messageRoute from "./routes/messageRoute.js";
 import conversationRoute from "./routes/conversationRoute.js";
-import { protectedRoute } from "./middlewares/userMiddleWare.js";
+import postRoute from "./routes/postRoute.js";
+import { createRouteHandler } from "uploadthing/express";
+import uploadRouter from "./uploadthing.js";
+import { protectedRoute } from "./middlewares/userMiddleware.js";
 
 const app = express();
 
 // Security & Performance Middlewares
 app.use(helmet()); // Bảo vệ app khỏi các lỗ hổng web phổ biến
+
+// CORS configuration - allow both frontend and admin
+const allowedOrigins = [
+  process.env.CLIENT_URL || "http://localhost:3000",
+  process.env.ADMIN_URL || "http://localhost:3002",
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
@@ -45,6 +61,7 @@ app.use(compression()); // Nén response để tăng tốc
 app.use(morgan("dev")); // Log HTTP requests
 app.use(express.json()); // Parse JSON body
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded body
+// Note: multer().any() removed - UploadThing handles multipart itself
 app.use(cookieParser()); // Parse cookies
 
 // Swagger Documentation Setup
@@ -67,12 +84,20 @@ app.get("/health", (req, res) => {
 // TODO: Add your API routes here
 // public routes
 app.use("/api/auth", authRoute);
-app.use("/api/posts", postRoute); // Move posts before protectedRoute
+app.use("/api/posts", postRoute);
 
-//private routes
+// UploadThing routes - public endpoint cho file upload
+// UploadThing sẽ auto-generate /api/uploadthing routes
+app.use(
+  "/api/uploadthing",
+  createRouteHandler({
+    router: uploadRouter,
+  })
+);
+
+// Protected routes (with middleware)
 app.use(protectedRoute);
 app.use("/api/users", userRoute);
-app.use("/api/posts", postRoute); // Keep posts route for protected as well
 app.use("/api/friends", friendRoute);
 app.use("/api/messages", messageRoute);
 app.use("/api/conversations", conversationRoute);

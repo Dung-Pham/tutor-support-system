@@ -1,7 +1,7 @@
 /**
  * File: pages/public/StudentRegistrationPage.tsx
  * Mục đích: Trang đăng ký dành cho học viên
- * Thiết kế: Form đăng ký với gradient background tương tự hình mẫu
+ * Thiết kế: Sử dụng shadcn/ui và theme variables từ index.css
  */
 
 import { useState } from 'react';
@@ -11,6 +11,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '@/services/api';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { BookOpen, Mail, Lock, User } from 'lucide-react';
 
 const studentSchema = z
   .object({
@@ -66,144 +69,132 @@ export default function StudentRegistrationPage(): JSX.Element {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-blue-500 to-purple-600 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-4">Đăng ký tài khoản</h1>
-          <p className="text-white/90">
+          <h1 className="text-3xl font-bold text-foreground mb-4">Đăng ký tài khoản</h1>
+          <p className="text-muted-foreground">
             Đăng ký để tìm gia sư phù hợp và bắt đầu hành trình học tập của bạn.
           </p>
         </div>
 
         {/* Form Container */}
-        <div className="bg-white rounded-lg shadow-xl p-8">
+        <div className="bg-card rounded-lg shadow-md p-8 border border-border">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Last Name */}
             <div>
-              <div className="flex items-center text-gray-700 mb-2">
-                <span className="text-purple-600 mr-2">👤</span>
+              <div className="flex items-center text-foreground mb-2">
+                <User className="w-4 h-4 text-primary mr-2" />
                 <label className="font-semibold">Họ</label>
               </div>
-              <input
+              <Input
                 type="text"
                 placeholder="Nguyễn"
                 {...register('lastName')}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
-                  errors.lastName ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`h-10 ${errors.lastName ? 'border-destructive' : ''}`}
               />
               {errors.lastName && (
-                <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
+                <p className="text-destructive text-sm mt-1">{errors.lastName.message}</p>
               )}
             </div>
 
             {/* First Name */}
             <div>
-              <div className="flex items-center text-gray-700 mb-2">
-                <span className="text-purple-600 mr-2">👤</span>
+              <div className="flex items-center text-foreground mb-2">
+                <User className="w-4 h-4 text-primary mr-2" />
                 <label className="font-semibold">Tên</label>
               </div>
-              <input
+              <Input
                 type="text"
                 placeholder="Văn A"
                 {...register('firstName')}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
-                  errors.firstName ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`h-10 ${errors.firstName ? 'border-destructive' : ''}`}
               />
               {errors.firstName && (
-                <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
+                <p className="text-destructive text-sm mt-1">{errors.firstName.message}</p>
               )}
             </div>
 
             {/* Email */}
             <div>
-              <div className="flex items-center text-gray-700 mb-2">
-                <span className="text-purple-600 mr-2">📧</span>
+              <div className="flex items-center text-foreground mb-2">
+                <Mail className="w-4 h-4 text-primary mr-2" />
                 <label className="font-semibold">Địa chỉ Email</label>
               </div>
-              <input
+              <Input
                 type="email"
                 placeholder="example@gmail.com"
                 {...register('email')}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`h-10 ${errors.email ? 'border-destructive' : ''}`}
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+              {errors.email && (
+                <p className="text-destructive text-sm mt-1">{errors.email.message}</p>
+              )}
             </div>
 
             {/* Password */}
             <div>
-              <div className="flex items-center text-gray-700 mb-2">
-                <span className="text-purple-600 mr-2">🔒</span>
+              <div className="flex items-center text-foreground mb-2">
+                <Lock className="w-4 h-4 text-primary mr-2" />
                 <label className="font-semibold">Mật khẩu</label>
               </div>
-              <input
+              <Input
                 type="password"
                 placeholder="Tối thiểu 6 ký tự"
                 {...register('password')}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`h-10 ${errors.password ? 'border-destructive' : ''}`}
               />
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                <p className="text-destructive text-sm mt-1">{errors.password.message}</p>
               )}
             </div>
 
             {/* Confirm Password */}
             <div>
-              <div className="flex items-center text-gray-700 mb-2">
-                <span className="text-purple-600 mr-2">🔒</span>
+              <div className="flex items-center text-foreground mb-2">
+                <Lock className="w-4 h-4 text-primary mr-2" />
                 <label className="font-semibold">Xác nhận mật khẩu</label>
               </div>
-              <input
+              <Input
                 type="password"
                 placeholder="Nhập lại mật khẩu"
                 {...register('confirmPassword')}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`h-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
               />
               {errors.confirmPassword && (
-                <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
+                <p className="text-destructive text-sm mt-1">{errors.confirmPassword.message}</p>
               )}
             </div>
 
             {/* Role Display */}
             <div>
-              <div className="flex items-center text-gray-700 mb-2">
-                <span className="text-purple-600 mr-2">📚</span>
+              <div className="flex items-center text-foreground mb-2">
+                <BookOpen className="w-4 h-4 text-primary mr-2" />
                 <span className="font-semibold">Vai trò:</span>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="bg-secondary border border-border rounded-lg p-3">
                 <div className="flex items-center">
-                  <span className="text-2xl mr-3">📚</span>
+                  <BookOpen className="w-6 h-6 text-primary mr-3" />
                   <div>
-                    <span className="font-semibold text-blue-800">Học viên</span>
-                    <p className="text-sm text-blue-600">Tìm gia sư và học tập</p>
+                    <span className="font-semibold text-foreground">Học viên</span>
+                    <p className="text-sm text-muted-foreground">Tìm gia sư và học tập</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white py-3 px-6 rounded-lg font-semibold hover:from-pink-600 hover:to-red-600 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-            >
-              {isLoading ? 'ĐANG TẠO TÀI KHOẢN...' : 'TẠO TÀI KHOẢN'}
-            </button>
+            <Button type="submit" disabled={isLoading} className="w-full h-10 text-base">
+              {isLoading ? '⏳ ĐANG TẠO TÀI KHOẢN...' : '✓ TẠO TÀI KHOẢN'}
+            </Button>
           </form>
 
           {/* Login Link */}
           <div className="text-center mt-6">
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Đã có tài khoản?{' '}
-              <Link to="/login" className="text-purple-600 hover:text-purple-800 font-semibold">
+              <Link to="/login" className="text-primary hover:text-primary/80 font-semibold">
                 Đăng nhập ngay
               </Link>
             </p>
@@ -211,26 +202,29 @@ export default function StudentRegistrationPage(): JSX.Element {
 
           {/* Back to Role Selection */}
           <div className="text-center mt-4">
-            <Link to="/login" className="text-gray-500 hover:text-gray-700 text-sm">
+            <Link
+              to="/login"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+            >
               ← Quay lại chọn vai trò
             </Link>
           </div>
         </div>
 
         {/* Features */}
-        <div className="mt-8 text-center">
-          <div className="grid grid-cols-3 gap-4 text-white">
-            <div>
+        <div className="mt-8">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-card rounded-lg border border-border">
               <div className="text-2xl mb-2">🎯</div>
-              <p className="text-sm">Tìm gia sư phù hợp</p>
+              <p className="text-sm text-muted-foreground">Tìm gia sư phù hợp</p>
             </div>
-            <div>
+            <div className="text-center p-4 bg-card rounded-lg border border-border">
               <div className="text-2xl mb-2">💬</div>
-              <p className="text-sm">Chat trực tiếp</p>
+              <p className="text-sm text-muted-foreground">Chat trực tiếp</p>
             </div>
-            <div>
+            <div className="text-center p-4 bg-card rounded-lg border border-border">
               <div className="text-2xl mb-2">📈</div>
-              <p className="text-sm">Theo dõi tiến độ</p>
+              <p className="text-sm text-muted-foreground">Theo dõi tiến độ</p>
             </div>
           </div>
         </div>
