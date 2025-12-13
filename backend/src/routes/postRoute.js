@@ -12,6 +12,7 @@ import {
   deletePost,
   getMyPosts,
   getPendingPosts,
+  getRejectedPosts,
   approvePost,
   rejectPost,
 } from "../controllers/postController.js";
@@ -26,6 +27,7 @@ router.get("/", getApprovedPosts);
 // Protected routes - cần authentication (phải đặt TRƯỚC /:id)
 router.get("/my", protectedRoute, getMyPosts);
 router.get("/pending", protectedRoute, getPendingPosts);
+router.get("/rejected", protectedRoute, getRejectedPosts);
 
 // Public routes - chi tiết post
 router.get("/:id", getPostDetail);

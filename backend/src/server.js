@@ -3,8 +3,7 @@
  * Mục đích: Entry point của ứng dụng
  * Vai trò:
  *   - Khởi động HTTP server
- *   - Kết nối database (nếu cần)
- *   - Khởi tạo Socket.IO (nếu cần)
+ *   - Kết nối database
  */
 
 import dotenv from "dotenv";

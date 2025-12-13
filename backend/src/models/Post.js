@@ -14,6 +14,13 @@ const postSchema = new mongoose.Schema(
       trim: true,
       maxlength: [200, "Tiêu đề không vượt quá 200 ký tự"],
     },
+    // Slug SEO-friendly sinh từ title
+    slug: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      index: true,
+    },
     content: {
       type: String,
       required: [true, "Vui lòng nhập nội dung bài viết"],
@@ -59,6 +66,17 @@ const postSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Admin rejection info
+    rejectedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    rejectedAt: {
+      type: Date,
+      default: null,
+    },
+
     // Metadata
     viewCount: {
       type: Number,
@@ -83,6 +101,7 @@ const postSchema = new mongoose.Schema(
 postSchema.index({ author: 1, status: 1 });
 postSchema.index({ status: 1, createdAt: -1 });
 postSchema.index({ createdAt: -1 });
+postSchema.index({ slug: 1 });
 
 // Middleware to populate author info
 postSchema.pre(["findOne", "find"], function () {

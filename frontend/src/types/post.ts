@@ -10,13 +10,19 @@ export type PostStatus = 'draft' | 'pending' | 'approved' | 'rejected';
 export interface Post {
   _id: string;
   title: string;
+  slug?: string; // ← SEO-friendly slug
   content: string; // ← HTML string from TipTap
   author: UserInfo;
   status: PostStatus;
   imageUrls?: string[];
   rejectionReason?: string;
-  approvedBy?: string;
+  approvedBy?: UserInfo;
   approvedAt?: Date;
+  rejectedBy?: UserInfo;
+  rejectedAt?: Date;
+  viewCount?: number;
+  likeCount?: number;
+  commentCount?: number;
   createdAt: Date;
   updatedAt: Date;
 }

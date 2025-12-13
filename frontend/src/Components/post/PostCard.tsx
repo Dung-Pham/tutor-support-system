@@ -1,16 +1,19 @@
 /**
  * File: components/post/PostCard.tsx
- * Mục đích: Component hiển thị một bài viết trong feed
+ * Mục đích: Component hiển thị một bài viết trong feed hoặc danh sách cộng đồng
  */
 
+import { Link } from 'react-router-dom';
 import { Post, PostStatus } from '@/types/post';
 import { formatMessageTime } from '@/lib/utils';
-import { Edit2, Eye, Share2 } from 'lucide-react';
+import { Edit2, Eye, Share2, Heart, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PostCardProps {
   post: Post;
   isAuthor?: boolean;
+  isCommunity?: boolean; // ← Hiển thị dạng cộng đồng
+  linkState?: unknown;
   onEdit?: (postId: string) => void;
   onDelete?: (postId: string) => void;
   onView?: (postId: string) => void;
@@ -23,11 +26,78 @@ const statusConfig: Record<PostStatus, { label: string; bgColor: string; textCol
   rejected: { label: 'Từ chối', bgColor: 'bg-red-100', textColor: 'text-red-700' },
 };
 
-export function PostCard({ post, isAuthor = false, onEdit, onView }: PostCardProps) {
+export function PostCard({
+  post,
+  isAuthor = false,
+  isCommunity = false,
+  linkState,
+  onEdit,
+  onView,
+}: PostCardProps) {
   const statusInfo = statusConfig[post.status];
-
   const canEdit = isAuthor && post.status === 'draft';
 
+  // Extract plain text từ HTML
+  const stripHtml = (html: string) => {
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    return temp.textContent || temp.innerText || '';
+  };
+
+  const plainContent = stripHtml(post.content);
+  const summary = plainContent.substring(0, 150) + (plainContent.length > 150 ? '...' : '');
+
+  // Build URL với slug
+  const postUrl = post.slug ? `/posts/${post._id}/${post.slug}` : `/posts/${post._id}`;
+
+  // Dạng community (danh sách công khai)
+  if (isCommunity) {
+    return (
+      <Link to={postUrl} state={linkState} className="block">
+        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition p-4">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-3">
+            <img
+              src={
+                post.author.avatarUrl ||
+                `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author._id}`
+              }
+              alt={post.author.displayName}
+              className="w-10 h-10 rounded-full"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">{post.author.displayName}</p>
+              <p className="text-xs text-gray-500">{formatMessageTime(new Date(post.createdAt))}</p>
+            </div>
+          </div>
+
+          {/* Title */}
+          <h2 className="text-lg font-bold mb-2 line-clamp-2">{post.title}</h2>
+
+          {/* Summary */}
+          <p className="text-sm text-gray-600 mb-3 line-clamp-3">{summary}</p>
+
+          {/* Stats */}
+          <div className="flex items-center gap-4 text-xs text-gray-500 border-t pt-3">
+            <div className="flex items-center gap-1">
+              <Eye size={14} />
+              {post.viewCount || 0}
+            </div>
+            <div className="flex items-center gap-1">
+              <Heart size={14} />
+              {post.likeCount || 0}
+            </div>
+            <div className="flex items-center gap-1">
+              <MessageCircle size={14} />
+              {post.commentCount || 0}
+            </div>
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
+  // Dạng tutor (bài viết của tôi)
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
       {/* Header */}

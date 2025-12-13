@@ -22,7 +22,8 @@ import StudentMessages from '@/pages/student/StudentMessages';
 
 // Tutor pages
 import { TutorLayout } from '@/pages/tutor/TutorLayout';
-import TutorPosts from '@/pages/tutor/TutorPosts';
+import CommunityPosts from '@/pages/public/CommunityPosts';
+import PostDetailPage from '@/pages/public/PostDetail';
 import CreatePost from '@/pages/tutor/CreatePost';
 import MyPosts from '@/pages/tutor/MyPosts';
 import TutorMessages from '@/pages/tutor/TutorMessages';
@@ -45,6 +46,9 @@ export const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/student" element={<StudentRegistrationPage />} />
       <Route path="/register/tutor" element={<TutorRegistrationPage />} />
+      <Route path="/posts" element={<CommunityPosts />} />
+      <Route path="/posts/:id" element={<PostDetailPage />} />
+      <Route path="/posts/:id/:slug" element={<PostDetailPage />} />
 
       {/* Protected Routes cho Student */}
       <Route element={<ProtectedRoute />}>
@@ -54,6 +58,7 @@ export const AppRoutes = () => {
             <Route path="schedule" element={<div>Lịch học</div>} />
             <Route path="classes" element={<div>Lớp học của tôi</div>} />
             <Route path="assignments" element={<div>Bài tập</div>} />
+            <Route path="posts" element={<CommunityPosts />} />
             <Route path="documents" element={<div>Tài liệu</div>} />
             <Route path="messages" element={<StudentMessages />} />
             <Route path="statistics" element={<div>Thống kê</div>} />
@@ -66,8 +71,8 @@ export const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         <Route element={<RoleBasedRoute allowedRoles={['tutor']} />}>
           <Route path="/tutor" element={<TutorLayout />}>
-            <Route index element={<TutorPosts />} />
-            <Route path="posts" element={<TutorPosts />} />
+            <Route index element={<CommunityPosts />} />
+            <Route path="posts" element={<CommunityPosts />} />
             <Route path="create-post" element={<CreatePost />} />
             <Route path="my-posts" element={<MyPosts />} />
             <Route path="messages" element={<TutorMessages />} />

@@ -4,6 +4,52 @@
  */
 
 import Post from "../models/Post.js";
+import { createSlug } from "../utils/slug.js";
+
+/**
+ * Lấy danh sách bài viết bị reject (admin only)
+ * GET /api/posts/rejected?page=1&limit=10
+ */
+export const getRejectedPosts = async (req, res) => {
+  try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Chỉ admin có thể xem bài viết bị reject",
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, parseInt(req.query.limit) || 10);
+    const skip = (page - 1) * limit;
+
+    const posts = await Post.find({ status: "rejected" })
+      .sort({ rejectedAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    const total = await Post.countDocuments({ status: "rejected" });
+    const totalPages = Math.ceil(total / limit);
+
+    res.json({
+      success: true,
+      message: "Lấy danh sách bài viết bị reject",
+      data: posts,
+      page,
+      limit,
+      total,
+      totalPages,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Get rejected posts error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách bài viết bị reject",
+      timestamp: new Date().toISOString(),
+    });
+  }
+};
 
 /**
  * Tạo bài viết mới (draft hoặc pending)
@@ -24,6 +70,7 @@ export const createPost = async (req, res) => {
 
     const post = new Post({
       title,
+      slug: createSlug(title),
       content,
       status: status === "draft" ? "draft" : "pending",
       author: userId,
@@ -252,7 +299,10 @@ export const updatePost = async (req, res) => {
       });
     }
 
-    if (title) post.title = title;
+    if (title) {
+      post.title = title;
+      post.slug = createSlug(title);
+    }
     if (content) post.content = content;
 
     await post.save();
@@ -420,21 +470,22 @@ export const rejectPost = async (req, res) => {
         message: "Bài viết không tồn tại",
         timestamp: new Date().toISOString(),
       });
-    if (post.status !== "pending") {
+    if (!["pending", "approved"].includes(post.status)) {
       return res.status(400).json({
         success: false,
-        message: "Chỉ có thể từ chối bài viết chờ duyệt",
+        message: "Chỉ có thể từ chối bài viết chờ duyệt hoặc đã duyệt",
         timestamp: new Date().toISOString(),
       });
     }
 
     post.status = "rejected";
     post.rejectionReason = reason;
-    post.approvedBy = adminId;
-    post.approvedAt = new Date();
+    post.rejectedBy = adminId;
+    post.rejectedAt = new Date();
 
     await post.save();
     await post.populate("author", "displayName avatarUrl role");
+    await post.populate("rejectedBy", "displayName");
 
     res.json({
       success: true,
