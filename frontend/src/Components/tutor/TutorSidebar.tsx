@@ -1,8 +1,3 @@
-/**
- * File: components/tutor/TutorSidebar.tsx
- * Mục đích: Sidebar navigation cho tutor
- */
-
 import { NavLink } from 'react-router-dom';
 import {
   BookMarked,
@@ -17,6 +12,10 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
+interface TutorSidebarProps {
+  onNavigate?: () => void;
+}
+
 const navItems = [
   { label: 'Bài viết', icon: FileText, to: '/tutor/posts' },
   { label: 'Tạo bài viết', icon: BookMarked, to: '/tutor/create-post' },
@@ -28,10 +27,10 @@ const navItems = [
   { label: 'Cài đặt', icon: Settings, to: '/tutor/settings' },
 ];
 
-export function TutorSidebar() {
+export function TutorSidebar({ onNavigate }: TutorSidebarProps = {}) {
   return (
     <aside
-      className="hidden md:flex md:flex-col w-64 border-r"
+      className="flex flex-col h-full w-full md:w-64 border-r"
       style={{ backgroundColor: 'hsl(var(--background))' }}
     >
       <div className="flex-1 overflow-y-auto">
@@ -40,11 +39,13 @@ export function TutorSidebar() {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 px-6 py-3 text-lg cursor-pointer transition-all duration-200',
-                  'hover:bg-secondary',
-                  isActive && 'border-l-4 font-semibold'
+                  'flex items-center gap-3 px-4 md:px-6 py-3.5 md:py-3 text-base md:text-lg cursor-pointer transition-all duration-200',
+                  'hover:bg-secondary active:bg-secondary/80',
+                  'touch-manipulation min-h-[48px]',
+                  isActive && 'border-l-4 font-semibold bg-secondary/50'
                 )
               }
               style={({ isActive }) => ({
@@ -52,15 +53,18 @@ export function TutorSidebar() {
                 borderLeftColor: isActive ? 'hsl(var(--primary))' : 'transparent',
               })}
             >
-              <item.icon className="w-4 h-4" />
-              <span>{item.label}</span>
+              <item.icon className="w-5 h-5 flex-shrink-0" />
+              <span className="truncate">{item.label}</span>
             </NavLink>
           ))}
         </nav>
       </div>
 
       <Separator />
-      <div className="px-6 py-3 text-[11px]" style={{ color: 'hsl(var(--muted-foreground))' }}>
+      <div
+        className="px-4 md:px-6 py-3 text-xs md:text-[11px]"
+        style={{ color: 'hsl(var(--muted-foreground))' }}
+      >
         Hệ thống hỗ trợ giáo viên v1.0
       </div>
     </aside>

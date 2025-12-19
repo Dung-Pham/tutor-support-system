@@ -1,8 +1,3 @@
-/**
- * File: pages/tutor/MyPosts.tsx
- * Mục đích: Trang chính "Bài viết của tôi" với tabs (Nháp/Chờ duyệt/Đã duyệt/Từ chối)
- */
-
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';

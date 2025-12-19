@@ -1,20 +1,35 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
 import { updateConversationAfterCreateMessage } from "../utils/messageHelper.js";
+import { emitToConversation, emitToUser } from "../config/socket.js";
 
 export const sendDirectMessage = async (req, res) => {
   try {
     // Extract inputs
-    const { recipientId, content, conversationId } = req.body;
+    const { recipientId, content, conversationId, imgUrls } = req.body;
     const senderId = req.user.id;
 
     let conversation;
 
-    // Validate: message content must not be empty
-    if (!content) {
+    // Validate: message must have content or images
+    if (!content && (!imgUrls || imgUrls.length === 0)) {
       return res
         .status(400)
-        .json({ message: "Message content cannot be empty." });
+        .json({ message: "Message must have content or images." });
+    }
+
+    // Validate: imgUrls must be an array if provided
+    if (imgUrls && !Array.isArray(imgUrls)) {
+      return res
+        .status(400)
+        .json({ message: "imgUrls must be an array of URLs." });
+    }
+
+    // Validate: maximum 10 images
+    if (imgUrls && imgUrls.length > 10) {
+      return res
+        .status(400)
+        .json({ message: "Cannot send more than 10 images per message." });
     }
 
     // If client provided a conversation ID, try to load it
@@ -23,9 +38,16 @@ export const sendDirectMessage = async (req, res) => {
       conversation = await Conversation.findById(conversationId);
     }
 
-    // If no conversation exists yet, create a new direct conversation
-    // Note: In a production system you may want to check for an existing
-    // direct conversation between the two users instead of always creating one.
+    // If no conversation exists yet, check if a direct conversation already exists between these two users
+    if (!conversation) {
+      // Find existing direct conversation between senderId and recipientId
+      conversation = await Conversation.findOne({
+        type: "direct",
+        "participants.userId": { $all: [senderId, recipientId] },
+      });
+    }
+
+    // If still no conversation found, create a new direct conversation
     if (!conversation) {
       conversation = await Conversation.create({
         type: "direct",
@@ -33,10 +55,8 @@ export const sendDirectMessage = async (req, res) => {
           { userId: senderId, joinedAt: new Date() },
           { userId: recipientId, joinedAt: new Date() },
         ],
-        // lastMessage should be a sub-document; here we set lastMessageAt timestamp
         lastMessageAt: new Date(),
-        // unreadCount map will be updated when messages are created
-        unreadCount: new Map(),
+        unreadCounts: new Map(),
       });
     }
 
@@ -44,12 +64,25 @@ export const sendDirectMessage = async (req, res) => {
     const message = await Message.create({
       conversationId: conversation._id,
       senderId,
-      content,
+      content: content || "", // Allow empty content if images are provided
+      imgUrls: imgUrls || [],
     });
 
     // Update conversation metadata for the new message
     updateConversationAfterCreateMessage(conversation, message, senderId);
     await conversation.save();
+
+    // Emit real-time event to conversation room
+    emitToConversation(conversation._id.toString(), "new_message", {
+      message,
+      conversationId: conversation._id,
+    });
+
+    // Also emit to recipient directly (in case they haven't joined the room yet)
+    emitToUser(recipientId, "new_message", {
+      message,
+      conversationId: conversation._id,
+    });
 
     return res.status(201).json({ message });
   } catch (error) {
@@ -59,26 +92,42 @@ export const sendDirectMessage = async (req, res) => {
 };
 
 // Send a message to a group conversation
-// Expected payload: { conversationId, content }
+// Expected payload: { conversationId, content, imgUrls }
 // Behavior:
 // 1. Validate inputs and that the user is a participant of the group
 // 2. Create a Message document and update conversation metadata
 export const sendGroupMessage = async (req, res) => {
   try {
-    const { conversationId, content } = req.body;
+    const { conversationId, content, imgUrls } = req.body;
     const senderId = req.user._id;
     const conversation = req.conversation; // Loaded by middleware
 
-    if (!content) {
+    // Validate: message must have content or images
+    if (!content && (!imgUrls || imgUrls.length === 0)) {
       return res
         .status(400)
-        .json({ message: "Message content cannot be empty." });
+        .json({ message: "Message must have content or images." });
+    }
+
+    // Validate: imgUrls must be an array if provided
+    if (imgUrls && !Array.isArray(imgUrls)) {
+      return res
+        .status(400)
+        .json({ message: "imgUrls must be an array of URLs." });
+    }
+
+    // Validate: maximum 10 images
+    if (imgUrls && imgUrls.length > 10) {
+      return res
+        .status(400)
+        .json({ message: "Cannot send more than 10 images per message." });
     }
 
     const message = await Message.create({
       conversationId,
       senderId,
-      content,
+      content: content || "",
+      imgUrls: imgUrls || [],
     });
 
     // Update conversation metadata for the new message

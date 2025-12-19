@@ -1,9 +1,3 @@
-/**
- * File: pages/public/LoginPage.tsx
- * Mục đích: Trang đăng nhập thống nhất với thiết kế đẹp
- * Thiết kế: Sử dụng shadcn/ui và theme variables từ index.css
- */
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';

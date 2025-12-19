@@ -1,36 +1,16 @@
-/**
- * File: types/message.ts
- * Mục đích: Định nghĩa tất cả types liên quan đến Message
- */
-
-/**
- * Loại nội dung message
- */
 export type MessageType = 'text' | 'image' | 'file' | 'system';
-
-/**
- * Trạng thái delivery của message
- */
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'seen' | 'failed';
 
-/**
- * Thông tin cơ bản của Message
- */
 export interface Message {
   _id: string;
   conversationId: string;
   senderId: string;
   content: string;
   imgUrls?: string[];
-  type: MessageType;
-  status: MessageStatus;
   createdAt: string;
   updatedAt: string;
 }
 
-/**
- * Message với thông tin sender
- */
 export interface MessageWithSender extends Message {
   sender?: {
     _id: string;
@@ -39,18 +19,13 @@ export interface MessageWithSender extends Message {
   };
 }
 
-/**
- * Send Message Request
- */
 export interface SendMessageRequest {
   conversationId: string;
+  recipientId: string;
   content: string;
   imgUrls?: string[];
 }
 
-/**
- * Get Messages Query
- */
 export interface GetMessagesQuery {
   conversationId: string;
   page?: number;
@@ -58,9 +33,6 @@ export interface GetMessagesQuery {
   sortBy?: 'newest' | 'oldest';
 }
 
-/**
- * Message Response từ API
- */
 export interface MessageResponse {
   _id: string;
   conversationId: string;

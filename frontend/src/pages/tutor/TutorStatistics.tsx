@@ -1,8 +1,3 @@
-/**
- * File: pages/tutor/TutorStatistics.tsx
- * Mục đích: Trang thống kê cho tutor
- */
-
 export function TutorStatistics() {
   return (
     <div className="container mx-auto">

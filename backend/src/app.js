@@ -16,7 +16,6 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import compression from "compression";
 import cookieParser from "cookie-parser";
 import swaggerUi from "swagger-ui-express";
 import fs from "fs";
@@ -25,12 +24,11 @@ import fs from "fs";
 // TODO: Add your routes here
 import authRoute from "./routes/authRoute.js";
 import userRoute from "./routes/userRoute.js";
-import friendRoute from "./routes/friendRoute.js";
 import messageRoute from "./routes/messageRoute.js";
 import conversationRoute from "./routes/conversationRoute.js";
 import postRoute from "./routes/postRoute.js";
-import { createRouteHandler } from "uploadthing/express";
-import uploadRouter from "./uploadthing.js";
+import uploadRoute from "./routes/uploadRoute.js";
+import commentRoute from "./routes/commentRoute.js";
 import { protectedRoute } from "./middlewares/userMiddleware.js";
 
 const app = express();
@@ -57,11 +55,9 @@ app.use(
     credentials: true,
   })
 );
-app.use(compression()); // Nén response để tăng tốc
 app.use(morgan("dev")); // Log HTTP requests
 app.use(express.json()); // Parse JSON body
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded body
-// Note: multer().any() removed - UploadThing handles multipart itself
 app.use(cookieParser()); // Parse cookies
 
 // Swagger Documentation Setup
@@ -85,22 +81,14 @@ app.get("/health", (req, res) => {
 // public routes
 app.use("/api/auth", authRoute);
 app.use("/api/posts", postRoute);
-
-// UploadThing routes - public endpoint cho file upload
-// UploadThing sẽ auto-generate /api/uploadthing routes
-app.use(
-  "/api/uploadthing",
-  createRouteHandler({
-    router: uploadRouter,
-  })
-);
+app.use("/api", commentRoute); // Comment và Like routes
 
 // Protected routes (with middleware)
 app.use(protectedRoute);
 app.use("/api/users", userRoute);
-app.use("/api/friends", friendRoute);
 app.use("/api/messages", messageRoute);
 app.use("/api/conversations", conversationRoute);
+app.use("/api/upload", uploadRoute); // Cloudinary upload route
 
 // 404 Handler - Route không tồn tại
 app.use((req, res) => {

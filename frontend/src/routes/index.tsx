@@ -1,48 +1,48 @@
-/**
- * File: routes/index.tsx
- * Mục đích: Central routing configuration cho hệ thống Student-Tutor
- * Vai trò:
- *   - Định nghĩa tất cả routes của app (chỉ Student và Tutor)
- *   - Tách logic routing ra khỏi App.tsx
- *   - Routes cho authentication flow và role-based home pages
- *   - Protected routes cho Student và Tutor
- */
-
 import { Routes, Route } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import HomePage from '../pages/public/HomePage';
-
-// Auth pages
 import LoginPage from '../pages/public/LoginPage';
 import StudentRegistrationPage from '../pages/public/StudentRegistrationPage';
 import TutorRegistrationPage from '../pages/public/TutorRegistrationPage';
-
-// Student pages
-import { StudentLayout } from '@/pages/student/StudentLayout';
-import StudentMessages from '@/pages/student/StudentMessages';
-
-// Tutor pages
-import { TutorLayout } from '@/pages/tutor/TutorLayout';
-import CommunityPosts from '@/pages/public/CommunityPosts';
-import PostDetailPage from '@/pages/public/PostDetail';
-import CreatePost from '@/pages/tutor/CreatePost';
-import MyPosts from '@/pages/tutor/MyPosts';
-import TutorMessages from '@/pages/tutor/TutorMessages';
-import TutorStudents from '@/pages/tutor/TutorStudents';
-import TutorSchedule from '@/pages/tutor/TutorSchedule';
-import TutorStatistics from '@/pages/tutor/TutorStatistics';
-import TutorSettings from '@/pages/tutor/TutorSettings';
-
-// Role-based components
+import CommunityPosts from '../pages/public/CommunityPosts';
+import PostDetailPage from '../pages/public/PostDetail';
 import { ProtectedRoute } from './ProtectedRoute';
 import { RoleBasedRoute } from './RoleBasedRoute';
+
+// === LAZY LOADED PAGES - Load khi cần ===
+
+// Student pages (chỉ load khi user là student)
+const StudentLayout = lazy(() =>
+  import('@/pages/student/StudentLayout').then((m) => ({ default: m.StudentLayout }))
+);
+const StudentMessages = lazy(() => import('@/pages/student/StudentMessages'));
+
+// Tutor pages (chỉ load khi user là tutor)
+const TutorLayout = lazy(() =>
+  import('@/pages/tutor/TutorLayout').then((m) => ({ default: m.TutorLayout }))
+);
+const CreatePost = lazy(() => import('@/pages/tutor/CreatePost'));
+const MyPosts = lazy(() => import('@/pages/tutor/MyPosts'));
+const TutorMessages = lazy(() => import('@/pages/tutor/TutorMessages')); // Có Emoji picker (100 KB)
+const TutorStudents = lazy(() => import('@/pages/tutor/TutorStudents'));
+const TutorSchedule = lazy(() => import('@/pages/tutor/TutorSchedule'));
+const TutorStatistics = lazy(() => import('@/pages/tutor/TutorStatistics'));
+const TutorSettings = lazy(() => import('@/pages/tutor/TutorSettings'));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  </div>
+);
 
 export const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public routes - Load ngay */}
       <Route path="/" element={<HomePage />} />
 
-      {/* Authentication routes */}
+      {/* Authentication routes - Load ngay */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/student" element={<StudentRegistrationPage />} />
       <Route path="/register/tutor" element={<TutorRegistrationPage />} />
@@ -50,36 +50,106 @@ export const AppRoutes = () => {
       <Route path="/posts/:id" element={<PostDetailPage />} />
       <Route path="/posts/:id/:slug" element={<PostDetailPage />} />
 
-      {/* Protected Routes cho Student */}
+      {/* Protected Routes cho Student - Lazy loaded */}
       <Route element={<ProtectedRoute />}>
         <Route element={<RoleBasedRoute allowedRoles={['student']} />}>
-          <Route path="/student" element={<StudentLayout />}>
+          <Route
+            path="/student"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <StudentLayout />
+              </Suspense>
+            }
+          >
             <Route index element={<div>Dashboard Student</div>} />
             <Route path="schedule" element={<div>Lịch học</div>} />
             <Route path="classes" element={<div>Lớp học của tôi</div>} />
             <Route path="assignments" element={<div>Bài tập</div>} />
             <Route path="posts" element={<CommunityPosts />} />
             <Route path="documents" element={<div>Tài liệu</div>} />
-            <Route path="messages" element={<StudentMessages />} />
+            <Route
+              path="messages"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <StudentMessages />
+                </Suspense>
+              }
+            />
             <Route path="statistics" element={<div>Thống kê</div>} />
             <Route path="settings" element={<div>Cài đặt</div>} />
           </Route>
         </Route>
       </Route>
 
-      {/* Protected Routes cho Tutor */}
+      {/* Protected Routes cho Tutor - Lazy loaded */}
       <Route element={<ProtectedRoute />}>
         <Route element={<RoleBasedRoute allowedRoles={['tutor']} />}>
-          <Route path="/tutor" element={<TutorLayout />}>
+          <Route
+            path="/tutor"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <TutorLayout />
+              </Suspense>
+            }
+          >
             <Route index element={<CommunityPosts />} />
             <Route path="posts" element={<CommunityPosts />} />
-            <Route path="create-post" element={<CreatePost />} />
-            <Route path="my-posts" element={<MyPosts />} />
-            <Route path="messages" element={<TutorMessages />} />
-            <Route path="students" element={<TutorStudents />} />
-            <Route path="schedule" element={<TutorSchedule />} />
-            <Route path="statistics" element={<TutorStatistics />} />
-            <Route path="settings" element={<TutorSettings />} />
+            <Route
+              path="create-post"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <CreatePost />
+                </Suspense>
+              }
+            />
+            <Route
+              path="my-posts"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <MyPosts />
+                </Suspense>
+              }
+            />
+            <Route
+              path="messages"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <TutorMessages />
+                </Suspense>
+              }
+            />
+            <Route
+              path="students"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <TutorStudents />
+                </Suspense>
+              }
+            />
+            <Route
+              path="schedule"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <TutorSchedule />
+                </Suspense>
+              }
+            />
+            <Route
+              path="statistics"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <TutorStatistics />
+                </Suspense>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <TutorSettings />
+                </Suspense>
+              }
+            />
           </Route>
         </Route>
       </Route>

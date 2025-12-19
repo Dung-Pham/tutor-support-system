@@ -1,15 +1,3 @@
-/**
- * File: store/slices/messagesSlice.ts
- * Mục đích: Quản lý state cho messaging system
- * State management:
- *   - conversations: Danh sách conversations
- *   - activeConversation: Conversation đang chat
- *   - messages: Map của messages theo conversationId
- *   - typing: Ai đang typing
- *   - unreadCounts: Unread count per conversation
- *   - loading: Loading state
- */
-
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Conversation, Message } from '@/types';
 
@@ -23,6 +11,7 @@ interface MessagesState {
   activeConversation: Conversation | null;
   messages: Record<string, Message[]>; // { conversationId: [messages] }
   typing: TypingState | null;
+  onlineUsers: string[]; // List of online user IDs
   unreadCounts: Record<string, number>; // { conversationId: count }
   loading: boolean;
   error: string | null;
@@ -33,6 +22,7 @@ const initialState: MessagesState = {
   activeConversation: null,
   messages: {},
   typing: null,
+  onlineUsers: [],
   unreadCounts: {},
   loading: false,
   error: null,
@@ -91,20 +81,27 @@ const messagesSlice = createSlice({
       }
     },
 
-    updateMessageStatus: (
-      state,
-      action: PayloadAction<{ conversationId: string; messageId: string; status: string }>
-    ) => {
-      const { conversationId, messageId, status } = action.payload;
-      const message = state.messages[conversationId]?.find((m) => m._id === messageId);
-      if (message) {
-        message.status = status as any;
-      }
-    },
+    // Note: updateMessageStatus removed - backend không có status field
+    // WebSocket real-time updates sẽ handle delivery status nếu cần sau này
 
     // Typing
     setTyping: (state, action: PayloadAction<TypingState | null>) => {
       state.typing = action.payload;
+    },
+
+    // Online users
+    setOnlineUsers: (state, action: PayloadAction<string[]>) => {
+      state.onlineUsers = action.payload;
+    },
+
+    addOnlineUser: (state, action: PayloadAction<string>) => {
+      if (!state.onlineUsers.includes(action.payload)) {
+        state.onlineUsers.push(action.payload);
+      }
+    },
+
+    removeOnlineUser: (state, action: PayloadAction<string>) => {
+      state.onlineUsers = state.onlineUsers.filter((id) => id !== action.payload);
     },
 
     // Unread counts
@@ -142,8 +139,10 @@ export const {
   setActiveConversation,
   setMessages,
   addMessage,
-  updateMessageStatus,
   setTyping,
+  setOnlineUsers,
+  addOnlineUser,
+  removeOnlineUser,
   setUnreadCount,
   incrementUnreadCount,
   setLoading,

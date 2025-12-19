@@ -18,12 +18,10 @@ const tagSchema = new mongoose.Schema(
       index: true,
     },
 
-    // Slug cho SEO (tạo từ tag_name)
     slug: {
       type: String,
       lowercase: true,
       unique: true,
-      index: true,
     },
 
     // Mô tả tag

@@ -1,13 +1,3 @@
-/**
- * File: Components/layout/Footer.tsx
- * Purpose: Reusable footer component using shadcn/ui
- * Features:
- *   - shadcn Button components for navigation and social links
- *   - lucide-react icons for social media
- *   - Theme-aware styling with CSS variables
- *   - Responsive layout
- */
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Facebook, Instagram, Twitter, Github, Youtube } from 'lucide-react';

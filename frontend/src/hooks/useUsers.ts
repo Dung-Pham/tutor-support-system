@@ -1,15 +1,3 @@
-/**
- * File: hooks/useUsers.ts
- * Mục đích: Custom React Query hooks cho User APIs
- * Vai trò:
- *   - Wrapper React Query hooks cho user operations
- *   - Handle caching, loading, error states tự động
- * Lưu ý:
- *   - useQuery cho read operations (GET)
- *   - useMutation cho write operations (POST, PUT, DELETE)
- *   - Query key 'users' để React Query cache và invalidate
- */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService, User } from '@/services/userService';
 
@@ -56,8 +44,7 @@ export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<User> }) =>
-      userService.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<User> }) => userService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },

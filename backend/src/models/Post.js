@@ -14,17 +14,22 @@ const postSchema = new mongoose.Schema(
       trim: true,
       maxlength: [200, "Tiêu đề không vượt quá 200 ký tự"],
     },
-    // Slug SEO-friendly sinh từ title
     slug: {
       type: String,
       trim: true,
       lowercase: true,
-      index: true,
     },
-    content: {
-      type: String,
+
+    // Tiptap editor content (JSON document - ProseMirror format)
+    contentJson: {
+      type: mongoose.Schema.Types.Mixed,
       required: [true, "Vui lòng nhập nội dung bài viết"],
-      // HTML string from TipTap editor
+    },
+
+    // Plain text version of content (auto-derived for search/preview)
+    contentPlain: {
+      type: String,
+      default: "",
     },
 
     // Tác giả
@@ -41,12 +46,6 @@ const postSchema = new mongoose.Schema(
       enum: ["draft", "pending", "approved", "rejected"],
       default: "draft",
       index: true,
-    },
-
-    // URLs of images extracted from HTML (for cleanup purposes)
-    imageUrls: {
-      type: [String],
-      default: [],
     },
 
     // Rejection reason (nếu status === 'rejected')
@@ -97,11 +96,51 @@ const postSchema = new mongoose.Schema(
   }
 );
 
+// Helper method to extract plain text from Tiptap JSON document
+postSchema.methods.extractPlainText = function () {
+  if (!this.contentJson || typeof this.contentJson !== "object") {
+    return "";
+  }
+
+  const extractTextFromNode = (node) => {
+    let text = "";
+
+    if (node.type === "text" && node.text) {
+      text += node.text;
+    }
+
+    if (node.content && Array.isArray(node.content)) {
+      node.content.forEach((child) => {
+        text += extractTextFromNode(child);
+      });
+    }
+
+    // Add spacing after block nodes
+    if (["paragraph", "heading", "listItem"].includes(node.type)) {
+      text += " ";
+    }
+
+    return text;
+  };
+
+  return extractTextFromNode(this.contentJson).trim();
+};
+
+// Auto-generate contentPlain from contentJson before save
+postSchema.pre("save", function (next) {
+  if (this.contentJson && this.isModified("contentJson")) {
+    this.contentPlain = this.extractPlainText();
+  }
+  next();
+});
+
 // Index for efficient querying
 postSchema.index({ author: 1, status: 1 });
 postSchema.index({ status: 1, createdAt: -1 });
 postSchema.index({ createdAt: -1 });
 postSchema.index({ slug: 1 });
+// Index for text search on plain content
+postSchema.index({ contentPlain: "text", title: "text" });
 
 // Middleware to populate author info
 postSchema.pre(["findOne", "find"], function () {

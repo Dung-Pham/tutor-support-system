@@ -1,24 +1,13 @@
-/**
- * File: store/slices/authSlice.ts
- * Mục đích: Redux slice cho authentication state
- * Vai trò:
- *   - Quản lý user authentication state
- *   - Lưu user info và token
- * Lưu ý:
- *   - Token nên được lưu vào localStorage để persist sau khi refresh
- *   - Logout cần clear cả localStorage
- *   - Có thể thêm async thunks cho login/register actions
- */
-
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiClient } from '@/services/api';
+import socketService from '@/services/socketService';
 
 interface User {
   id: string;
   email: string;
-  name: string;
   firstName: string;
   lastName: string;
+  displayName?: string;
   role: string;
 }
 
@@ -101,6 +90,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      socketService.disconnect();
     },
   },
   extraReducers: (builder) => {

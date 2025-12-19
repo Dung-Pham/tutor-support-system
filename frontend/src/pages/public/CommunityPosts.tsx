@@ -1,8 +1,3 @@
-/**
- * File: pages/public/CommunityPosts.tsx
- * Mục đích: Trang xem bài viết cộng đồng (các bài đã approved)
- */
-
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { PostCard } from '@/components/post/PostCard';
@@ -67,23 +62,29 @@ export function CommunityPosts() {
   }
 
   return (
-    <div className="container mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Bài viết từ cộng đồng</h1>
-        <p className="text-gray-600">Khám phá những bài viết hữu ích từ các gia sư trên nền tảng</p>
+    <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Bài viết từ cộng đồng</h1>
+        <p className="text-sm sm:text-base text-gray-600">
+          Khám phá những bài viết hữu ích từ các gia sư trên nền tảng
+        </p>
       </div>
 
       {posts.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">Chưa có bài viết nào</p>
-          <Button variant="outline" onClick={fetchApprovedPosts}>
+          <Button
+            variant="outline"
+            onClick={fetchApprovedPosts}
+            className="touch-manipulation min-h-[44px]"
+          >
             Làm mới
           </Button>
         </div>
       ) : (
         <>
           {/* Posts Grid */}
-          <div className="space-y-4 mb-8">
+          <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
             {posts.map((post) => (
               <PostCard
                 key={post._id}
@@ -96,8 +97,9 @@ export function CommunityPosts() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8 pb-8">
+            <div className="flex items-center justify-center gap-2 mt-6 sm:mt-8 pb-6 sm:pb-8 flex-wrap">
               <Button
+                className="touch-manipulation min-h-[44px] px-4"
                 variant="outline"
                 disabled={page === 1}
                 onClick={() => setPage(Math.max(1, page - 1))}

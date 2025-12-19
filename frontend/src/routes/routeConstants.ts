@@ -1,13 +1,3 @@
-/**
- * File: routes/routeConstants.ts
- * Mục đích: Định nghĩa constants cho routes của hệ thống Student-Tutor
- * Vai trò:
- *   - Tránh hardcode paths trong components
- *   - Dễ maintain và refactor
- *   - Type safety cho route params
- *   - Organize routes theo Student và Tutor roles
- */
-
 export const ROUTES = {
   // Public routes
   HOME: '/',
@@ -54,12 +44,4 @@ export const getBaseRouteByRole = (role: string): string => {
     default:
       return ROUTES.HOME;
   }
-};
-
-// Helper functions để generate dynamic routes
-export const generateRoute = {
-  // TODO: Thêm helpers khi có dynamic routes
-  // classDetail: (id: string) => `/classes/${id}`,
-  // tutorDetail: (id: string) => `/tutors/${id}`,
-  // chatRoom: (roomId: string) => `/chat/${roomId}`,
 };

@@ -57,11 +57,11 @@ export const getRejectedPosts = async (req, res) => {
  */
 export const createPost = async (req, res) => {
   try {
-    const { title, content, status = "draft" } = req.body;
+    const { title, contentJson, status = "draft" } = req.body;
     const userId = req.user?._id;
 
     if (!userId) return res.status(401).json(formatError("Unauthorized"));
-    if (!title || !content)
+    if (!title || !contentJson)
       return res.status(400).json({
         success: false,
         message: "Tiêu đề và nội dung là bắt buộc",
@@ -71,7 +71,7 @@ export const createPost = async (req, res) => {
     const post = new Post({
       title,
       slug: createSlug(title),
-      content,
+      contentJson,
       status: status === "draft" ? "draft" : "pending",
       author: userId,
     });
@@ -263,7 +263,7 @@ export const getMyPosts = async (req, res) => {
 export const updatePost = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content } = req.body;
+    const { title, contentJson, status } = req.body;
     const userId = req.user?._id;
 
     if (!userId) return res.status(401).json(formatError("Unauthorized"));
@@ -299,11 +299,22 @@ export const updatePost = async (req, res) => {
       });
     }
 
+    if (status !== undefined) {
+      if (!["draft", "pending"].includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Trạng thái bài viết không hợp lệ",
+          timestamp: new Date().toISOString(),
+        });
+      }
+      post.status = status;
+    }
+
     if (title) {
       post.title = title;
       post.slug = createSlug(title);
     }
-    if (content) post.content = content;
+    if (contentJson) post.contentJson = contentJson;
 
     await post.save();
     await post.populate("author", "displayName avatarUrl role");

@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 const newsCommentSchema = new mongoose.Schema(
   {
     // Bài viết mà comment này thuộc về
-    newsId: {
+    postId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",
       required: [true, "Comment phải thuộc về một bài viết"],
@@ -63,14 +63,13 @@ const newsCommentSchema = new mongoose.Schema(
   }
 );
 
-// Index cho efficient querying
-newsCommentSchema.index({ newsId: 1, create_at: -1 });
-newsCommentSchema.index({ accountId: 1 });
+// Index cho efficient querying (postId và accountId đã có index: true trong schema)
+newsCommentSchema.index({ postId: 1, create_at: -1 });
+newsCommentSchema.index({ postId: 1, status: 1, create_at: -1 }); // Compound index cho query phổ biến
 
-// Middleware để populate author info
+// Middleware để populate author info (chỉ populate accountId, không populate postId vì không cần)
 newsCommentSchema.pre(["findOne", "find"], function () {
   this.populate("accountId", "displayName avatarUrl");
-  this.populate("newsId", "title slug");
 });
 
 const NewsComment = mongoose.model("NewsComment", newsCommentSchema);

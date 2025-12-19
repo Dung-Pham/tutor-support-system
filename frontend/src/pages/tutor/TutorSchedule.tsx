@@ -1,8 +1,3 @@
-/**
- * File: pages/tutor/TutorSchedule.tsx
- * Mục đích: Trang xem lịch dạy
- */
-
 export function TutorSchedule() {
   return (
     <div className="container mx-auto">

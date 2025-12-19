@@ -1,12 +1,7 @@
-/**
- * File: pages/tutor/TutorStudents.tsx
- * Mục đích: Trang xem danh sách học sinh
- */
-
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function TutorStudents() {
-  const students: any[] = []; // TODO: Fetch from API
+  const students: any[] = [];
 
   return (
     <div className="container mx-auto">

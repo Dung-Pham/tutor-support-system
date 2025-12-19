@@ -1,11 +1,3 @@
-/**
- * File: types/common.ts
- * Mục đích: Định nghĩa các types chung được sử dụng trên toàn ứng dụng
- */
-
-/**
- * API Response chung - Success
- */
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -13,9 +5,6 @@ export interface ApiResponse<T = any> {
   statusCode?: number;
 }
 
-/**
- * API Response - Error
- */
 export interface ApiError {
   success: false;
   message: string;
@@ -23,9 +12,6 @@ export interface ApiError {
   errors?: Record<string, any>;
 }
 
-/**
- * Pagination Info
- */
 export interface Pagination {
   page: number;
   limit: number;
@@ -35,28 +21,19 @@ export interface Pagination {
   hasPrevPage: boolean;
 }
 
-/**
- * Paginated Response
- */
 export interface PaginatedResponse<T> {
   data: T[];
   pagination: Pagination;
 }
 
-/**
- * File Upload Info
- */
 export interface FileUploadInfo {
   fileName: string;
   fileSize: number;
   fileType: string;
   fileUrl: string;
-  fileId?: string; // Cloudinary public_id
+  fileId?: string;
 }
 
-/**
- * Image Upload Info (từ Cloudinary)
- */
 export interface CloudinaryImageInfo {
   public_id: string;
   version: number;
@@ -77,9 +54,6 @@ export interface CloudinaryImageInfo {
   original_filename: string;
 }
 
-/**
- * Notification Type
- */
 export type NotificationType =
   | 'message'
   | 'friend_request'
@@ -88,9 +62,6 @@ export type NotificationType =
   | 'assignment'
   | 'system';
 
-/**
- * Notification
- */
 export interface Notification {
   _id: string;
   userId: string;
@@ -103,9 +74,6 @@ export interface Notification {
   updatedAt: string;
 }
 
-/**
- * Toast Notification
- */
 export interface Toast {
   id: string;
   title: string;
@@ -114,14 +82,8 @@ export interface Toast {
   duration?: number;
 }
 
-/**
- * Sort Order
- */
 export type SortOrder = 'asc' | 'desc';
 
-/**
- * Query Params chung
- */
 export interface CommonQueryParams {
   page?: number;
   limit?: number;
@@ -130,14 +92,8 @@ export interface CommonQueryParams {
   sortOrder?: SortOrder;
 }
 
-/**
- * Online Status
- */
 export type OnlineStatus = 'online' | 'offline' | 'away' | 'idle';
 
-/**
- * User Presence
- */
 export interface UserPresence {
   userId: string;
   status: OnlineStatus;

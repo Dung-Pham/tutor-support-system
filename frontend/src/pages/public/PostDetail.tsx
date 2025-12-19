@@ -1,8 +1,3 @@
-/**
- * File: pages/public/PostDetail.tsx
- * Mục đích: Trang hiển thị chi tiết một bài viết cộng đồng
- */
-
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, Eye, Heart, MessageCircle } from 'lucide-react';
@@ -10,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { PostDetail } from '@/types/post';
 import * as postService from '@/services/postService';
 import { formatMessageTime } from '@/lib/utils';
+import { extractImageUrlsFromTiptapJson } from '@/lib/tiptap-utils';
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -62,6 +58,9 @@ export default function PostDetailPage() {
     );
   }
 
+  const imageUrls = extractImageUrlsFromTiptapJson(post.contentJson);
+  const plain = post.contentPlain ?? '';
+
   return (
     <div className="container mx-auto max-w-4xl py-10">
       <div className="mb-6 flex items-center gap-3">
@@ -101,10 +100,24 @@ export default function PostDetailPage() {
         </div>
       </div>
 
-      <div
-        className="prose max-w-none prose-headings:mb-3 prose-p:my-3"
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
+      <div className="flex flex-col gap-6">
+        {/* Images Gallery */}
+        {imageUrls.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {imageUrls.map((image: string, index: number) => (
+              <img
+                key={index}
+                src={image}
+                alt={`${post.title} - ${index + 1}`}
+                className="w-full h-48 object-cover rounded-lg border border-gray-200"
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Plain Text Content */}
+        <div className="text-gray-700 whitespace-pre-wrap">{plain}</div>
+      </div>
     </div>
   );
 }

@@ -1,39 +1,31 @@
-/**
- * File: components/chat/TypingIndicator.tsx
- * Mục đích: Hiển thị ai đang typing
- */
-
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 
-export function TypingIndicator() {
+interface TypingIndicatorProps {
+  conversationId: string;
+}
+
+export function TypingIndicator({ conversationId }: TypingIndicatorProps) {
   const typing = useSelector((state: RootState) => state.messages.typing);
 
-  if (!typing || typing.users.length === 0) {
+  if (!typing || typing.users.length === 0 || typing.conversationId !== conversationId) {
     return null;
   }
 
-  const typingUsers = typing.users.join(', ');
-
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 px-4 py-2">
       <div className="flex gap-1">
+        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" />
         <span
-          className="w-2 h-2 rounded-full animate-bounce"
-          style={{ backgroundColor: 'hsl(var(--primary))' }}
+          className="w-2 h-2 rounded-full bg-primary animate-bounce"
+          style={{ animationDelay: '0.2s' }}
         />
         <span
-          className="w-2 h-2 rounded-full animate-bounce"
-          style={{ backgroundColor: 'hsl(var(--primary))', animationDelay: '0.2s' }}
-        />
-        <span
-          className="w-2 h-2 rounded-full animate-bounce"
-          style={{ backgroundColor: 'hsl(var(--primary))', animationDelay: '0.4s' }}
+          className="w-2 h-2 rounded-full bg-primary animate-bounce"
+          style={{ animationDelay: '0.4s' }}
         />
       </div>
-      <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
-        {typingUsers} đang nhập...
-      </span>
+      <span className="text-xs text-muted-foreground">đang nhập...</span>
     </div>
   );
 }

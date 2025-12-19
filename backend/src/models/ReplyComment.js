@@ -57,14 +57,13 @@ const replyCommentSchema = new mongoose.Schema(
   }
 );
 
-// Index cho efficient querying
+// Index cho efficient querying (comment_id và accountId đã có index: true trong schema)
 replyCommentSchema.index({ comment_id: 1, create_at: -1 });
-replyCommentSchema.index({ accountId: 1 });
+replyCommentSchema.index({ comment_id: 1, status: 1, create_at: 1 }); // Compound index
 
-// Middleware để populate author info
+// Middleware để populate author info (chỉ populate accountId)
 replyCommentSchema.pre(["findOne", "find"], function () {
   this.populate("accountId", "displayName avatarUrl");
-  this.populate("comment_id", "comment_content");
 });
 
 const ReplyComment = mongoose.model("ReplyComment", replyCommentSchema);

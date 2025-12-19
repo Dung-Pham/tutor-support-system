@@ -9,8 +9,6 @@ import { protectedRoute } from "../middlewares/userMiddleware.js";
 const router = express.Router();
 
 router.get("/me", authMe);
-
-// Admin routes
 router.get("/", protectedRoute, getAllUsers);
 router.patch("/:id", protectedRoute, updateUserStatus);
 

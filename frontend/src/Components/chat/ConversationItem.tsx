@@ -1,13 +1,9 @@
-/**
- * File: components/chat/ConversationItem.tsx
- * Mục đích: Một item trong conversation list
- */
-
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveConversation } from '@/store/slices/messagesSlice';
 import type { RootState } from '@/store';
 import type { Conversation } from '@/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { OnlineStatus } from './OnlineStatus';
 import { cn } from '@/lib/utils';
 
 interface ConversationItemProps {
@@ -21,8 +17,20 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
     (state: RootState) => state.messages.unreadCounts[conversation._id] || 0
   );
 
+  const currentUser = useSelector((state: RootState) => state.auth.user);
   const isActive = activeConversation?._id === conversation._id;
-  const conversationName = conversation.group?.name || 'Group Chat';
+
+  // Lấy thông tin người chat (participant còn lại, không phải current user)
+  const currentUserId = currentUser?.id || (currentUser as any)?._id;
+  const otherParticipant = conversation.participants.find((p) => {
+    const participantId = (p as any).id || p.userId;
+    return participantId !== currentUserId;
+  });
+  const otherParticipantId = (otherParticipant as any)?.id || otherParticipant?.userId || '';
+  const conversationName =
+    (otherParticipant as any)?.displayName || otherParticipant?.userId || 'Unknown User';
+  const avatarUrl = (otherParticipant as any)?.avatarUrl;
+
   const lastMessage = conversation.lastMessage?.content || 'Không có tin nhắn';
   const lastMessageTime = conversation.lastMessageAt
     ? new Date(conversation.lastMessageAt).toLocaleTimeString('vi-VN', {
@@ -35,50 +43,38 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
     <div
       onClick={() => dispatch(setActiveConversation(conversation))}
       className={cn(
-        'flex items-center gap-3 p-3 cursor-pointer transition-all duration-200',
-        'hover:bg-secondary',
-        isActive && 'bg-secondary border-l-4',
-        'border-l-4 border-l-transparent'
+        'flex items-center gap-3 p-3 mx-2 my-1 rounded-lg cursor-pointer transition-all duration-200',
+        'hover:bg-secondary/60 hover:shadow-sm',
+        isActive && 'bg-primary/10 shadow-sm ring-1 ring-primary/20',
+        !isActive && 'hover:scale-[1.01]'
       )}
-      style={{
-        backgroundColor: isActive ? 'hsl(var(--secondary))' : 'transparent',
-        borderLeftColor: isActive ? 'hsl(var(--primary))' : 'transparent',
-      }}
     >
       {/* Avatar */}
-      <Avatar className="w-10 h-10 flex-shrink-0">
-        <AvatarFallback
-          style={{
-            backgroundColor: 'hsl(var(--primary) / 0.1)',
-            color: 'hsl(var(--primary))',
-          }}
-          className="font-semibold"
-        >
-          {conversationName[0]?.toUpperCase() || 'G'}
-        </AvatarFallback>
-      </Avatar>
+      <div className="relative flex-shrink-0">
+        <Avatar className="w-11 h-11 ring-2 ring-border shadow-sm">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={conversationName} className="w-full h-full object-cover" />
+          ) : (
+            <AvatarFallback className="font-bold text-sm bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
+              {conversationName[0]?.toUpperCase() || 'U'}
+            </AvatarFallback>
+          )}
+        </Avatar>
+        <OnlineStatus userId={otherParticipantId} size="md" />
+      </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
-          <p className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>
-            {conversationName}
-          </p>
-          <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
-            {lastMessageTime}
-          </p>
+          <p className="font-semibold text-sm text-foreground truncate pr-2">{conversationName}</p>
+          <p className="text-xs text-muted-foreground flex-shrink-0">{lastMessageTime}</p>
         </div>
-        <p className="text-sm truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
-          {lastMessage}
-        </p>
+        <p className="text-sm truncate text-muted-foreground">{lastMessage}</p>
       </div>
 
       {/* Unread badge */}
       {unreadCount > 0 && (
-        <div
-          className="flex items-center justify-center w-5 h-5 rounded-full text-xs font-semibold text-white flex-shrink-0"
-          style={{ backgroundColor: 'hsl(var(--primary))' }}
-        >
+        <div className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold text-primary-foreground bg-primary shadow-sm flex-shrink-0 animate-in fade-in zoom-in duration-200">
           {unreadCount > 9 ? '9+' : unreadCount}
         </div>
       )}

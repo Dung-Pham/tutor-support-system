@@ -1,11 +1,7 @@
-/**
- * File: components/post/PostCard.tsx
- * Mục đích: Component hiển thị một bài viết trong feed hoặc danh sách cộng đồng
- */
-
 import { Link } from 'react-router-dom';
 import { Post, PostStatus } from '@/types/post';
 import { formatMessageTime } from '@/lib/utils';
+import { extractImageUrlsFromTiptapJson } from '@/lib/tiptap-utils';
 import { Edit2, Eye, Share2, Heart, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -37,15 +33,9 @@ export function PostCard({
   const statusInfo = statusConfig[post.status];
   const canEdit = isAuthor && post.status === 'draft';
 
-  // Extract plain text từ HTML
-  const stripHtml = (html: string) => {
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-    return temp.textContent || temp.innerText || '';
-  };
-
-  const plainContent = stripHtml(post.content);
-  const summary = plainContent.substring(0, 150) + (plainContent.length > 150 ? '...' : '');
+  const plain = (post.contentPlain ?? '').trim();
+  const summary = plain.length > 150 ? `${plain.substring(0, 150)}...` : plain;
+  const imageUrls = extractImageUrlsFromTiptapJson(post.contentJson);
 
   // Build URL với slug
   const postUrl = post.slug ? `/posts/${post._id}/${post.slug}` : `/posts/${post._id}`;
@@ -53,43 +43,56 @@ export function PostCard({
   // Dạng community (danh sách công khai)
   if (isCommunity) {
     return (
-      <Link to={postUrl} state={linkState} className="block">
-        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition p-4">
+      <Link to={postUrl} state={linkState} className="block touch-manipulation">
+        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-lg active:shadow-md transition p-3 sm:p-4">
           {/* Header */}
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
             <img
               src={
                 post.author.avatarUrl ||
                 `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author._id}`
               }
               alt={post.author.displayName}
-              className="w-10 h-10 rounded-full"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0"
             />
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm">{post.author.displayName}</p>
-              <p className="text-xs text-gray-500">{formatMessageTime(new Date(post.createdAt))}</p>
+              <p className="font-semibold text-sm truncate">{post.author.displayName}</p>
+              <p className="text-xs text-gray-500 truncate">
+                {formatMessageTime(new Date(post.createdAt))}
+              </p>
             </div>
           </div>
 
           {/* Title */}
-          <h2 className="text-lg font-bold mb-2 line-clamp-2">{post.title}</h2>
+          <h2 className="text-base sm:text-lg font-bold mb-2 line-clamp-2">{post.title}</h2>
+
+          {/* First Image if available */}
+          {imageUrls.length > 0 && (
+            <img
+              src={imageUrls[0]}
+              alt={post.title}
+              className="w-full h-40 object-cover rounded-lg mb-3"
+            />
+          )}
 
           {/* Summary */}
-          <p className="text-sm text-gray-600 mb-3 line-clamp-3">{summary}</p>
+          <p className="text-sm text-gray-600 mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-3">
+            {summary}
+          </p>
 
           {/* Stats */}
-          <div className="flex items-center gap-4 text-xs text-gray-500 border-t pt-3">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs text-gray-500 border-t pt-2 sm:pt-3">
             <div className="flex items-center gap-1">
-              <Eye size={14} />
-              {post.viewCount || 0}
+              <Eye size={14} className="flex-shrink-0" />
+              <span className="tabular-nums">{post.viewCount || 0}</span>
             </div>
             <div className="flex items-center gap-1">
-              <Heart size={14} />
-              {post.likeCount || 0}
+              <Heart size={14} className="flex-shrink-0" />
+              <span className="tabular-nums">{post.likeCount || 0}</span>
             </div>
             <div className="flex items-center gap-1">
-              <MessageCircle size={14} />
-              {post.commentCount || 0}
+              <MessageCircle size={14} className="flex-shrink-0" />
+              <span className="tabular-nums">{post.commentCount || 0}</span>
             </div>
           </div>
         </div>

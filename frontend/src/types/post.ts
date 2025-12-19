@@ -1,8 +1,3 @@
-/**
- * File: types/post.ts
- * Mục đích: TypeScript types cho Post/Blog feature
- */
-
 import { UserInfo } from './user';
 
 export type PostStatus = 'draft' | 'pending' | 'approved' | 'rejected';
@@ -10,11 +5,11 @@ export type PostStatus = 'draft' | 'pending' | 'approved' | 'rejected';
 export interface Post {
   _id: string;
   title: string;
-  slug?: string; // ← SEO-friendly slug
-  content: string; // ← HTML string from TipTap
+  slug?: string;
+  contentJson: any; // Tiptap JSON document (ProseMirror format)
+  contentPlain?: string; // Plain text for preview/search
   author: UserInfo;
   status: PostStatus;
-  imageUrls?: string[];
   rejectionReason?: string;
   approvedBy?: UserInfo;
   approvedAt?: Date;
@@ -27,19 +22,18 @@ export interface Post {
   updatedAt: Date;
 }
 
-export interface PostDetail extends Post {
-  // Extended info if needed
-}
+export interface PostDetail extends Post {}
 
 export interface CreatePostRequest {
   title: string;
-  content: string;
+  contentJson: any; // Tiptap JSON document
   status?: 'draft' | 'pending';
 }
 
 export interface UpdatePostRequest {
   title?: string;
-  content?: string;
+  contentJson?: any; // Tiptap JSON document
+  status?: 'draft' | 'pending';
 }
 
 export interface PostsResponse {

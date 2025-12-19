@@ -9,11 +9,8 @@ import {
 
 const router = express.Router();
 
-// Separate registration endpoints for each role
 router.post("/register/student", registerStudent);
 router.post("/register/tutor", registerTutor);
-
-// Universal login endpoint
 router.post("/signin", signIn);
 
 router.post("/signout", signOut);

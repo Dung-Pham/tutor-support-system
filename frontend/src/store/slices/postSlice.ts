@@ -1,8 +1,3 @@
-/**
- * File: store/slices/postSlice.ts
- * Mục đích: Redux state management cho Post/Blog feature
- */
-
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Post, CreatePostRequest, UpdatePostRequest, PostStatus } from '@/types/post';
 import * as postService from '@/services/postService';
@@ -12,10 +7,10 @@ export interface PostState {
   myPosts: Post[];
   pendingPosts: Post[];
   currentPost: Post | null;
-  selectedPost: Post | null; // ← POST ĐƯỢC CHỌN ĐỂ HIỂN THỊ DETAIL
-  showDetailModal: boolean; // ← ĐIỀU KHIỂN MODAL
-  currentStatus: PostStatus | 'all'; // ← FILTER STATUS
-  currentPage: number; // ← TRANG HIỆN TẠI
+  selectedPost: Post | null;
+  showDetailModal: boolean;
+  currentStatus: PostStatus | 'all';
+  currentPage: number;
   loading: boolean;
   error: string | null;
   page: number;

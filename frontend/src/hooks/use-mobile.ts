@@ -1,8 +1,3 @@
-/**
- * File: hooks/use-mobile.ts
- * Mục đích: Hook để check nếu thiết bị là mobile
- */
-
 import { useEffect, useState } from 'react';
 
 export function useIsMobile(): boolean {

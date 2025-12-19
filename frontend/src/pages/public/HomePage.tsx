@@ -1,21 +1,8 @@
-/**
- * File: pages/HomePage.tsx
- * Mục đích: Trang chủ với role selection trực tiếp
- * Vai trò:
- *   - Landing page cho toàn hệ thống
- *   - Quick access để login/register
- *   - Giới thiệu features
- */
-
 import { Link } from 'react-router-dom';
 import Header from '@/components/public/GlobalHeader';
 import Footer from '@/components/public/GlobalFooter';
 
 export default function HomePage() {
-  // TODO: Auth logic disabled for UI development
-  // const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-
-  // Landing page for all users (auth temporarily disabled)
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />

@@ -100,23 +100,14 @@ export const getConversations = async (req, res) => {
     const conversations = await Conversation.find({
       "participants.userId": userId,
     })
-      // Sort by last message time and update time (newest first)
-      .sort({ lastMessageAt: -1, updatedAt: -1 })
-      // Populate participant info for each conversation
+      // Sort by last message time (index will be used)
+      .sort({ lastMessageAt: -1 })
+      // Populate only essential participant info (removed seenBy and lastMessage.senderId for performance)
       .populate({
         path: "participants.userId",
-        select: "displayName avatarUrl",
+        select: "displayName avatarUrl", // Only get needed fields
       })
-      // Populate last message sender info
-      .populate({
-        path: "lastMessage.senderId",
-        select: "displayName avatarUrl",
-      })
-      // Populate users who have seen the conversation
-      .populate({
-        path: "seenBy",
-        select: "displayName avatarUrl",
-      });
+      .lean(); // Convert to plain JS object (faster than Mongoose documents)
 
     // Format each conversation for response
     const formatted = conversations.map((convo) => {
@@ -129,8 +120,9 @@ export const getConversations = async (req, res) => {
       }));
 
       // Return conversation object with formatted participants and unread counts
+      // Note: Already lean object, no need to call toObject()
       return {
-        ...convo.toObject(),
+        ...convo,
         unreadCounts: convo.unreadCounts || {},
         participants,
       };

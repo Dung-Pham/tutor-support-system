@@ -1,8 +1,3 @@
-/**
- * File: types/index.ts
- * Mục đích: Central export point cho tất cả types
- */
-
 export * from './auth';
 export * from './user';
 export * from './conversation';

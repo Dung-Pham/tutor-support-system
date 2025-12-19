@@ -1,21 +1,19 @@
-/**
- * File: components/chat/MessageBubble.tsx
- * Mục đích: Một message bubble
- */
-
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Check, CheckCheck } from 'lucide-react';
 import type { Message, User } from '@/types';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 
 interface MessageBubbleProps {
   message: Message;
+  showTime?: boolean;
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, showTime = false }: MessageBubbleProps) {
   const currentUser = useSelector((state: RootState) => state.auth.user) as User | null;
-  const isOwn = currentUser && message.senderId === currentUser._id;
+
+  // So sánh senderId với currentUser id (hỗ trợ cả id và _id)
+  const currentUserId = (currentUser as any)?._id || (currentUser as any)?.id;
+  const isOwn = currentUserId && message.senderId === currentUserId;
 
   const messageTime = new Date(message.createdAt).toLocaleTimeString('vi-VN', {
     hour: '2-digit',
@@ -38,28 +36,56 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         </Avatar>
       )}
 
-      <div className={`flex flex-col gap-1 max-w-xs ${isOwn ? 'items-end' : 'items-start'}`}>
-        <div
-          className="px-3 py-2 rounded-lg break-words"
-          style={{
-            backgroundColor: isOwn ? 'hsl(var(--primary))' : 'hsl(var(--secondary))',
-            color: isOwn ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
-          }}
-        >
-          <p className="text-sm">{message.content}</p>
-        </div>
+      <div
+        className={`flex flex-col gap-1 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg ${isOwn ? 'items-end' : 'items-start'}`}
+      >
+        {/* Display images if present - without background wrapper */}
+        {message.imgUrls && message.imgUrls.length > 0 && (
+          <div
+            className={`grid gap-1 rounded-lg overflow-hidden ${
+              message.imgUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
+            }`}
+          >
+            {message.imgUrls.map((url, index) => {
+              const totalImages = message.imgUrls?.length || 0;
+              const isLastImage = index === totalImages - 1;
+              const isOddCount = totalImages % 2 === 1;
+              const shouldAlignRight = isOddCount && isLastImage && totalImages > 1;
 
-        <div className="flex items-center gap-1">
-          <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              return (
+                <img
+                  key={index}
+                  src={url}
+                  alt={`Image ${index + 1}`}
+                  loading="lazy"
+                  className={`w-full h-auto max-h-48 sm:max-h-56 md:max-h-64 lg:max-h-72 object-cover rounded cursor-pointer hover:opacity-90 hover:scale-[1.02] transition-all duration-200 ${
+                    shouldAlignRight ? 'col-start-2' : ''
+                  }`}
+                  onClick={() => window.open(url, '_blank')}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {/* Display text content if present */}
+        {message.content && (
+          <div
+            className="rounded-lg break-words px-3 py-2"
+            style={{
+              backgroundColor: isOwn ? 'hsl(var(--primary))' : 'hsl(var(--secondary))',
+              color: isOwn ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
+            }}
+          >
+            <p className="text-base">{message.content}</p>
+          </div>
+        )}
+
+        {showTime && (
+          <span className="text-base font-medium text-muted-foreground block mt-3">
             {messageTime}
           </span>
-          {isOwn && message.status === 'seen' && (
-            <CheckCheck className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} />
-          )}
-          {isOwn && message.status === 'delivered' && (
-            <Check className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} />
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

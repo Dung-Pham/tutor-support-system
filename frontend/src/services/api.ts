@@ -1,21 +1,7 @@
-/**
- * File: services/api.ts
- * Mục đích: Cấu hình Axios client cho API calls
- * Vai trò:
- *   - Tạo axios instance với base config
- *   - Setup request/response interceptors
- * Lưu ý:
- *   - Tự động thêm Bearer token vào header nếu có
- *   - Auto-refresh accessToken khi hết hạn (401)
- *   - Redirect đến /login khi refresh fail
- *   - API URL lấy từ env variable VITE_API_URL
- */
-
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// Tạo axios instance với base configuration
 export const apiClient = axios.create({
   baseURL: `${API_URL}/api`,
   headers: {
@@ -84,7 +70,7 @@ apiClient.interceptors.response.use(
           `${API_URL}/api/auth/refresh`,
           {},
           {
-            withCredentials: true, // ← Gửi refreshToken cookie
+            withCredentials: true,
           }
         );
 

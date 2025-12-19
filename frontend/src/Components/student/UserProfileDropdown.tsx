@@ -1,12 +1,3 @@
-/**
- * File: components/student/UserProfileDropdown.tsx
- * Mục đích: Dropdown menu hiển thị thông tin user và các tùy chọn
- * Vai trò:
- *   - Hiển thị avatar, tên, role
- *   - Menu items: Thông tin cá nhân, Đổi mật khẩu, Cài đặt
- *   - Logout button
- */
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -45,8 +36,8 @@ export function UserProfileDropdown() {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button className="relative focus:outline-none hover:opacity-80 transition-opacity">
-          <Avatar className="w-8 h-8 border-2 border-primary/20 cursor-pointer">
-            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+          <Avatar className="w-11 h-11 border-2 border-primary/20 cursor-pointer">
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-base">
               {user?.firstName?.[0]?.toUpperCase() || user?.lastName?.[0]?.toUpperCase() || 'S'}
             </AvatarFallback>
           </Avatar>
@@ -56,24 +47,24 @@ export function UserProfileDropdown() {
       <DropdownMenuContent align="end" className="w-64">
         {/* User Info Header */}
         <div
-          className="flex items-center gap-3 px-4 py-3 text-white rounded-t-lg -mx-2 mb-2"
+          className="flex items-center gap-4 px-4 py-4 text-white rounded-t-lg -mx-2 mb-2"
           style={{
             background: 'linear-gradient(to right, hsl(var(--teal) / 0.95), hsl(var(--teal)))',
           }}
         >
-          <Avatar className="w-10 h-10 border-2 border-white">
+          <Avatar className="w-12 h-12 border-2 border-white">
             <AvatarFallback
-              className="font-semibold text-white"
+              className="font-semibold text-white text-lg"
               style={{ backgroundColor: 'hsl(var(--teal) / 0.8)' }}
             >
               {user?.firstName?.[0]?.toUpperCase() || user?.lastName?.[0]?.toUpperCase() || 'S'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm truncate">
+            <p className="font-semibold text-base truncate">
               {user ? `${user.firstName} ${user.lastName}` : 'Học sinh'}
             </p>
-            <p className="text-xs truncate" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
+            <p className="text-sm truncate" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
               {user?.email || 'student@example.com'}
             </p>
           </div>

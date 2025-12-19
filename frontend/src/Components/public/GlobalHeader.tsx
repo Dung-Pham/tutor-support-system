@@ -1,13 +1,3 @@
-/**
- * File: Components/layout/Header.tsx
- * Purpose: Desktop-only header design
- * Features:
- *   - Clean white background with subtle shadows
- *   - Professional navigation
- *   - Desktop-optimized layout
- *   - User authentication state integration
- */
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {

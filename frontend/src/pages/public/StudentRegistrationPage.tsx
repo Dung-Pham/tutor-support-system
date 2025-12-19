@@ -1,9 +1,3 @@
-/**
- * File: pages/public/StudentRegistrationPage.tsx
- * Mục đích: Trang đăng ký dành cho học viên
- * Thiết kế: Sử dụng shadcn/ui và theme variables từ index.css
- */
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';

@@ -42,11 +42,8 @@ commentLikeSchema.index(
   { unique: true }
 );
 
-// Middleware để populate info
-commentLikeSchema.pre(["findOne", "find"], function () {
-  this.populate("account_id", "displayName avatarUrl");
-  this.populate("comment_like_id", "comment_content");
-});
+// Không dùng auto-populate để tăng performance
+// Populate thủ công khi cần
 
 const CommentLike = mongoose.model("CommentLike", commentLikeSchema);
 export default CommentLike;

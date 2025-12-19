@@ -1,8 +1,3 @@
-/**
- * File: components/post/PostDetailModal.tsx
- * Mục đích: Modal xem chi tiết bài viết với đầy đủ content, tác giả, metadata
- */
-
 import { Post } from '@/types/post';
 import {
   Dialog,
@@ -13,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { formatMessageTime } from '@/lib/utils';
-import DOMPurify from 'dompurify';
+import { extractImageUrlsFromTiptapJson } from '@/lib/tiptap-utils';
 
 interface PostDetailModalProps {
   open: boolean;
@@ -42,32 +37,8 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
   if (!post) return null;
 
   const statusInfo = statusConfig[post.status] || statusConfig.draft;
-
-  // Sanitize content
-  const sanitizedContent = DOMPurify.sanitize(post.content, {
-    ALLOWED_TAGS: [
-      'h1',
-      'h2',
-      'h3',
-      'h4',
-      'h5',
-      'h6',
-      'p',
-      'br',
-      'strong',
-      'em',
-      'u',
-      'a',
-      'img',
-      'ul',
-      'ol',
-      'li',
-      'blockquote',
-      'code',
-      'pre',
-    ],
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel'],
-  });
+  const imageUrls = extractImageUrlsFromTiptapJson(post.contentJson);
+  const plain = post.contentPlain ?? '';
 
   const handleDelete = () => {
     if (onDelete && window.confirm('Bạn chắc chắn muốn xóa bài viết này?')) {
@@ -116,11 +87,22 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
 
         {/* Content */}
         <div className="space-y-6 py-4">
-          {/* Main Content */}
-          <div
-            className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300"
-            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-          />
+          {/* Images Gallery */}
+          {imageUrls.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {imageUrls.map((image: string, index: number) => (
+                <img
+                  key={index}
+                  src={image}
+                  alt={`${post.title} - ${index + 1}`}
+                  className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Plain Text Content */}
+          <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{plain}</div>
 
           {/* Rejection Reason */}
           {post.status === 'rejected' && post.rejectionReason && (

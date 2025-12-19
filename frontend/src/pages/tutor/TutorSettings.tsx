@@ -1,8 +1,3 @@
-/**
- * File: pages/tutor/TutorSettings.tsx
- * Mục đích: Trang cài đặt cho tutor
- */
-
 export function TutorSettings() {
   return (
     <div className="container mx-auto">

@@ -1,14 +1,11 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-// Middleware to protect routes and ensure the user is authenticated
-export const protectedRoute = async (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
   try {
-    // Get the token from the Authorization header
     const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(" ")[1]; // Bearer <token>
+    const token = authHeader && authHeader.split(" ")[1];
 
-    // Identify validate token
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -16,7 +13,6 @@ export const protectedRoute = async (req, res, next) => {
       });
     }
 
-    // Decode token to get user info
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
       if (err) {
         return res.status(401).json({
@@ -26,7 +22,6 @@ export const protectedRoute = async (req, res, next) => {
       }
 
       try {
-        // Find user by ID from token
         const user = await User.findById(decoded.userId).select(
           "-hashedPassword"
         );
@@ -36,7 +31,55 @@ export const protectedRoute = async (req, res, next) => {
             message: "User not found",
           });
         }
-        // Attach user info to req object
+        req.user = user;
+        next();
+      } catch (dbError) {
+        console.error("Database error in authenticateToken:", dbError);
+        return res.status(500).json({
+          success: false,
+          message: "Internal server error",
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Error in authenticateToken:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const protectedRoute = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Access token is missing",
+      });
+    }
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
+      if (err) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid or expired access token",
+        });
+      }
+
+      try {
+        const user = await User.findById(decoded.userId).select(
+          "-hashedPassword"
+        );
+        if (!user) {
+          return res.status(404).json({
+            success: false,
+            message: "User not found",
+          });
+        }
         req.user = user;
         next();
       } catch (dbError) {

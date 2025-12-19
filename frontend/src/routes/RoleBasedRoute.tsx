@@ -1,12 +1,3 @@
-/**
- * File: routes/RoleBasedRoute.tsx
- * Mục đích: Component kiểm soát truy cập dựa trên role
- * Vai trò:
- *   - Check user role và cho phép/từ chối truy cập
- *   - Redirect về trang phù hợp nếu không đúng role
- *   - Hỗ trợ multiple roles cho một route
- */
-
 import { Navigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';

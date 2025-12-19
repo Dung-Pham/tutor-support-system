@@ -1,8 +1,3 @@
-/**
- * File: pages/auth/TutorPendingPage.tsx
- * Purpose: Page shown to tutors waiting for approval
- */
-
 import { Link } from 'react-router-dom';
 import Header from '@/components/public/GlobalHeader';
 import Footer from '@/components/public/GlobalFooter';

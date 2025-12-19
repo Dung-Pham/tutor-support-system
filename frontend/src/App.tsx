@@ -1,15 +1,3 @@
-/**
- * File: App.tsx
- * Mục đích: Root component của application
- * Vai trò:
- *   - Setup các providers (Redux, React Query, Router)
- *   - Định nghĩa routing structure
- * Lưu ý:
- *   - Thứ tự providers: Redux → React Query → Router
- *   - React Query config: refetchOnWindowFocus = false, retry = 1
- *   - Cần cài đặt dependencies trước: react-router-dom, @tanstack/react-query, react-redux
- */
-
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider, useDispatch } from 'react-redux';

@@ -1,8 +1,3 @@
-/**
- * File: components/post/PostList.tsx
- * Mục đích: Container render danh sách PostCard với pagination, loading, empty state
- */
-
 import { Post } from '@/types/post';
 import { PostCard } from './PostCard';
 import { Button } from '@/components/ui/button';
