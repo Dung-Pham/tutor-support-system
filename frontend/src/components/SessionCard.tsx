@@ -1,28 +1,77 @@
 /**
  * File: components/SessionCard.tsx
- * Purpose: Display session information in a card format
+ * Purpose: Display session/schedule information in a card format
  * Usage: Used in ScheduleCalendar and session lists
- * Dependencies: shadcn/ui Card, Badge components
+ * 
+ * Schema: Schedule is weekly recurring template with day_of_week, start_time, end_time
+ * SessionInstance is a specific occurrence on a date
  */
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Clock, MapPin, User } from 'lucide-react';
-import { formatDate } from '../utils/dateHelper';
-import { SESSION_STATUS_LABELS, SESSION_STATUS_COLORS } from '../utils/constants';
-import type { Session } from '../types/session';
+import { Clock, User, Calendar } from 'lucide-react';
+import type { Schedule, SessionInstance } from '../types/session';
+
+const DAY_NAMES_VN = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
 
 interface SessionCardProps {
-  session: Session;
+  session: Schedule | SessionInstance;
   onClick?: () => void;
   isToday?: boolean;
 }
 
 export const SessionCard: React.FC<SessionCardProps> = ({ session, onClick, isToday }) => {
-  const startDate = session.scheduled_at || session.start_date || '';
-  const statusColor = SESSION_STATUS_COLORS[session.status] || 'bg-gray-100 text-gray-800';
-  const statusLabel = SESSION_STATUS_LABELS[session.status] || session.status;
+  // Determine display information
+  const className = session.class_name || 'Lớp chưa xác định';
+  const subject = session.subject_name || 'Môn học chưa xác định';
+  const tutorName = session.tutor_name || 'Gia sư chưa xác định';
+  
+  // Format time for display (handles Date objects, ISO strings, and HH:mm:ss format)
+  const formatTime = (timeStr: string | Date): string => {
+    if (!timeStr) return '';
+    
+    // If it's a Date object, format it
+    if (timeStr instanceof Date) {
+      const hours = timeStr.getHours().toString().padStart(2, '0');
+      const minutes = timeStr.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+    
+    // Handle ISO date string format: "1970-01-01T18:00:00.000Z" -> "18:00"
+    if (timeStr.includes('T')) {
+      const timePart = timeStr.split('T')[1];
+      return timePart.slice(0, 5); // "18:00"
+    }
+    
+    // Handle HH:mm:ss or HH:mm format
+    return timeStr.slice(0, 5);
+  };
+
+  // Format time range from start_time and end_time (HH:mm:ss format)
+  const formatTimeRange = () => {
+    if (session.start_time && session.end_time) {
+      const startTime = formatTime(session.start_time);
+      const endTime = formatTime(session.end_time);
+      return `${startTime} - ${endTime}`;
+    }
+    return formatTime(session.start_time) || 'Chưa xác định';
+  };
+
+  // Get day name
+  const getDayName = () => {
+    if (session.day_of_week !== undefined) {
+      return DAY_NAMES_VN[session.day_of_week];
+    }
+    return '';
+  };
+
+  // Get session date if available (for SessionInstance)
+  const getSessionDate = () => {
+    if ('session_date' in session && session.session_date) {
+      return new Date(session.session_date).toLocaleDateString('vi-VN');
+    }
+    return null;
+  };
 
   return (
     <Card
@@ -32,28 +81,34 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onClick, isTo
       onClick={onClick}
     >
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-lg font-semibold">
-            {session.title || session.subject}
-          </CardTitle>
-          <Badge className={statusColor}>{statusLabel}</Badge>
+        <CardTitle className="text-lg font-semibold truncate">
+          {className}
+        </CardTitle>
+        <div className="text-sm text-gray-600 font-medium">
+          {subject}
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
+        {/* Day of week or specific date */}
+        <div className="flex items-center text-sm text-gray-600">
+          <Calendar className="mr-2 h-4 w-4" />
+          <span>{getSessionDate() || getDayName()}</span>
+        </div>
+        {/* Time range */}
         <div className="flex items-center text-sm text-gray-600">
           <Clock className="mr-2 h-4 w-4" />
-          <span>
-            {formatDate(startDate, 'datetime')} ({session.duration} phút)
-          </span>
+          <span>{formatTimeRange()}</span>
         </div>
-        {session.location && (
-          <div className="flex items-center text-sm text-gray-600">
-            <MapPin className="mr-2 h-4 w-4" />
-            <span>{session.location}</span>
+        {/* Tutor */}
+        <div className="flex items-center text-sm text-gray-600">
+          <User className="mr-2 h-4 w-4" />
+          <span className="font-medium">{tutorName}</span>
+        </div>
+        {/* Status indicator for inactive schedules */}
+        {session.is_active === false && (
+          <div className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
+            Tạm ngưng
           </div>
-        )}
-        {session.description && (
-          <p className="text-sm text-gray-500 line-clamp-2">{session.description}</p>
         )}
       </CardContent>
     </Card>

@@ -1,30 +1,32 @@
 /**
  * File: services/scheduleService.ts
  * Purpose: Business logic for schedule management
- * Updated to use new query modules with UUID and correct schema
+ * Updated to match new schema: Schedule only has class_id, day_of_week, start_time, end_time, duration_minutes, is_active
  */
 
 import * as scheduleQueries from '../database/queries/scheduleQueries';
 import {
   Schedule,
-  ScheduleTimeBlock,
   CreateScheduleDTO,
   UpdateScheduleDTO
 } from '../database/queries/scheduleQueries';
 
 /**
- * Create a new schedule
+ * Create a new schedule for a class
  */
-export const createSchedule = async (data: CreateScheduleDTO): Promise<Schedule> => {
-  // Check for conflicts
-  const hasConflict = await scheduleQueries.checkScheduleConflict(
-    data.tutor_id,
-    new Date(data.start_date),
-    new Date(data.end_date)
-  );
+export const createSchedule = async (data: CreateScheduleDTO): Promise<Schedule[]> => {
+  // Check for conflicts within the same class for each day
+  for (const dayOfWeek of data.days_of_week) {
+    const hasConflict = await scheduleQueries.checkScheduleConflict(
+      data.class_id,
+      dayOfWeek,
+      data.start_time,
+      data.end_time
+    );
 
-  if (hasConflict) {
-    throw new Error('Schedule conflict detected');
+    if (hasConflict) {
+      throw new Error(`Schedule conflict detected for this class on day ${dayOfWeek}`);
+    }
   }
 
   return await scheduleQueries.createSchedule(data);
@@ -38,16 +40,36 @@ export const getScheduleById = async (scheduleId: string): Promise<Schedule | nu
 };
 
 /**
- * Get schedules with filters
+ * Get schedules by class
+ */
+export const getSchedulesByClass = async (classId: string): Promise<Schedule[]> => {
+  return await scheduleQueries.getSchedulesByClass(classId);
+};
+
+/**
+ * Get schedules by tutor
+ */
+export const getSchedulesByTutor = async (tutorId: string): Promise<Schedule[]> => {
+  return await scheduleQueries.getSchedulesByTutor(tutorId);
+};
+
+/**
+ * Get schedules by student
+ */
+export const getSchedulesByStudent = async (studentId: string): Promise<Schedule[]> => {
+  return await scheduleQueries.getSchedulesByStudent(studentId);
+};
+
+/**
+ * Get schedules with filters and pagination
  */
 export const getSchedules = async (
   filters: {
-    tutor_id?: string;
-    user_id?: string; // Changed from student_id
     class_id?: string;
-    status?: string;
-    startDate?: Date;
-    endDate?: Date;
+    tutor_id?: string;
+    student_id?: string;
+    day_of_week?: number;
+    is_active?: boolean;
   },
   page: number = 1,
   limit: number = 20
@@ -81,15 +103,17 @@ export const updateSchedule = async (
     throw new Error('Schedule not found');
   }
 
-  // If updating time, check for conflicts
-  if (data.start_date || data.end_date) {
-    const startDate = data.start_date ? new Date(data.start_date) : existing.start_date;
-    const endDate = data.end_date ? new Date(data.end_date) : existing.end_date;
+  // If updating time or day, check for conflicts
+  if (data.day_of_week !== undefined || data.start_time !== undefined || data.end_time !== undefined) {
+    const dayOfWeek = data.day_of_week !== undefined ? data.day_of_week : existing.day_of_week;
+    const startTime = data.start_time || existing.start_time;
+    const endTime = data.end_time || existing.end_time;
 
     const hasConflict = await scheduleQueries.checkScheduleConflict(
-      existing.tutor_id,
-      startDate,
-      endDate,
+      existing.class_id,
+      dayOfWeek,
+      startTime,
+      endTime,
       scheduleId // Exclude current schedule from conflict check
     );
 
@@ -114,92 +138,193 @@ export const deleteSchedule = async (scheduleId: string): Promise<boolean> => {
 };
 
 /**
- * Get calendar view
+ * Deactivate schedule (soft delete)
  */
-export const getCalendarView = async (
+export const deactivateSchedule = async (scheduleId: string): Promise<Schedule> => {
+  const existing = await scheduleQueries.getScheduleById(scheduleId);
+  if (!existing) {
+    throw new Error('Schedule not found');
+  }
+
+  return await scheduleQueries.deactivateSchedule(scheduleId);
+};
+
+/**
+ * Get weekly schedules for a user
+ */
+export const getWeeklySchedules = async (
   userId: string,
-  userRole: 'tutor' | 'user', // Changed from 'student' to 'user'
-  startDate: Date,
-  endDate: Date
+  userRole: 'tutor' | 'student'
 ): Promise<Schedule[]> => {
-  return await scheduleQueries.getCalendarSchedules(userId, userRole, startDate, endDate);
+  return await scheduleQueries.getWeeklySchedules(userId, userRole);
+};
+
+/**
+ * Get today's schedules for a user
+ */
+export const getTodaySchedules = async (
+  userId: string,
+  userRole: 'tutor' | 'student'
+): Promise<Schedule[]> => {
+  return await scheduleQueries.getTodaySchedules(userId, userRole);
 };
 
 /**
  * Check schedule conflicts
  */
 export const checkConflicts = async (
-  tutorId: string,
-  startDate: Date,
-  endDate: Date,
+  classId: string,
+  dayOfWeek: number,
+  startTime: string,
+  endTime: string,
   excludeScheduleId?: string
 ): Promise<boolean> => {
-  return await scheduleQueries.checkScheduleConflict(tutorId, startDate, endDate, excludeScheduleId);
-};
-
-// ============================================================
-// TIME BLOCK SERVICES
-// ============================================================
-
-/**
- * Create time block
- */
-export const createTimeBlock = async (data: {
-  tutor_id: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  week_start_date: Date | string;
-  is_available?: boolean;
-  reason_if_blocked?: string;
-}): Promise<ScheduleTimeBlock> => {
-  return await scheduleQueries.createTimeBlock(data);
+  return await scheduleQueries.checkScheduleConflict(
+    classId,
+    dayOfWeek,
+    startTime,
+    endTime,
+    excludeScheduleId
+  );
 };
 
 /**
- * Get time blocks by tutor
+ * Check tutor schedule conflicts across all classes
  */
-export const getTimeBlocksByTutor = async (
+export const checkTutorConflicts = async (
   tutorId: string,
-  weekStartDate?: Date | string
-): Promise<ScheduleTimeBlock[]> => {
-  return await scheduleQueries.getTimeBlocks({
-    tutor_id: tutorId,
-    week_start_date: weekStartDate,
+  dayOfWeek: number,
+  startTime: string,
+  endTime: string,
+  excludeScheduleId?: string
+): Promise<boolean> => {
+  return await scheduleQueries.checkTutorScheduleConflict(
+    tutorId,
+    dayOfWeek,
+    startTime,
+    endTime,
+    excludeScheduleId
+  );
+};
+
+/**
+ * Bulk create schedules for a class
+ */
+export const bulkCreateSchedules = async (
+  classId: string,
+  schedules: Array<{
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+    duration_minutes?: number;
+  }>
+): Promise<Schedule[]> => {
+  // Check for conflicts before creating
+  for (const schedule of schedules) {
+    const hasConflict = await scheduleQueries.checkScheduleConflict(
+      classId,
+      schedule.day_of_week,
+      schedule.start_time,
+      schedule.end_time
+    );
+
+    if (hasConflict) {
+      throw new Error(`Schedule conflict detected for day ${schedule.day_of_week}`);
+    }
+  }
+
+  return await scheduleQueries.bulkCreateSchedules(classId, schedules);
+};
+
+/**
+ * Delete all schedules for a class
+ */
+export const deleteSchedulesByClass = async (classId: string): Promise<number> => {
+  return await scheduleQueries.deleteSchedulesByClass(classId);
+};
+
+/**
+ * Get schedule for a class on a specific day of week
+ */
+export const getScheduleByClassAndDay = async (
+  classId: string,
+  dayOfWeek: number
+): Promise<Schedule | null> => {
+  return await scheduleQueries.getScheduleByClassAndDay(classId, dayOfWeek);
+};
+
+/**
+ * Get all schedules that apply to a specific date
+ * Useful for finding what sessions are happening on a given day
+ */
+export const getSchedulesForDate = async (
+  date: Date | string,
+  tutorId?: string,
+  studentId?: string
+): Promise<Schedule[]> => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return await scheduleQueries.getSchedulesForDate(dateObj, tutorId, studentId);
+};
+
+/**
+ * Get weekly schedule template for a user
+ * Returns schedules organized by day of week (0-6)
+ */
+export const getWeeklyScheduleTemplate = async (
+  userId: string,
+  userRole: 'tutor' | 'student'
+): Promise<Map<number, Schedule[]>> => {
+  return await scheduleQueries.getWeeklySchedulesByUser(userId, userRole);
+};
+
+/**
+ * Convert weekly schedule template to specific dates for a given week
+ * Takes a week start date (Monday) and returns actual session dates
+ */
+export const getScheduleInstancesForWeek = async (
+  userId: string,
+  userRole: 'tutor' | 'student',
+  weekStartDate: Date
+): Promise<Array<{ schedule: Schedule; sessionDate: Date }>> => {
+  const weeklySchedules = await scheduleQueries.getWeeklySchedulesByUser(userId, userRole);
+  const instances: Array<{ schedule: Schedule; sessionDate: Date }> = [];
+
+  // weekStartDate should be Monday (day 1)
+  // Convert day_of_week (0=Sun, 1=Mon, ..., 6=Sat) to date offset from Monday
+  const dayOffsets: Record<number, number> = {
+    0: 6, // Sunday -> +6 days from Monday
+    1: 0, // Monday -> +0 days
+    2: 1, // Tuesday -> +1 day
+    3: 2, // Wednesday -> +2 days
+    4: 3, // Thursday -> +3 days
+    5: 4, // Friday -> +4 days
+    6: 5, // Saturday -> +5 days
+  };
+
+  weeklySchedules.forEach((schedules, dayOfWeek) => {
+    for (const schedule of schedules) {
+      const sessionDate = new Date(weekStartDate);
+      sessionDate.setDate(sessionDate.getDate() + dayOffsets[dayOfWeek]);
+      
+      // Filter by class start_date and end_date
+      if (schedule.startDate && schedule.endDate) {
+        const startDate = new Date(schedule.startDate);
+        const endDate = new Date(schedule.endDate);
+        if (sessionDate < startDate || sessionDate > endDate) {
+          continue; // Skip this instance
+        }
+      }
+      
+      instances.push({ schedule, sessionDate });
+    }
   });
-};
 
-/**
- * Update time block status
- */
-export const updateTimeBlockStatus = async (
-  timeblockId: string,
-  isAvailable: boolean,
-  reason?: string
-): Promise<ScheduleTimeBlock> => {
-  return await scheduleQueries.updateTimeBlockStatus(timeblockId, isAvailable, reason);
-};
-
-/**
- * Delete time block
- */
-export const deleteTimeBlock = async (timeblockId: string): Promise<boolean> => {
-  // Note: This function doesn't exist in queries yet, would need to add
-  throw new Error('Delete timeblock not implemented in queries yet');
-};
-
-/**
- * Get available time blocks
- */
-export const getAvailableTimeBlocks = async (
-  tutorId: string,
-  weekStartDate: Date | string
-): Promise<ScheduleTimeBlock[]> => {
-  const blocks = await scheduleQueries.getTimeBlocks({
-    tutor_id: tutorId,
-    week_start_date: weekStartDate,
+  // Sort by date and time
+  instances.sort((a, b) => {
+    const dateCompare = a.sessionDate.getTime() - b.sessionDate.getTime();
+    if (dateCompare !== 0) return dateCompare;
+    return a.schedule.start_time.localeCompare(b.schedule.start_time);
   });
 
-  // Filter for available only
-  return blocks.filter((block) => block.is_available);
+  return instances;
 };

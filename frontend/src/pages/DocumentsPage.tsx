@@ -27,14 +27,12 @@ import {
   Image,
   File,
   Users,
-  Eye,
   Trash2,
-  Edit,
   Share2,
   Calendar,
   User,
 } from 'lucide-react';
-import { formatFileSize, getFileIcon } from '../utils/fileHelper';
+import { formatFileSize } from '../utils/fileHelper';
 import {
   fetchMyDocuments,
   setShowUploadModal,

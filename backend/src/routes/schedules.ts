@@ -11,7 +11,6 @@ import {
   createScheduleValidation,
   updateScheduleValidation,
   calendarViewValidation,
-  timeBlockValidation,
   idParamValidation
 } from '../utils/validator';
 
@@ -21,7 +20,7 @@ const router = Router();
  * @swagger
  * /api/schedules:
  *   post:
- *     summary: Create a new schedule
+ *     summary: Create new schedules for multiple days of the week
  *     tags: [Schedules]
  *     requestBody:
  *       required: true
@@ -30,23 +29,39 @@ const router = Router();
  *           schema:
  *             type: object
  *             required:
- *               - tutorRequestId
- *               - startTime
- *               - endTime
+ *               - class_id
+ *               - days_of_week
+ *               - start_time
+ *               - end_time
  *             properties:
- *               tutorRequestId:
+ *               class_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: The class ID
+ *               days_of_week:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                   minimum: 0
+ *                   maximum: 6
+ *                 description: Array of days (0=Sunday, 1=Monday, ..., 6=Saturday)
+ *               start_time:
+ *                 type: string
+ *                 format: time
+ *                 description: Start time in HH:mm format
+ *               end_time:
+ *                 type: string
+ *                 format: time
+ *                 description: End time in HH:mm format
+ *               duration_minutes:
  *                 type: integer
- *               startTime:
- *                 type: string
- *                 format: date-time
- *               endTime:
- *                 type: string
- *                 format: date-time
- *               notes:
- *                 type: string
+ *                 description: Duration in minutes (optional)
+ *               is_active:
+ *                 type: boolean
+ *                 description: Whether the schedule is active (optional, default true)
  *     responses:
  *       201:
- *         description: Schedule created successfully
+ *         description: Schedules created successfully
  */
 router.post('/', createScheduleValidation(), scheduleController.createSchedule);
 
@@ -82,6 +97,52 @@ router.post('/', createScheduleValidation(), scheduleController.createSchedule);
  *         description: Schedules retrieved successfully
  */
 router.get('/', scheduleController.getSchedules);
+
+/**
+ * @swagger
+ * /api/schedules/week/{weekStartDate}:
+ *   get:
+ *     summary: Get schedules for a specific week
+ *     tags: [Schedules]
+ *     parameters:
+ *       - in: path
+ *         name: weekStartDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: The start date of the week (Monday) in YYYY-MM-DD format
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID (tutor or student)
+ *       - in: query
+ *         name: role
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [tutor, student]
+ *     responses:
+ *       200:
+ *         description: Week schedules retrieved successfully
+ */
+router.get('/week/:weekStartDate', scheduleController.getWeekSchedules);
+
+/**
+ * @swagger
+ * /api/schedules/template/weekly:
+ *   get:
+ *     summary: Get weekly schedule template for current user
+ *     tags: [Schedules]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Weekly template retrieved successfully
+ */
+router.get('/template/weekly', authenticate, scheduleController.getWeeklyTemplate);
 
 /**
  * @swagger
@@ -191,122 +252,40 @@ router.put('/:scheduleId', updateScheduleValidation(), scheduleController.update
  */
 router.delete('/:scheduleId', idParamValidation('scheduleId'), scheduleController.deleteSchedule);
 
-// ============ TimeBlock Routes ============
-
 /**
  * @swagger
- * /api/schedules/timeblocks:
- *   post:
- *     summary: Create timeblock
- *     tags: [TimeBlocks]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - tutorId
- *               - dayOfWeek
- *               - startTime
- *               - endTime
- *     responses:
- *       201:
- *         description: TimeBlock created successfully
- */
-// TimeBlock creation uses snake_case fields per new schema (tutor_id, day_of_week, start_time, end_time)
-router.post('/timeblocks', timeBlockValidation(), scheduleController.createTimeBlock);
-
-/**
- * @swagger
- * /api/schedules/timeblocks/tutor/{tutorId}:
+ * /api/schedules/week/{weekStartDate}:
  *   get:
- *     summary: Get timeblocks by tutor
- *     tags: [TimeBlocks]
+ *     summary: Get schedule instances for a specific week
+ *     tags: [Schedules]
  *     parameters:
  *       - in: path
- *         name: tutorId
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: TimeBlocks retrieved successfully
- */
-// Fetch timeblocks by tutor UUID
-router.get('/timeblocks/tutor/:tutorId', idParamValidation('tutorId'), scheduleController.getTimeBlocksByTutor);
-
-/**
- * @swagger
- * /api/schedules/timeblocks/available:
- *   get:
- *     summary: Get available timeblocks
- *     tags: [TimeBlocks]
- *     parameters:
- *       - in: query
- *         name: tutorId
- *         required: true
- *         schema:
- *           type: integer
- *       - in: query
- *         name: date
+ *         name: weekStartDate
  *         required: true
  *         schema:
  *           type: string
- *           format: date-time
- *     responses:
- *       200:
- *         description: Available timeblocks retrieved successfully
- */
-// Available timeblocks query expects tutor_id & week_start_date (ISO date) per new schema
-router.get('/timeblocks/available', scheduleController.getAvailableTimeBlocks);
-
-/**
- * @swagger
- * /api/schedules/timeblocks/{timeBlockId}/status:
- *   patch:
- *     summary: Update timeblock status
- *     tags: [TimeBlocks]
- *     parameters:
- *       - in: path
- *         name: timeBlockId
+ *           format: date
+ *         description: Week start date (YYYY-MM-DD)
+ *       - in: query
+ *         name: userId
  *         required: true
  *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - status
- *             properties:
- *               status:
- *                 type: string
- *                 enum: [available, locked, booked]
- *     responses:
- *       200:
- *         description: TimeBlock status updated successfully
- */
-router.patch('/timeblocks/:timeBlockId/status', idParamValidation('timeBlockId'), scheduleController.updateTimeBlockStatus);
-
-/**
- * @swagger
- * /api/schedules/timeblocks/{timeBlockId}:
- *   delete:
- *     summary: Delete timeblock
- *     tags: [TimeBlocks]
- *     parameters:
- *       - in: path
- *         name: timeBlockId
+ *           type: string
+ *         description: User ID
+ *       - in: query
+ *         name: role
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           enum: [tutor, student]
+ *         description: User role
  *     responses:
  *       200:
- *         description: TimeBlock deleted successfully
+ *         description: Schedule instances for the week
  */
-router.delete('/timeblocks/:timeBlockId', idParamValidation('timeBlockId'), scheduleController.deleteTimeBlock);
+router.get('/week/:weekStartDate', scheduleController.getSessionsByWeek);
+
+// Note: TimeBlock routes have been removed in favor of Schedule-based approach
+// The Schedule table now handles recurring time slots with day_of_week, start_time, end_time
 
 export default router;

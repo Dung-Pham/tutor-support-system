@@ -9,10 +9,29 @@ import { body, param, query, ValidationChain } from 'express-validator';
 // ============ Schedule Validators ============
 
 export const createScheduleValidation = (): ValidationChain[] => [
-  body('tutorRequestId').isInt({ min: 1 }).withMessage('Valid tutorRequestId is required'),
-  body('startTime').isISO8601().withMessage('Valid startTime is required'),
-  body('endTime').isISO8601().withMessage('Valid endTime is required'),
-  body('notes').optional().isString().trim(),
+  body('class_id')
+    .matches(/^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$/)
+    .withMessage('Valid class_id is required'),
+  body('days_of_week')
+    .isArray({ min: 1 })
+    .withMessage('days_of_week must be a non-empty array'),
+  body('days_of_week.*')
+    .isInt({ min: 0, max: 6 })
+    .withMessage('Each day_of_week must be 0-6'),
+  body('start_time')
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage('start_time must be HH:mm format'),
+  body('end_time')
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage('end_time must be HH:mm format'),
+  body('duration_minutes')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('duration_minutes must be positive integer'),
+  body('is_active')
+    .optional()
+    .isBoolean()
+    .withMessage('is_active must be boolean'),
 ];
 
 export const updateScheduleValidation = (): ValidationChain[] => [

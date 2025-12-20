@@ -1,6 +1,7 @@
 /**
  * File: routes/attendance.ts
- * Mục đích: Define routes cho attendance management
+ * Purpose: Define routes for attendance management
+ * Updated: session/:scheduleId/:sessionDate pattern
  */
 
 import { Router } from 'express';
@@ -11,12 +12,26 @@ const router = Router();
 
 /**
  * @swagger
- * /api/attendance/schedule/{scheduleId}:
+ * /api/attendance/session/{scheduleId}/{sessionDate}:
  *   get:
- *     summary: Get or create attendance for a schedule
+ *     summary: Get or create attendance for a schedule on specific date
  *     tags: [Attendance]
+ *     parameters:
+ *       - in: path
+ *         name: scheduleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: path
+ *         name: sessionDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Session date in YYYY-MM-DD format
  */
-router.get('/schedule/:scheduleId', idParamValidation('scheduleId'), attendanceController.getOrCreateAttendance);
+router.get('/session/:scheduleId/:sessionDate', attendanceController.getOrCreateAttendance);
 
 /**
  * @swagger
@@ -25,17 +40,27 @@ router.get('/schedule/:scheduleId', idParamValidation('scheduleId'), attendanceC
  *     summary: Update attendance status
  *     tags: [Attendance]
  */
-// Update attendance by UUID
 router.put('/:attendanceId', updateAttendanceValidation(), attendanceController.updateAttendance);
 
 /**
  * @swagger
  * /api/attendance/{attendanceId}/confirm:
  *   post:
- *     summary: Confirm attendance (tutor or user)
+ *     summary: Confirm attendance (tutor or student)
  *     tags: [Attendance]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               confirmedBy:
+ *                 type: string
+ *                 enum: [tutor, student]
+ *               notes:
+ *                 type: string
  */
-// Confirm attendance (tutor or user) with UUID attendanceId
 router.post('/:attendanceId/confirm', confirmAttendanceValidation(), attendanceController.confirmAttendance);
 
 /**
@@ -44,8 +69,13 @@ router.post('/:attendanceId/confirm', confirmAttendanceValidation(), attendanceC
  *   get:
  *     summary: Get user attendance history
  *     tags: [Attendance]
+ *     parameters:
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [tutor, student]
  */
-// Attendance history for tutor or user UUID
 router.get('/user/:userId/history', idParamValidation('userId'), attendanceController.getAttendanceHistory);
 
 /**
@@ -54,8 +84,13 @@ router.get('/user/:userId/history', idParamValidation('userId'), attendanceContr
  *   get:
  *     summary: Get attendance statistics for a user
  *     tags: [Attendance]
+ *     parameters:
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [tutor, student]
  */
-// Attendance stats for tutor or user UUID
 router.get('/user/:userId/stats', idParamValidation('userId'), attendanceController.getAttendanceStats);
 
 /**

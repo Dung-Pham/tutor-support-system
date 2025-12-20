@@ -1,7 +1,7 @@
 /**
  * File: services/attendanceService.ts
  * Purpose: Business logic for attendance management
- * Updated to use new query modules with UUID and correct schema
+ * Updated to match new schema: session_date, student_confirmed
  */
 
 import * as attendanceQueries from '../database/queries/attendanceQueries';
@@ -12,18 +12,21 @@ import {
 } from '../database/queries/attendanceQueries';
 
 /**
- * Get or create attendance record for a schedule
+ * Get or create attendance record for a schedule on specific date
  */
-export const getOrCreateAttendance = async (scheduleId: string): Promise<AttendanceRecord> => {
-  return await attendanceQueries.getOrCreateAttendance(scheduleId);
+export const getOrCreateAttendance = async (
+  scheduleId: string,
+  sessionDate: string // YYYY-MM-DD
+): Promise<AttendanceRecord> => {
+  return await attendanceQueries.getOrCreateAttendance(scheduleId, sessionDate);
 };
 
 /**
- * Confirm attendance (tutor or user)
+ * Confirm attendance (tutor or student)
  */
 export const confirmAttendance = async (
   attendanceId: string,
-  confirmedBy: 'tutor' | 'user', // Changed from 'parent' to 'user'
+  confirmedBy: 'tutor' | 'student',
   notes?: string
 ): Promise<AttendanceRecord> => {
   const attendance = await attendanceQueries.getAttendanceById(attendanceId);
@@ -37,8 +40,8 @@ export const confirmAttendance = async (
     throw new Error('Attendance already confirmed by tutor');
   }
 
-  if (confirmedBy === 'user' && attendance.user_confirmed) {
-    throw new Error('Attendance already confirmed by user');
+  if (confirmedBy === 'student' && attendance.student_confirmed) {
+    throw new Error('Attendance already confirmed by student');
   }
 
   return await attendanceQueries.confirmAttendance(attendanceId, confirmedBy, notes);
@@ -78,7 +81,7 @@ export const getAttendanceById = async (attendanceId: string): Promise<Attendanc
  */
 export const getAttendanceHistory = async (
   userId: string,
-  role: 'tutor' | 'user', // Changed from 'student' to 'user'
+  role: 'tutor' | 'student',
   classId?: string,
   page: number = 1,
   limit: number = 20
@@ -111,13 +114,13 @@ export const getAttendanceHistory = async (
  */
 export const getAttendanceStats = async (
   userId: string,
-  role: 'tutor' | 'user', // Changed from 'student' to 'user'
+  role: 'tutor' | 'student',
   classId?: string
 ): Promise<{
   total_sessions: number;
   confirmed_sessions: number;
   pending_sessions: number;
-  disputed_sessions: number;
+  absent_sessions: number;
   confirmation_rate: number;
 }> => {
   return await attendanceQueries.getAttendanceStatistics(userId, role, classId);

@@ -5,7 +5,25 @@
  */
 
 /**
- * Session/Schedule status values
+ * Schedule status values (for is_active flag)
+ */
+export const SCHEDULE_STATUS = {
+  ACTIVE: true,
+  INACTIVE: false,
+} as const;
+
+export const SCHEDULE_STATUS_LABELS: Record<string, string> = {
+  true: 'Đang hoạt động',
+  false: 'Tạm dừng',
+};
+
+export const SCHEDULE_STATUS_COLORS: Record<string, string> = {
+  true: 'bg-green-100 text-green-800',
+  false: 'bg-gray-100 text-gray-800',
+};
+
+/**
+ * Session/Class status values
  */
 export const SESSION_STATUS = {
   SCHEDULED: 'scheduled',
@@ -26,6 +44,19 @@ export const SESSION_STATUS_COLORS: Record<string, string> = {
   in_progress: 'bg-green-100 text-green-800',
   completed: 'bg-gray-100 text-gray-800',
   cancelled: 'bg-red-100 text-red-800',
+};
+
+/**
+ * Day of week labels
+ */
+export const DAY_OF_WEEK_LABELS: Record<number, string> = {
+  0: 'Chủ nhật',
+  1: 'Thứ hai',
+  2: 'Thứ ba',
+  3: 'Thứ tư',
+  4: 'Thứ năm',
+  5: 'Thứ sáu',
+  6: 'Thứ bảy',
 };
 
 /**
@@ -74,44 +105,60 @@ export const SUBMISSION_STATUS_COLORS: Record<string, string> = {
 };
 
 /**
- * Attendance status values
+ * Attendance status values (overall_status)
+ * Matches tutorsupportdb_merged-v2.sql schema
  */
 export const ATTENDANCE_STATUS = {
-  PENDING: 'pending',
-  CONFIRMED_BY_USER: 'confirmed_by_user',
-  CONFIRMED_BY_TUTOR: 'confirmed_by_tutor',
-  CONFIRMED: 'confirmed',
-  ABSENT: 'absent',
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  ABSENT: 'ABSENT',
+  CANCELLED: 'CANCELLED',
 } as const;
 
 export const ATTENDANCE_STATUS_LABELS: Record<string, string> = {
-  pending: 'Chưa xác nhận',
-  confirmed_by_user: 'Học viên đã xác nhận',
-  confirmed_by_tutor: 'Gia sư đã xác nhận',
-  confirmed: 'Đã xác nhận',
-  absent: 'Vắng mặt',
+  PENDING: 'Chờ xác nhận',
+  CONFIRMED: 'Đã xác nhận',
+  ABSENT: 'Vắng mặt',
+  CANCELLED: 'Đã hủy',
 };
 
 export const ATTENDANCE_STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  confirmed_by_user: 'bg-blue-100 text-blue-800',
-  confirmed_by_tutor: 'bg-blue-100 text-blue-800',
-  confirmed: 'bg-green-100 text-green-800',
-  absent: 'bg-red-100 text-red-800',
+  PENDING: 'bg-yellow-100 text-yellow-800',
+  CONFIRMED: 'bg-green-100 text-green-800',
+  ABSENT: 'bg-red-100 text-red-800',
+  CANCELLED: 'bg-gray-100 text-gray-800',
 };
 
 /**
  * User roles
  */
 export const USER_ROLES = {
-  USER: 'USER',
-  TUTOR: 'TUTOR',
+  STUDENT: 'student',
+  TUTOR: 'tutor',
+  ADMIN: 'admin',
 } as const;
 
 export const USER_ROLE_LABELS: Record<string, string> = {
-  USER: 'Học viên/Phụ huynh',
-  TUTOR: 'Gia sư',
+  student: 'Học viên',
+  tutor: 'Gia sư',
+  admin: 'Quản trị viên',
 };
+
+/**
+ * Day of week constants
+ */
+export const DAY_OF_WEEK = {
+  SUNDAY: { value: 0 as const, label: 'Chủ nhật', shortLabel: 'CN' },
+  MONDAY: { value: 1 as const, label: 'Thứ hai', shortLabel: 'T2' },
+  TUESDAY: { value: 2 as const, label: 'Thứ ba', shortLabel: 'T3' },
+  WEDNESDAY: { value: 3 as const, label: 'Thứ tư', shortLabel: 'T4' },
+  THURSDAY: { value: 4 as const, label: 'Thứ năm', shortLabel: 'T5' },
+  FRIDAY: { value: 5 as const, label: 'Thứ sáu', shortLabel: 'T6' },
+  SATURDAY: { value: 6 as const, label: 'Thứ bảy', shortLabel: 'T7' },
+} as const;
+
+export const DAY_NAMES = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
+export const DAY_SHORT_NAMES = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
 /**
  * Material types

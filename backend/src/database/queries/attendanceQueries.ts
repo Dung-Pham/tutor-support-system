@@ -1,7 +1,20 @@
 /**
  * File: database/queries/attendanceQueries.ts
  * Purpose: Database queries for Attendance management
- * Schema: Matches SQLTSSupportServer.sql
+ * Schema: Matches tutorsupportdb_merged-v2.sql
+ * 
+ * AttendanceRecord table fields:
+ * - attendance_id (UNIQUEIDENTIFIER)
+ * - class_id (UNIQUEIDENTIFIER) - FK to Class
+ * - schedule_id (UNIQUEIDENTIFIER) - FK to Schedule
+ * - session_date (date) - Ngày diễn ra buổi học
+ * - tutor_confirmed (bit) - Gia sư xác nhận
+ * - tutor_confirmed_at (datetime2)
+ * - tutor_notes (nvarchar)
+ * - student_confirmed (bit) - Học viên xác nhận
+ * - student_confirmed_at (datetime2)
+ * - student_notes (nvarchar)
+ * - overall_status (varchar) - 'PENDING', 'CONFIRMED', 'ABSENT', 'CANCELLED'
  */
 
 import dbConnection from '../connection';
@@ -10,43 +23,66 @@ import dbConnection from '../connection';
  * AttendanceRecord interface matching actual SQL schema
  */
 export interface AttendanceRecord {
-  attendance_id: string; // UNIQUEIDENTIFIER
-  schedule_id: string;
+  attendance_id: string;
   class_id: string;
-  attendance_date: Date;
-  tutor_confirmed: boolean; // BIT
+  schedule_id: string;
+  session_date: string; // DATE format: YYYY-MM-DD
+  tutor_confirmed: boolean;
   tutor_confirmed_at?: Date;
   tutor_notes?: string;
-  user_confirmed: boolean; // BIT - USER confirmation (parent or student)
-  user_confirmed_at?: Date;
-  user_notes?: string;
-  overall_status: string; // 'PENDING', 'CONFIRMED', 'ABSENT', 'CANCELLED'
+  student_confirmed: boolean; // Changed from user_confirmed
+  student_confirmed_at?: Date;
+  student_notes?: string; // Changed from user_notes
+  overall_status: 'PENDING' | 'CONFIRMED' | 'ABSENT' | 'CANCELLED';
   created_at: Date;
   updated_at?: Date;
+  // Joined fields
+  tutor_name?: string;
+  student_name?: string;
+  subject_name?: string;
+  day_of_week?: number;
+  start_time?: string;
+  end_time?: string;
 }
 
 export interface CreateAttendanceDTO {
-  schedule_id: string;
   class_id: string;
-  attendance_date: Date | string;
+  schedule_id: string;
+  session_date: string; // YYYY-MM-DD
 }
 
 export interface ConfirmAttendanceDTO {
-  confirmed_by: 'tutor' | 'user'; // Changed from 'parent' to 'user'
+  confirmed_by: 'tutor' | 'student'; // Changed from 'user' to 'student'
   notes?: string;
 }
 
 /**
- * Create or get attendance record
+ * Create or get attendance record for a schedule on specific date
  */
-export const getOrCreateAttendance = async (scheduleId: string): Promise<AttendanceRecord> => {
-  // First, try to get existing attendance
+export const getOrCreateAttendance = async (
+  scheduleId: string,
+  sessionDate: string // YYYY-MM-DD
+): Promise<AttendanceRecord> => {
+  // First, try to get existing attendance for this schedule and date
   const selectQuery = `
-    SELECT * FROM [AttendanceRecord]
-    WHERE schedule_id = @scheduleId
+    SELECT ar.*, 
+           s.day_of_week, s.start_time, s.end_time,
+           t.name as tutor_name,
+           st.name as student_name,
+           sub.name as subject_name
+    FROM [AttendanceRecord] ar
+    INNER JOIN [Schedule] s ON ar.schedule_id = s.schedule_id
+    INNER JOIN [Class] c ON ar.class_id = c.class_id
+    LEFT JOIN [UserAccount] t ON c.tutor_id = t.user_id
+    LEFT JOIN [UserAccount] st ON c.student_id = st.user_id
+    LEFT JOIN [Subjects] sub ON c.subject_id = sub.subject_id
+    WHERE ar.schedule_id = @scheduleId AND ar.session_date = @sessionDate
   `;
 
-  const existingResult = await dbConnection.query<AttendanceRecord>(selectQuery, { scheduleId });
+  const existingResult = await dbConnection.query<AttendanceRecord>(selectQuery, { 
+    scheduleId,
+    sessionDate 
+  });
 
   if (existingResult.recordset.length > 0) {
     return existingResult.recordset[0];
@@ -54,15 +90,19 @@ export const getOrCreateAttendance = async (scheduleId: string): Promise<Attenda
 
   // Get schedule info to create attendance
   const scheduleQuery = `
-    SELECT class_id, start_date
-    FROM [Schedule]
-    WHERE schedule_id = @scheduleId
+    SELECT s.class_id, s.day_of_week, s.start_time, s.end_time,
+           c.tutor_id, c.student_id
+    FROM [Schedule] s
+    INNER JOIN [Class] c ON s.class_id = c.class_id
+    WHERE s.schedule_id = @scheduleId
   `;
 
-  const scheduleResult = await dbConnection.query<{ class_id: string; start_date: Date }>(
-    scheduleQuery,
-    { scheduleId }
-  );
+  const scheduleResult = await dbConnection.query<{ 
+    class_id: string; 
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+  }>(scheduleQuery, { scheduleId });
 
   if (scheduleResult.recordset.length === 0) {
     throw new Error('Schedule not found');
@@ -73,32 +113,32 @@ export const getOrCreateAttendance = async (scheduleId: string): Promise<Attenda
   // Create new attendance record
   const insertQuery = `
     INSERT INTO [AttendanceRecord] (
-      schedule_id, class_id, attendance_date,
-      tutor_confirmed, user_confirmed,
+      class_id, schedule_id, session_date,
+      tutor_confirmed, student_confirmed,
       overall_status, created_at, updated_at
     )
     OUTPUT INSERTED.*
     VALUES (
-      @schedule_id, @class_id, @attendance_date,
+      @class_id, @schedule_id, @session_date,
       0, 0, 'PENDING', GETDATE(), GETDATE()
     )
   `;
 
   const result = await dbConnection.query<AttendanceRecord>(insertQuery, {
-    schedule_id: scheduleId,
     class_id: schedule.class_id,
-    attendance_date: schedule.start_date,
+    schedule_id: scheduleId,
+    session_date: sessionDate,
   });
 
   return result.recordset[0];
 };
 
 /**
- * Confirm attendance by tutor or parent
+ * Confirm attendance by tutor or student
  */
 export const confirmAttendance = async (
   attendanceId: string,
-  confirmedBy: 'tutor' | 'user',
+  confirmedBy: 'tutor' | 'student',
   notes?: string
 ): Promise<AttendanceRecord> => {
   const now = new Date().toISOString();
@@ -110,24 +150,24 @@ export const confirmAttendance = async (
     updateFields.push('tutor_confirmed = 1');
     updateFields.push('tutor_confirmed_at = @confirmed_at');
     updateFields.push('tutor_notes = @notes');
-  } else if (confirmedBy === 'user') {
-    updateFields.push('user_confirmed = 1');
-    updateFields.push('user_confirmed_at = @confirmed_at');
-    updateFields.push('user_notes = @notes');
+  } else if (confirmedBy === 'student') {
+    updateFields.push('student_confirmed = 1');
+    updateFields.push('student_confirmed_at = @confirmed_at');
+    updateFields.push('student_notes = @notes');
   }
 
   params.confirmed_at = now;
 
   // Check if both confirmed to update overall_status
   const checkQuery = `
-    SELECT tutor_confirmed, user_confirmed
+    SELECT tutor_confirmed, student_confirmed
     FROM [AttendanceRecord]
     WHERE attendance_id = @attendanceId
   `;
 
   const checkResult = await dbConnection.query<{
     tutor_confirmed: boolean;
-    user_confirmed: boolean;
+    student_confirmed: boolean;
   }>(checkQuery, { attendanceId });
 
   if (checkResult.recordset.length === 0) {
@@ -137,7 +177,7 @@ export const confirmAttendance = async (
   const current = checkResult.recordset[0];
   const willBothBeConfirmed =
     (confirmedBy === 'tutor' || current.tutor_confirmed) &&
-    (confirmedBy === 'user' || current.user_confirmed);
+    (confirmedBy === 'student' || current.student_confirmed);
 
   if (willBothBeConfirmed) {
     updateFields.push("overall_status = 'CONFIRMED'");
@@ -162,15 +202,16 @@ export const confirmAttendance = async (
 export const getAttendanceById = async (attendanceId: string): Promise<AttendanceRecord | null> => {
   const query = `
     SELECT ar.*,
-           s.start_date, s.end_date,
-           c.[name] as class_name,
-           u1.[name] as tutor_name,
-           u2.[name] as user_name
+           s.day_of_week, s.start_time, s.end_time,
+           t.name as tutor_name,
+           st.name as student_name,
+           sub.name as subject_name
     FROM [AttendanceRecord] ar
-    LEFT JOIN [Schedule] s ON ar.schedule_id = s.schedule_id
-    LEFT JOIN [Class] c ON ar.class_id = c.class_id
-    LEFT JOIN [UserAccount] u1 ON s.tutor_id = u1.user_id
-    LEFT JOIN [UserAccount] u2 ON s.user_id = u2.user_id
+    INNER JOIN [Schedule] s ON ar.schedule_id = s.schedule_id
+    INNER JOIN [Class] c ON ar.class_id = c.class_id
+    LEFT JOIN [UserAccount] t ON c.tutor_id = t.user_id
+    LEFT JOIN [UserAccount] st ON c.student_id = st.user_id
+    LEFT JOIN [Subjects] sub ON c.subject_id = sub.subject_id
     WHERE ar.attendance_id = @attendanceId
   `;
 
@@ -183,10 +224,19 @@ export const getAttendanceById = async (attendanceId: string): Promise<Attendanc
  */
 export const getAttendanceHistory = async (scheduleId: string): Promise<AttendanceRecord[]> => {
   const query = `
-    SELECT *
-    FROM [AttendanceRecord]
-    WHERE schedule_id = @scheduleId
-    ORDER BY attendance_date DESC
+    SELECT ar.*,
+           s.day_of_week, s.start_time, s.end_time,
+           t.name as tutor_name,
+           st.name as student_name,
+           sub.name as subject_name
+    FROM [AttendanceRecord] ar
+    INNER JOIN [Schedule] s ON ar.schedule_id = s.schedule_id
+    INNER JOIN [Class] c ON ar.class_id = c.class_id
+    LEFT JOIN [UserAccount] t ON c.tutor_id = t.user_id
+    LEFT JOIN [UserAccount] st ON c.student_id = st.user_id
+    LEFT JOIN [Subjects] sub ON c.subject_id = sub.subject_id
+    WHERE ar.schedule_id = @scheduleId
+    ORDER BY ar.session_date DESC
   `;
 
   const result = await dbConnection.query<AttendanceRecord>(query, { scheduleId });
@@ -194,11 +244,37 @@ export const getAttendanceHistory = async (scheduleId: string): Promise<Attendan
 };
 
 /**
+ * Get attendance by schedule and date
+ */
+export const getAttendanceByScheduleAndDate = async (
+  scheduleId: string,
+  sessionDate: string
+): Promise<AttendanceRecord | null> => {
+  const query = `
+    SELECT ar.*,
+           s.day_of_week, s.start_time, s.end_time,
+           t.name as tutor_name,
+           st.name as student_name,
+           sub.name as subject_name
+    FROM [AttendanceRecord] ar
+    INNER JOIN [Schedule] s ON ar.schedule_id = s.schedule_id
+    INNER JOIN [Class] c ON ar.class_id = c.class_id
+    LEFT JOIN [UserAccount] t ON c.tutor_id = t.user_id
+    LEFT JOIN [UserAccount] st ON c.student_id = st.user_id
+    LEFT JOIN [Subjects] sub ON c.subject_id = sub.subject_id
+    WHERE ar.schedule_id = @scheduleId AND ar.session_date = @sessionDate
+  `;
+
+  const result = await dbConnection.query<AttendanceRecord>(query, { scheduleId, sessionDate });
+  return result.recordset.length > 0 ? result.recordset[0] : null;
+};
+
+/**
  * Get attendance records by user (tutor or student)
  */
 export const getAttendanceByUser = async (filters: {
   user_id: string;
-  role: 'tutor' | 'user'; // Changed from 'student' to 'user'
+  role: 'tutor' | 'student'; // Changed from 'user' to 'student'
   class_id?: string;
   status?: string;
   start_date?: Date | string;
@@ -206,7 +282,7 @@ export const getAttendanceByUser = async (filters: {
   limit?: number;
   offset?: number;
 }): Promise<{ records: AttendanceRecord[]; total: number }> => {
-  const userFilter = filters.role === 'tutor' ? 's.tutor_id' : 's.user_id';
+  const userFilter = filters.role === 'tutor' ? 'c.tutor_id' : 'c.student_id';
   let whereConditions: string[] = [`${userFilter} = @user_id`];
   const params: Record<string, any> = { user_id: filters.user_id };
 
@@ -221,12 +297,12 @@ export const getAttendanceByUser = async (filters: {
   }
 
   if (filters.start_date) {
-    whereConditions.push('ar.attendance_date >= @start_date');
+    whereConditions.push('ar.session_date >= @start_date');
     params.start_date = filters.start_date;
   }
 
   if (filters.end_date) {
-    whereConditions.push('ar.attendance_date <= @end_date');
+    whereConditions.push('ar.session_date <= @end_date');
     params.end_date = filters.end_date;
   }
 
@@ -237,6 +313,7 @@ export const getAttendanceByUser = async (filters: {
     SELECT COUNT(*) as total
     FROM [AttendanceRecord] ar
     INNER JOIN [Schedule] s ON ar.schedule_id = s.schedule_id
+    INNER JOIN [Class] c ON ar.class_id = c.class_id
     WHERE ${whereClause}
   `;
 
@@ -246,17 +323,18 @@ export const getAttendanceByUser = async (filters: {
   // Get records
   const query = `
     SELECT ar.*,
-           s.start_date, s.end_date,
-           c.[name] as class_name,
-           u1.[name] as tutor_name,
-           u2.[name] as user_name
+           s.day_of_week, s.start_time, s.end_time,
+           t.name as tutor_name,
+           st.name as student_name,
+           sub.name as subject_name
     FROM [AttendanceRecord] ar
     INNER JOIN [Schedule] s ON ar.schedule_id = s.schedule_id
-    LEFT JOIN [Class] c ON ar.class_id = c.class_id
-    LEFT JOIN [UserAccount] u1 ON s.tutor_id = u1.user_id
-    LEFT JOIN [UserAccount] u2 ON s.user_id = u2.user_id
+    INNER JOIN [Class] c ON ar.class_id = c.class_id
+    LEFT JOIN [UserAccount] t ON c.tutor_id = t.user_id
+    LEFT JOIN [UserAccount] st ON c.student_id = st.user_id
+    LEFT JOIN [Subjects] sub ON c.subject_id = sub.subject_id
     WHERE ${whereClause}
-    ORDER BY ar.attendance_date DESC
+    ORDER BY ar.session_date DESC
     OFFSET @offset ROWS
     FETCH NEXT @limit ROWS ONLY
   `;
@@ -277,16 +355,16 @@ export const getAttendanceByUser = async (filters: {
  */
 export const getAttendanceStatistics = async (
   userId: string,
-  role: 'tutor' | 'user',
+  role: 'tutor' | 'student',
   classId?: string
 ): Promise<{
   total_sessions: number;
   confirmed_sessions: number;
   pending_sessions: number;
-  disputed_sessions: number;
+  absent_sessions: number;
   confirmation_rate: number;
 }> => {
-  const userFilter = role === 'tutor' ? 's.tutor_id' : 's.user_id';
+  const userFilter = role === 'tutor' ? 'c.tutor_id' : 'c.student_id';
   let whereConditions: string[] = [`${userFilter} = @userId`];
   const params: Record<string, any> = { userId };
 
@@ -302,7 +380,7 @@ export const getAttendanceStatistics = async (
       COUNT(*) as total_sessions,
       SUM(CASE WHEN ar.overall_status = 'CONFIRMED' THEN 1 ELSE 0 END) as confirmed_sessions,
       SUM(CASE WHEN ar.overall_status = 'PENDING' THEN 1 ELSE 0 END) as pending_sessions,
-      SUM(CASE WHEN ar.overall_status = 'DISPUTED' THEN 1 ELSE 0 END) as disputed_sessions,
+      SUM(CASE WHEN ar.overall_status = 'ABSENT' THEN 1 ELSE 0 END) as absent_sessions,
       CASE 
         WHEN COUNT(*) > 0 
         THEN CAST(SUM(CASE WHEN ar.overall_status = 'CONFIRMED' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) * 100
@@ -310,6 +388,7 @@ export const getAttendanceStatistics = async (
       END as confirmation_rate
     FROM [AttendanceRecord] ar
     INNER JOIN [Schedule] s ON ar.schedule_id = s.schedule_id
+    INNER JOIN [Class] c ON ar.class_id = c.class_id
     WHERE ${whereClause}
   `;
 
@@ -317,7 +396,7 @@ export const getAttendanceStatistics = async (
     total_sessions: number;
     confirmed_sessions: number;
     pending_sessions: number;
-    disputed_sessions: number;
+    absent_sessions: number;
     confirmation_rate: number;
   }>(query, params);
 
@@ -369,19 +448,59 @@ export const getPendingConfirmations = async (
 ): Promise<AttendanceRecord[]> => {
   const query = `
     SELECT TOP (@limit) ar.*,
-           s.start_date, s.end_date,
-           c.[name] as class_name
+           s.day_of_week, s.start_time, s.end_time,
+           t.name as tutor_name,
+           st.name as student_name,
+           sub.name as subject_name
     FROM [AttendanceRecord] ar
     INNER JOIN [Schedule] s ON ar.schedule_id = s.schedule_id
-    LEFT JOIN [Class] c ON ar.class_id = c.class_id
+    INNER JOIN [Class] c ON ar.class_id = c.class_id
+    LEFT JOIN [UserAccount] t ON c.tutor_id = t.user_id
+    LEFT JOIN [UserAccount] st ON c.student_id = st.user_id
+    LEFT JOIN [Subjects] sub ON c.subject_id = sub.subject_id
     WHERE ar.class_id = @classId
       AND ar.overall_status = 'PENDING'
-    ORDER BY ar.attendance_date DESC
+    ORDER BY ar.session_date DESC
   `;
 
   const result = await dbConnection.query<AttendanceRecord>(query, {
     classId,
     limit: limit || 10,
+  });
+
+  return result.recordset;
+};
+
+/**
+ * Get attendance records by class and date range
+ */
+export const getAttendanceByClassAndDateRange = async (
+  classId: string,
+  startDate: string,
+  endDate: string
+): Promise<AttendanceRecord[]> => {
+  const query = `
+    SELECT ar.*,
+           s.day_of_week, s.start_time, s.end_time,
+           t.name as tutor_name,
+           st.name as student_name,
+           sub.name as subject_name
+    FROM [AttendanceRecord] ar
+    INNER JOIN [Schedule] s ON ar.schedule_id = s.schedule_id
+    INNER JOIN [Class] c ON ar.class_id = c.class_id
+    LEFT JOIN [UserAccount] t ON c.tutor_id = t.user_id
+    LEFT JOIN [UserAccount] st ON c.student_id = st.user_id
+    LEFT JOIN [Subjects] sub ON c.subject_id = sub.subject_id
+    WHERE ar.class_id = @classId
+      AND ar.session_date >= @startDate
+      AND ar.session_date <= @endDate
+    ORDER BY ar.session_date ASC
+  `;
+
+  const result = await dbConnection.query<AttendanceRecord>(query, {
+    classId,
+    startDate,
+    endDate,
   });
 
   return result.recordset;

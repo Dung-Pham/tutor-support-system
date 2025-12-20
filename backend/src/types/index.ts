@@ -34,71 +34,52 @@ export interface PaginatedResponse<T> {
 }
 
 // ============ Schedule Types ============
+// Matches tutorsupportdb_merged-v2.sql schema
 
-export enum ScheduleStatus {
-  PENDING = 'pending',
-  CONFIRMED = 'confirmed',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
-  RESCHEDULED = 'rescheduled'
-}
-
-export enum TimeBlockStatus {
-  AVAILABLE = 'available',
-  LOCKED = 'locked',
-  BOOKED = 'booked'
-}
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0=Sunday, 6=Saturday
 
 export interface Schedule {
-  scheduleId: number;
-  tutorRequestId: number;
-  tutorId: number;
-  studentId: number;
-  subjectId: number;
-  startTime: Date;
-  endTime: Date;
-  status: ScheduleStatus;
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  schedule_id: string;      // UNIQUEIDENTIFIER
+  class_id: string;         // FK to Class
+  day_of_week: DayOfWeek;   // 0-6
+  start_time: string;       // TIME format HH:mm:ss
+  end_time: string;         // TIME format HH:mm:ss
+  duration_minutes: number;
+  is_active: boolean;
+  created_at: Date;
+  updated_at?: Date;
+  // Joined fields
+  tutor_id?: string;
+  student_id?: string;
+  subject_name?: string;
+  tutor_name?: string;
+  student_name?: string;
+  startDate?: Date;        // Class start date
+  endDate?: Date;          // Class end date
 }
 
 export interface CreateScheduleDTO {
-  tutorRequestId: number;
-  startTime: Date;
-  endTime: Date;
-  notes?: string;
+  class_id: string;
+  day_of_week: DayOfWeek;
+  start_time: string;       // HH:mm or HH:mm:ss
+  end_time: string;         // HH:mm or HH:mm:ss
+  duration_minutes?: number;
+  is_active?: boolean;
 }
 
 export interface UpdateScheduleDTO {
-  startTime?: Date;
-  endTime?: Date;
-  status?: ScheduleStatus;
-  notes?: string;
+  day_of_week?: DayOfWeek;
+  start_time?: string;
+  end_time?: string;
+  duration_minutes?: number;
+  is_active?: boolean;
 }
 
 export interface CalendarViewParams {
-  userId: string; // UUID
-  userRole: 'tutor' | 'user'; // Changed: only 'user' and 'tutor' roles
+  userId: string;
+  userRole: 'tutor' | 'student';
   viewType: 'day' | 'week' | 'month';
   date: Date;
-}
-
-export interface ScheduleTimeBlock {
-  timeBlockId: number;
-  tutorId: number;
-  dayOfWeek: number; // 0-6 (Sunday-Saturday)
-  startTime: string; // HH:mm format
-  endTime: string;
-  status: TimeBlockStatus;
-  createdAt: Date;
-}
-
-export interface CreateTimeBlockDTO {
-  tutorId: number;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
 }
 
 // ============ Reschedule Types ============
@@ -137,37 +118,48 @@ export interface ReviewRescheduleDTO {
 }
 
 // ============ Attendance Types ============
+// Matches tutorsupportdb_merged-v2.sql schema
 
-export enum AttendanceStatus {
-  PENDING = 'pending',
-  PRESENT = 'present',
-  ABSENT = 'absent',
-  LATE = 'late',
-  EXCUSED = 'excused'
-}
+export type AttendanceOverallStatus = 'PENDING' | 'CONFIRMED' | 'ABSENT' | 'CANCELLED';
 
 export interface AttendanceRecord {
-  attendanceId: number;
-  scheduleId: number;
-  studentId: number;
-  tutorId: number;
-  status: AttendanceStatus;
-  tutorConfirmed: boolean;
-  parentConfirmed: boolean;
-  tutorConfirmedAt?: Date;
-  parentConfirmedAt?: Date;
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  attendance_id: string;        // UNIQUEIDENTIFIER
+  class_id: string;             // FK to Class
+  schedule_id: string;          // FK to Schedule
+  session_date: string;         // DATE format YYYY-MM-DD
+  tutor_confirmed: boolean;
+  tutor_confirmed_at?: Date;
+  tutor_notes?: string;
+  student_confirmed: boolean;   // Changed from user_confirmed
+  student_confirmed_at?: Date;
+  student_notes?: string;       // Changed from user_notes
+  overall_status: AttendanceOverallStatus;
+  created_at: Date;
+  updated_at?: Date;
+  // Joined fields
+  tutor_name?: string;
+  student_name?: string;
+  subject_name?: string;
+  day_of_week?: number;
+  start_time?: string;
+  end_time?: string;
+}
+
+export interface CreateAttendanceDTO {
+  class_id: string;
+  schedule_id: string;
+  session_date: string;         // YYYY-MM-DD
 }
 
 export interface UpdateAttendanceDTO {
-  status: AttendanceStatus;
-  notes?: string;
+  overall_status?: AttendanceOverallStatus;
+  tutor_notes?: string;
+  student_notes?: string;
 }
 
 export interface ConfirmAttendanceDTO {
-  confirmedBy: 'tutor' | 'parent';
+  confirmedBy: 'tutor' | 'student';
+  notes?: string;
 }
 
 // ============ Progress Evaluation Types ============
