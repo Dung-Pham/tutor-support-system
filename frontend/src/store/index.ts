@@ -3,12 +3,14 @@ import { useDispatch } from 'react-redux';
 import authReducer from './slices/authSlice';
 import messagesReducer from './slices/messagesSlice';
 import postReducer from './slices/postSlice';
+import commentReducer from './slices/commentSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     messages: messagesReducer,
     posts: postReducer,
+    comments: commentReducer,
   },
 });
 

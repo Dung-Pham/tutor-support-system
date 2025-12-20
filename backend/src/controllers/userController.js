@@ -25,12 +25,14 @@ export const getAllUsers = async (req, res) => {
     const { page = 1, limit = 20 } = req.query;
     const skip = (page - 1) * limit;
 
-    const users = await User.find({}, "-password")
-      .skip(skip)
-      .limit(parseInt(limit))
-      .sort({ createdAt: -1 });
-
-    const total = await User.countDocuments();
+    const [users, total] = await Promise.all([
+      User.find({}, "-password")
+        .skip(skip)
+        .limit(parseInt(limit))
+        .sort({ createdAt: -1 })
+        .lean(),
+      User.countDocuments(),
+    ]);
 
     return res.status(200).json({
       success: true,

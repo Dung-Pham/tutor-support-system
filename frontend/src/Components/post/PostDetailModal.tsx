@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { formatMessageTime } from '@/lib/utils';
 import { extractImageUrlsFromTiptapJson } from '@/lib/tiptap-utils';
+import { TiptapRenderer } from '@/components/post/TiptapRenderer';
 
 interface PostDetailModalProps {
   open: boolean;
@@ -38,7 +39,6 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
 
   const statusInfo = statusConfig[post.status] || statusConfig.draft;
   const imageUrls = extractImageUrlsFromTiptapJson(post.contentJson);
-  const plain = post.contentPlain ?? '';
 
   const handleDelete = () => {
     if (onDelete && window.confirm('Bạn chắc chắn muốn xóa bài viết này?')) {
@@ -101,8 +101,10 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
             </div>
           )}
 
-          {/* Plain Text Content */}
-          <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{plain}</div>
+          {/* Tiptap Content - render đúng format */}
+          <div className="prose prose-gray dark:prose-invert max-w-none">
+            <TiptapRenderer content={post.contentJson} />
+          </div>
 
           {/* Rejection Reason */}
           {post.status === 'rejected' && post.rejectionReason && (

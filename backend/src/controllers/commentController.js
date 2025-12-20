@@ -33,8 +33,8 @@ export const createComment = async (req, res) => {
       });
     }
 
-    // Kiểm tra bài viết tồn tại và đã được duyệt
-    const post = await Post.findById(postId);
+    // Kiểm tra bài viết tồn tại và đã được duyệt (chỉ select status)
+    const post = await Post.findById(postId).select("status").lean();
     if (!post) {
       return res.status(404).json({
         success: false,
@@ -58,12 +58,13 @@ export const createComment = async (req, res) => {
       comment_content: content.trim(),
     });
 
-    await comment.save();
+    // Lưu comment và tăng commentCount song song
+    await Promise.all([
+      comment.save(),
+      Post.findByIdAndUpdate(postId, { $inc: { commentCount: 1 } }),
+    ]);
 
-    // Tăng commentCount của bài viết
-    await Post.findByIdAndUpdate(postId, { $inc: { commentCount: 1 } });
-
-    // Populate author info
+    // Populate author info (đã có trong middleware nhưng call thêm để đảm bảo)
     await comment.populate("accountId", "displayName avatarUrl");
 
     res.status(201).json({
@@ -93,9 +94,9 @@ export const getComments = async (req, res) => {
     const limit = Math.min(50, parseInt(req.query.limit) || 10);
     const skip = (page - 1) * limit;
 
-    // Kiểm tra bài viết tồn tại
-    const post = await Post.findById(postId);
-    if (!post) {
+    // Kiểm tra bài viết tồn tại (chỉ cần check exists)
+    const postExists = await Post.exists({ _id: postId });
+    if (!postExists) {
       return res.status(404).json({
         success: false,
         message: "Bài viết không tồn tại",
@@ -103,18 +104,15 @@ export const getComments = async (req, res) => {
       });
     }
 
-    const comments = await NewsComment.find({
-      postId,
-      status: "active",
-    })
-      .sort({ create_at: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const total = await NewsComment.countDocuments({
-      postId,
-      status: "active",
-    });
+    const filter = { postId, status: "active" };
+    const [comments, total] = await Promise.all([
+      NewsComment.find(filter)
+        .sort({ create_at: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      NewsComment.countDocuments(filter),
+    ]);
     const totalPages = Math.ceil(total / limit);
 
     res.json({
@@ -287,8 +285,10 @@ export const createReply = async (req, res) => {
       });
     }
 
-    // Kiểm tra comment tồn tại
-    const comment = await NewsComment.findById(commentId);
+    // Kiểm tra comment tồn tại (chỉ select status)
+    const comment = await NewsComment.findById(commentId)
+      .select("status")
+      .lean();
     if (!comment || comment.status === "deleted") {
       return res.status(404).json({
         success: false,
@@ -304,12 +304,11 @@ export const createReply = async (req, res) => {
       reply_comment_content: content.trim(),
     });
 
-    await reply.save();
-
-    // Tăng reply_count của comment
-    await NewsComment.findByIdAndUpdate(commentId, {
-      $inc: { reply_count: 1 },
-    });
+    // Lưu reply và tăng reply_count song song
+    await Promise.all([
+      reply.save(),
+      NewsComment.findByIdAndUpdate(commentId, { $inc: { reply_count: 1 } }),
+    ]);
 
     // Populate author info
     await reply.populate("accountId", "displayName avatarUrl");
@@ -341,9 +340,9 @@ export const getReplies = async (req, res) => {
     const limit = Math.min(50, parseInt(req.query.limit) || 10);
     const skip = (page - 1) * limit;
 
-    // Kiểm tra comment tồn tại
-    const comment = await NewsComment.findById(commentId);
-    if (!comment) {
+    // Kiểm tra comment tồn tại (chỉ cần check exists)
+    const commentExists = await NewsComment.exists({ _id: commentId });
+    if (!commentExists) {
       return res.status(404).json({
         success: false,
         message: "Comment không tồn tại",
@@ -351,18 +350,15 @@ export const getReplies = async (req, res) => {
       });
     }
 
-    const replies = await ReplyComment.find({
-      comment_id: commentId,
-      status: "active",
-    })
-      .sort({ create_at: 1 }) // Replies sắp xếp từ cũ đến mới
-      .skip(skip)
-      .limit(limit);
-
-    const total = await ReplyComment.countDocuments({
-      comment_id: commentId,
-      status: "active",
-    });
+    const filter = { comment_id: commentId, status: "active" };
+    const [replies, total] = await Promise.all([
+      ReplyComment.find(filter)
+        .sort({ create_at: 1 }) // Replies sắp xếp từ cũ đến mới
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      ReplyComment.countDocuments(filter),
+    ]);
     const totalPages = Math.ceil(total / limit);
 
     res.json({

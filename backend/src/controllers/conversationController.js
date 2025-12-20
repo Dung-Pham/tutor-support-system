@@ -155,7 +155,8 @@ export const getMessages = async (req, res) => {
     // Fetch messages, sorted by newest first, limit to (limit + 1) for pagination
     let messages = await Message.find(query)
       .sort({ createdAt: -1 })
-      .limit(Number(limit) + 1); // Fetch one extra to check for more
+      .limit(Number(limit) + 1)
+      .lean(); // Convert to plain JS object for better performance
 
     let nextCursor = null;
 

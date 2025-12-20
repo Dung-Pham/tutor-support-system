@@ -27,8 +27,12 @@ export const togglePostLike = async (req, res) => {
       });
     }
 
-    // Kiểm tra bài viết tồn tại và đã được duyệt
-    const post = await Post.findById(postId);
+    // Chạy song song: kiểm tra post + kiểm tra đã like
+    const [post, existingLike] = await Promise.all([
+      Post.findById(postId).select("status likeCount").lean(),
+      PostLike.findOne({ postId, userId }).select("_id").lean(),
+    ]);
+
     if (!post) {
       return res.status(404).json({
         success: false,
@@ -45,29 +49,38 @@ export const togglePostLike = async (req, res) => {
       });
     }
 
-    // Kiểm tra đã like chưa
-    const existingLike = await PostLike.findOne({ postId, userId });
-
     if (existingLike) {
-      // Unlike: xóa like và giảm count
-      await PostLike.findByIdAndDelete(existingLike._id);
-      await Post.findByIdAndUpdate(postId, { $inc: { likeCount: -1 } });
+      // Unlike: xóa like và giảm count song song
+      const [, updatedPost] = await Promise.all([
+        PostLike.deleteOne({ _id: existingLike._id }),
+        Post.findByIdAndUpdate(
+          postId,
+          { $inc: { likeCount: -1 } },
+          { new: true, select: "likeCount" }
+        ).lean(),
+      ]);
 
       return res.json({
         success: true,
         message: "Đã bỏ thích bài viết",
-        data: { liked: false },
+        data: { liked: false, likeCount: updatedPost.likeCount },
         timestamp: new Date().toISOString(),
       });
     } else {
-      // Like: tạo like và tăng count
-      await PostLike.create({ postId, userId });
-      await Post.findByIdAndUpdate(postId, { $inc: { likeCount: 1 } });
+      // Like: tạo like và tăng count song song
+      const [, updatedPost] = await Promise.all([
+        PostLike.create({ postId, userId }),
+        Post.findByIdAndUpdate(
+          postId,
+          { $inc: { likeCount: 1 } },
+          { new: true, select: "likeCount" }
+        ).lean(),
+      ]);
 
       return res.json({
         success: true,
         message: "Đã thích bài viết",
-        data: { liked: true },
+        data: { liked: true, likeCount: updatedPost.likeCount },
         timestamp: new Date().toISOString(),
       });
     }
@@ -98,11 +111,12 @@ export const checkPostLike = async (req, res) => {
       });
     }
 
-    const existingLike = await PostLike.findOne({ postId, userId });
+    // Chỉ cần check exists, không cần fetch document
+    const exists = await PostLike.exists({ postId, userId });
 
     res.json({
       success: true,
-      data: { liked: !!existingLike },
+      data: { liked: !!exists },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -126,13 +140,17 @@ export const getPostLikes = async (req, res) => {
     const limit = Math.min(50, parseInt(req.query.limit) || 20);
     const skip = (page - 1) * limit;
 
-    const likes = await PostLike.find({ postId })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate("userId", "displayName avatarUrl");
+    // Chạy song song: lấy data + đếm total
+    const [likes, total] = await Promise.all([
+      PostLike.find({ postId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("userId", "displayName avatarUrl")
+        .lean(),
+      PostLike.countDocuments({ postId }),
+    ]);
 
-    const total = await PostLike.countDocuments({ postId });
     const totalPages = Math.ceil(total / limit);
 
     res.json({
@@ -172,8 +190,14 @@ export const toggleCommentLike = async (req, res) => {
       });
     }
 
-    // Kiểm tra comment tồn tại
-    const comment = await NewsComment.findById(commentId);
+    // Chạy song song: kiểm tra comment + kiểm tra đã like
+    const [comment, existingLike] = await Promise.all([
+      NewsComment.findById(commentId).select("status like_count").lean(),
+      CommentLike.findOne({ comment_like_id: commentId, account_id: userId })
+        .select("_id")
+        .lean(),
+    ]);
+
     if (!comment || comment.status === "deleted") {
       return res.status(404).json({
         success: false,
@@ -182,39 +206,38 @@ export const toggleCommentLike = async (req, res) => {
       });
     }
 
-    // Kiểm tra đã like chưa
-    const existingLike = await CommentLike.findOne({
-      comment_like_id: commentId,
-      account_id: userId,
-    });
-
     if (existingLike) {
-      // Unlike
-      await CommentLike.findByIdAndDelete(existingLike._id);
-      await NewsComment.findByIdAndUpdate(commentId, {
-        $inc: { like_count: -1 },
-      });
+      // Unlike: xóa like và giảm count song song
+      const [, updatedComment] = await Promise.all([
+        CommentLike.deleteOne({ _id: existingLike._id }),
+        NewsComment.findByIdAndUpdate(
+          commentId,
+          { $inc: { like_count: -1 } },
+          { new: true, select: "like_count" }
+        ).lean(),
+      ]);
 
       return res.json({
         success: true,
         message: "Đã bỏ thích comment",
-        data: { liked: false },
+        data: { liked: false, likeCount: updatedComment.like_count },
         timestamp: new Date().toISOString(),
       });
     } else {
-      // Like
-      await CommentLike.create({
-        comment_like_id: commentId,
-        account_id: userId,
-      });
-      await NewsComment.findByIdAndUpdate(commentId, {
-        $inc: { like_count: 1 },
-      });
+      // Like: tạo like và tăng count song song
+      const [, updatedComment] = await Promise.all([
+        CommentLike.create({ comment_like_id: commentId, account_id: userId }),
+        NewsComment.findByIdAndUpdate(
+          commentId,
+          { $inc: { like_count: 1 } },
+          { new: true, select: "like_count" }
+        ).lean(),
+      ]);
 
       return res.json({
         success: true,
         message: "Đã thích comment",
-        data: { liked: true },
+        data: { liked: true, likeCount: updatedComment.like_count },
         timestamp: new Date().toISOString(),
       });
     }
@@ -245,14 +268,15 @@ export const checkCommentLike = async (req, res) => {
       });
     }
 
-    const existingLike = await CommentLike.findOne({
+    // Chỉ cần check exists, không cần fetch document
+    const exists = await CommentLike.exists({
       comment_like_id: commentId,
       account_id: userId,
     });
 
     res.json({
       success: true,
-      data: { liked: !!existingLike },
+      data: { liked: !!exists },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -282,8 +306,14 @@ export const toggleReplyLike = async (req, res) => {
       });
     }
 
-    // Kiểm tra reply tồn tại
-    const reply = await ReplyComment.findById(replyId);
+    // Chạy song song: kiểm tra reply + kiểm tra đã like
+    const [reply, existingLike] = await Promise.all([
+      ReplyComment.findById(replyId).select("status like_count").lean(),
+      ReplyCommentLike.findOne({ reply_like_id: replyId, account_id: userId })
+        .select("_id")
+        .lean(),
+    ]);
+
     if (!reply || reply.status === "deleted") {
       return res.status(404).json({
         success: false,
@@ -292,39 +322,38 @@ export const toggleReplyLike = async (req, res) => {
       });
     }
 
-    // Kiểm tra đã like chưa
-    const existingLike = await ReplyCommentLike.findOne({
-      reply_like_id: replyId,
-      account_id: userId,
-    });
-
     if (existingLike) {
-      // Unlike
-      await ReplyCommentLike.findByIdAndDelete(existingLike._id);
-      await ReplyComment.findByIdAndUpdate(replyId, {
-        $inc: { like_count: -1 },
-      });
+      // Unlike: xóa like và giảm count song song
+      const [, updatedReply] = await Promise.all([
+        ReplyCommentLike.deleteOne({ _id: existingLike._id }),
+        ReplyComment.findByIdAndUpdate(
+          replyId,
+          { $inc: { like_count: -1 } },
+          { new: true, select: "like_count" }
+        ).lean(),
+      ]);
 
       return res.json({
         success: true,
         message: "Đã bỏ thích reply",
-        data: { liked: false },
+        data: { liked: false, likeCount: updatedReply.like_count },
         timestamp: new Date().toISOString(),
       });
     } else {
-      // Like
-      await ReplyCommentLike.create({
-        reply_like_id: replyId,
-        account_id: userId,
-      });
-      await ReplyComment.findByIdAndUpdate(replyId, {
-        $inc: { like_count: 1 },
-      });
+      // Like: tạo like và tăng count song song
+      const [, updatedReply] = await Promise.all([
+        ReplyCommentLike.create({ reply_like_id: replyId, account_id: userId }),
+        ReplyComment.findByIdAndUpdate(
+          replyId,
+          { $inc: { like_count: 1 } },
+          { new: true, select: "like_count" }
+        ).lean(),
+      ]);
 
       return res.json({
         success: true,
         message: "Đã thích reply",
-        data: { liked: true },
+        data: { liked: true, likeCount: updatedReply.like_count },
         timestamp: new Date().toISOString(),
       });
     }
@@ -355,14 +384,15 @@ export const checkReplyLike = async (req, res) => {
       });
     }
 
-    const existingLike = await ReplyCommentLike.findOne({
+    // Chỉ cần check exists, không cần fetch document
+    const exists = await ReplyCommentLike.exists({
       reply_like_id: replyId,
       account_id: userId,
     });
 
     res.json({
       success: true,
-      data: { liked: !!existingLike },
+      data: { liked: !!exists },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

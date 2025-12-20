@@ -82,18 +82,62 @@ export const PostList: React.FC<PostListProps> = ({
             Trước
           </Button>
 
-          <div className="flex items-center gap-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => onPageChange?.(page)}
-                className="w-9 h-9 p-0"
-              >
-                {page}
-              </Button>
-            ))}
+          <div className="flex items-center gap-1">
+            {(() => {
+              const pages: (number | string)[] = [];
+              const showEllipsisStart = currentPage > 3;
+              const showEllipsisEnd = currentPage < totalPages - 2;
+
+              // Always show first page
+              pages.push(1);
+
+              // Show ellipsis if needed
+              if (showEllipsisStart) {
+                pages.push('...');
+              }
+
+              // Show pages around current page
+              for (
+                let i = Math.max(2, currentPage - 1);
+                i <= Math.min(totalPages - 1, currentPage + 1);
+                i++
+              ) {
+                if (!pages.includes(i)) {
+                  pages.push(i);
+                }
+              }
+
+              // Show ellipsis if needed
+              if (showEllipsisEnd) {
+                pages.push('...');
+              }
+
+              // Always show last page
+              if (totalPages > 1 && !pages.includes(totalPages)) {
+                pages.push(totalPages);
+              }
+
+              return pages.map((page, index) => {
+                if (page === '...') {
+                  return (
+                    <span key={`ellipsis-${index}`} className="px-2 text-gray-500">
+                      ...
+                    </span>
+                  );
+                }
+                return (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onPageChange?.(page as number)}
+                    className="w-9 h-9 p-0"
+                  >
+                    {page}
+                  </Button>
+                );
+              });
+            })()}
           </div>
 
           <Button

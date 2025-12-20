@@ -95,9 +95,9 @@ export function MyPosts() {
     dispatch(setCurrentPage(page));
   };
 
-  // Handle post edit
+  // Handle post edit - sử dụng route mới
   const handlePostEdit = (postId: string) => {
-    navigate(`/tutor/create-post?id=${postId}`);
+    navigate(`/tutor/edit-post/${postId}`);
   };
 
   return (

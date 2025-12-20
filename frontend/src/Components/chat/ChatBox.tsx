@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import type { Conversation } from '@/types';
-import { setMessages } from '@/store/slices/messagesSlice';
+import { setMessages, addMessage } from '@/store/slices/messagesSlice';
 import * as messageService from '@/services/messageService';
 import { MessagesList } from './MessagesList';
 import { MessageInput } from './MessageInput';
@@ -52,16 +52,16 @@ export function ChatBox({ conversation }: ChatBoxProps) {
       }
     };
 
-    // Add listeners
-    socketService.socket?.on('new_message', handleNewMessage);
-    socketService.socket?.on('message_seen', handleMessageSeen);
-    socketService.socket?.on('user_typing', handleUserTyping);
+    // Add listeners using socketService.on()
+    const unsubNewMessage = socketService.on('new_message', handleNewMessage);
+    const unsubMessageSeen = socketService.on('message_seen', handleMessageSeen);
+    const unsubUserTyping = socketService.on('user_typing', handleUserTyping);
 
     return () => {
       // Remove listeners
-      socketService.socket?.off('new_message', handleNewMessage);
-      socketService.socket?.off('message_seen', handleMessageSeen);
-      socketService.socket?.off('user_typing', handleUserTyping);
+      unsubNewMessage();
+      unsubMessageSeen();
+      unsubUserTyping();
     };
   }, [conversation._id, dispatch]);
 

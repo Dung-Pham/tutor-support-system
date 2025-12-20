@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Save, Send, Loader2, AlertCircle, FileEdit, FilePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -30,8 +30,10 @@ export function CreatePost() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { postId: routePostId } = useParams<{ postId: string }>();
 
-  const postId = searchParams.get('id');
+  // Hỗ trợ cả query param (?id=xxx) và route param (/edit-post/:postId)
+  const postId = routePostId || searchParams.get('id');
   const isEditMode = !!postId;
 
   const [formData, setFormData] = useState({

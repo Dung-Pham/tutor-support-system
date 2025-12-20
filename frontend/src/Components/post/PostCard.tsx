@@ -1,8 +1,8 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Post, PostStatus } from '@/types/post';
 import { formatMessageTime } from '@/lib/utils';
 import { extractImageUrlsFromTiptapJson } from '@/lib/tiptap-utils';
-import { Edit2, Eye, Share2, Heart, MessageCircle } from 'lucide-react';
+import { Edit2, Eye, Share2, Heart, MessageCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PostCardProps {
@@ -28,17 +28,37 @@ export function PostCard({
   isCommunity = false,
   linkState,
   onEdit,
+  onDelete,
   onView,
 }: PostCardProps) {
+  const location = useLocation();
   const statusInfo = statusConfig[post.status];
-  const canEdit = isAuthor && post.status === 'draft';
+  // Cho phép edit cả draft và pending
+  const canEdit = isAuthor && ['draft', 'pending'].includes(post.status);
+  // Chỉ cho xóa draft và pending
+  const canDelete = isAuthor && ['draft', 'pending'].includes(post.status);
 
   const plain = (post.contentPlain ?? '').trim();
   const summary = plain.length > 150 ? `${plain.substring(0, 150)}...` : plain;
   const imageUrls = extractImageUrlsFromTiptapJson(post.contentJson);
 
-  // Build URL với slug
-  const postUrl = post.slug ? `/posts/${post._id}/${post.slug}` : `/posts/${post._id}`;
+  // Build URL với slug - giữ nguyên prefix layout hiện tại
+  const getPostUrl = () => {
+    const slug = post.slug ? `/${post.slug}` : '';
+    const basePath = `/posts/${post._id}${slug}`;
+
+    // Nếu đang trong layout tutor/student, giữ prefix đó
+    if (location.pathname.startsWith('/tutor')) {
+      return `/tutor/posts/${post._id}${slug}`;
+    }
+    if (location.pathname.startsWith('/student')) {
+      return `/student/posts/${post._id}${slug}`;
+    }
+    // Mặc định cho guest
+    return basePath;
+  };
+
+  const postUrl = getPostUrl();
 
   // Dạng community (danh sách công khai)
   if (isCommunity) {
@@ -171,12 +191,43 @@ export function PostCard({
         </div>
       )}
 
-      {/* Action Buttons - Edit only */}
+      {/* Stats */}
+      <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+        <div className="flex items-center gap-1">
+          <Eye size={16} />
+          <span className="tabular-nums">{post.viewCount || 0}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Heart size={16} />
+          <span className="tabular-nums">{post.likeCount || 0}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <MessageCircle size={16} />
+          <span className="tabular-nums">{post.commentCount || 0}</span>
+        </div>
+      </div>
+
+      {/* Action Buttons - Edit và Delete */}
       <div className="flex gap-2 mt-3">
         {canEdit && onEdit && (
           <Button size="sm" variant="outline" onClick={() => onEdit(post._id)} className="gap-2">
             <Edit2 size={16} />
             <span className="hidden sm:inline">Chỉnh sửa</span>
+          </Button>
+        )}
+        {canDelete && onDelete && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={() => {
+              if (window.confirm('Bạn chắc chắn muốn xóa bài viết này?')) {
+                onDelete(post._id);
+              }
+            }}
+          >
+            <Trash2 size={16} />
+            <span className="hidden sm:inline">Xóa</span>
           </Button>
         )}
       </div>

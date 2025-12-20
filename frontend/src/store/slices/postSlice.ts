@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Post, CreatePostRequest, UpdatePostRequest, PostStatus } from '@/types/post';
 import * as postService from '@/services/postService';
+import * as likeService from '@/services/likeService';
 
 export interface PostState {
   posts: Post[];
@@ -16,6 +17,8 @@ export interface PostState {
   page: number;
   limit: number;
   total: number;
+  // Like state
+  likedPosts: Record<string, boolean>;
 }
 
 const initialState: PostState = {
@@ -32,6 +35,7 @@ const initialState: PostState = {
   page: 1,
   limit: 10,
   total: 0,
+  likedPosts: {},
 };
 
 // Async Thunks
@@ -87,6 +91,24 @@ export const rejectPostAsync = createAsyncThunk(
   'posts/rejectPost',
   async ({ id, reason }: { id: string; reason: string }) => {
     return await postService.rejectPost(id, reason);
+  }
+);
+
+// Like/Unlike post
+export const togglePostLikeAsync = createAsyncThunk(
+  'posts/togglePostLike',
+  async (postId: string) => {
+    const response = await likeService.togglePostLike(postId);
+    return { postId, liked: response.data.liked, likeCount: response.data.likeCount };
+  }
+);
+
+// Check if user liked post
+export const checkPostLikeAsync = createAsyncThunk(
+  'posts/checkPostLike',
+  async (postId: string) => {
+    const response = await likeService.checkPostLike(postId);
+    return { postId, liked: response.data.liked };
   }
 );
 
@@ -291,6 +313,37 @@ const postSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Lỗi khi từ chối bài viết';
       });
+
+    // Toggle Post Like
+    builder.addCase(togglePostLikeAsync.fulfilled, (state, action) => {
+      const { postId, liked, likeCount } = action.payload;
+      state.likedPosts[postId] = liked;
+
+      // Update likeCount on post from server response
+      const updateLikeCount = (posts: Post[]) => {
+        const post = posts.find((p) => p._id === postId);
+        if (post) {
+          post.likeCount = likeCount;
+        }
+      };
+
+      updateLikeCount(state.posts);
+      updateLikeCount(state.myPosts);
+      updateLikeCount(state.pendingPosts);
+
+      if (state.currentPost?._id === postId) {
+        state.currentPost.likeCount = likeCount;
+      }
+      if (state.selectedPost?._id === postId) {
+        state.selectedPost.likeCount = likeCount;
+      }
+    });
+
+    // Check Post Like
+    builder.addCase(checkPostLikeAsync.fulfilled, (state, action) => {
+      const { postId, liked } = action.payload;
+      state.likedPosts[postId] = liked;
+    });
   },
 });
 

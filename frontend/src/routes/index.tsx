@@ -6,6 +6,7 @@ import StudentRegistrationPage from '../pages/public/StudentRegistrationPage';
 import TutorRegistrationPage from '../pages/public/TutorRegistrationPage';
 import CommunityPosts from '../pages/public/CommunityPosts';
 import PostDetailPage from '../pages/public/PostDetail';
+import NotFound from '../pages/public/NotFound';
 import { ProtectedRoute } from './ProtectedRoute';
 import { RoleBasedRoute } from './RoleBasedRoute';
 
@@ -66,6 +67,8 @@ export const AppRoutes = () => {
             <Route path="classes" element={<div>Lớp học của tôi</div>} />
             <Route path="assignments" element={<div>Bài tập</div>} />
             <Route path="posts" element={<CommunityPosts />} />
+            <Route path="posts/:id" element={<PostDetailPage />} />
+            <Route path="posts/:id/:slug" element={<PostDetailPage />} />
             <Route path="documents" element={<div>Tài liệu</div>} />
             <Route
               path="messages"
@@ -94,8 +97,18 @@ export const AppRoutes = () => {
           >
             <Route index element={<CommunityPosts />} />
             <Route path="posts" element={<CommunityPosts />} />
+            <Route path="posts/:id" element={<PostDetailPage />} />
+            <Route path="posts/:id/:slug" element={<PostDetailPage />} />
             <Route
               path="create-post"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <CreatePost />
+                </Suspense>
+              }
+            />
+            <Route
+              path="edit-post/:postId"
               element={
                 <Suspense fallback={<PageLoader />}>
                   <CreatePost />
@@ -168,7 +181,7 @@ export const AppRoutes = () => {
       />
 
       {/* 404 page */}
-      {/* <Route path="*" element={<NotFound />} /> */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

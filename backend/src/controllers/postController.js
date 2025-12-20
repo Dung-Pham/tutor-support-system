@@ -24,11 +24,14 @@ export const getRejectedPosts = async (req, res) => {
     const limit = Math.min(50, parseInt(req.query.limit) || 10);
     const skip = (page - 1) * limit;
 
-    const posts = await Post.find({ status: "rejected" })
-      .sort({ rejectedAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    const total = await Post.countDocuments({ status: "rejected" });
+    const [posts, total] = await Promise.all([
+      Post.find({ status: "rejected" })
+        .sort({ rejectedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Post.countDocuments({ status: "rejected" }),
+    ]);
     const totalPages = Math.ceil(total / limit);
 
     res.json({
@@ -104,11 +107,14 @@ export const getApprovedPosts = async (req, res) => {
     const limit = Math.min(50, parseInt(req.query.limit) || 10);
     const skip = (page - 1) * limit;
 
-    const posts = await Post.find({ status: "approved" })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    const total = await Post.countDocuments({ status: "approved" });
+    const [posts, total] = await Promise.all([
+      Post.find({ status: "approved" })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Post.countDocuments({ status: "approved" }),
+    ]);
     const totalPages = Math.ceil(total / limit);
 
     res.json({
@@ -149,11 +155,14 @@ export const getPendingPosts = async (req, res) => {
     const limit = Math.min(50, parseInt(req.query.limit) || 10);
     const skip = (page - 1) * limit;
 
-    const posts = await Post.find({ status: "pending" })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    const total = await Post.countDocuments({ status: "pending" });
+    const [posts, total] = await Promise.all([
+      Post.find({ status: "pending" })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Post.countDocuments({ status: "pending" }),
+    ]);
     const totalPages = Math.ceil(total / limit);
 
     res.json({
@@ -183,13 +192,15 @@ export const getPendingPosts = async (req, res) => {
 export const getPostDetail = async (req, res) => {
   try {
     const { id } = req.params;
-    const post = await Post.findById(id);
+    // Dùng findByIdAndUpdate để atomic increment viewCount, nhanh hơn save()
+    const post = await Post.findByIdAndUpdate(
+      id,
+      { $inc: { viewCount: 1 } },
+      { new: true }
+    ).lean();
 
     if (!post)
       return res.status(404).json(formatError("Bài viết không tồn tại"));
-
-    post.viewCount = (post.viewCount || 0) + 1;
-    await post.save();
 
     res.json({
       success: true,
@@ -229,11 +240,10 @@ export const getMyPosts = async (req, res) => {
       filter.status = status;
     }
 
-    const posts = await Post.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-    const total = await Post.countDocuments(filter);
+    const [posts, total] = await Promise.all([
+      Post.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Post.countDocuments(filter),
+    ]);
     const totalPages = Math.ceil(total / limit);
 
     res.json({
