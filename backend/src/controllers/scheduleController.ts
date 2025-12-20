@@ -243,6 +243,7 @@ export const getWeekSchedules = async (req: AuthenticatedRequest, res: Response)
       }
     } as ApiResponse);
   } catch (error: any) {
+    console.error('Error in getWeekSchedules:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to retrieve week schedules',

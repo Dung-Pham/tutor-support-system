@@ -286,7 +286,9 @@ export const getScheduleInstancesForWeek = async (
   userRole: 'tutor' | 'student',
   weekStartDate: Date
 ): Promise<Array<{ schedule: Schedule; sessionDate: Date }>> => {
+  console.log(`getScheduleInstancesForWeek - userId: ${userId}, role: ${userRole}, weekStart: ${weekStartDate}`);
   const weeklySchedules = await scheduleQueries.getWeeklySchedulesByUser(userId, userRole);
+  console.log(`Got ${weeklySchedules.size} days of schedules`);
   const instances: Array<{ schedule: Schedule; sessionDate: Date }> = [];
 
   // weekStartDate should be Monday (day 1)
@@ -323,7 +325,10 @@ export const getScheduleInstancesForWeek = async (
   instances.sort((a, b) => {
     const dateCompare = a.sessionDate.getTime() - b.sessionDate.getTime();
     if (dateCompare !== 0) return dateCompare;
-    return a.schedule.start_time.localeCompare(b.schedule.start_time);
+    // Convert start_time to string if it's not already (SQL Server returns it as string or object)
+    const timeA = typeof a.schedule.start_time === 'string' ? a.schedule.start_time : String(a.schedule.start_time);
+    const timeB = typeof b.schedule.start_time === 'string' ? b.schedule.start_time : String(b.schedule.start_time);
+    return timeA.localeCompare(timeB);
   });
 
   return instances;

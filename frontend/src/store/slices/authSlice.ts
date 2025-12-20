@@ -72,7 +72,7 @@ export const register = createAsyncThunk(
       password: string;
       name: string;
       phone: string;
-      role: 'USER' | 'TUTOR';
+      role: 'student' | 'tutor';
     },
     { rejectWithValue }
   ) => {

@@ -19,7 +19,7 @@ import * as scheduleService from './scheduleService';
  */
 export const createRescheduleRequest = async (
   data: CreateRescheduleDTO,
-  requestedBy: number
+  requestedBy: string
 ): Promise<RescheduleRequest> => {
   // Verify schedule exists
   const schedule = await scheduleService.getScheduleById(data.scheduleId);
@@ -94,7 +94,7 @@ export const getReschedulesBySchedule = async (scheduleId: number): Promise<Resc
 /**
  * Get pending reschedule requests for a user
  */
-export const getPendingReschedules = async (userId: number, role: string): Promise<RescheduleRequest[]> => {
+export const getPendingReschedules = async (userId: string, role: string): Promise<RescheduleRequest[]> => {
   let query = '';
   
   if (role === 'tutor') {
@@ -135,9 +135,9 @@ export const getPendingReschedules = async (userId: number, role: string): Promi
  * If approved, automatically create new schedule
  */
 export const reviewRescheduleRequest = async (
-  rescheduleId: number,
+  rescheduleId: string,
   data: ReviewRescheduleDTO,
-  reviewedBy: number
+  reviewedBy: string
 ): Promise<RescheduleRequest> => {
   return await executeTransaction(async (transaction: Transaction) => {
     // Get reschedule request
@@ -205,7 +205,7 @@ export const reviewRescheduleRequest = async (
 /**
  * Cancel reschedule request (by requester)
  */
-export const cancelRescheduleRequest = async (rescheduleId: number, userId: number): Promise<void> => {
+export const cancelRescheduleRequest = async (rescheduleId: string, userId: string): Promise<void> => {
   const reschedule = await getRescheduleById(rescheduleId);
   
   if (!reschedule) {

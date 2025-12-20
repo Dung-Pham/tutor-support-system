@@ -70,7 +70,7 @@ export const ClassDetailPage: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [newLesson, setNewLesson] = useState({ topic: '', description: '', session_date: '' });
 
-  const isTutor = user?.role?.toUpperCase() === 'TUTOR';
+  const isTutor = user?.role?.toLowerCase() === 'tutor';
 
   useEffect(() => {
     if (classId) {
@@ -84,9 +84,8 @@ export const ClassDetailPage: React.FC = () => {
       setError(null);
 
       // Load class info
-      const classResponse = await apiClient.get('/classes/my-classes');
-      const classes = classResponse.data.data || [];
-      const foundClass = classes.find((c: ClassInfo) => c.class_id === classId);
+      const classResponse = await apiClient.get(`/classes/${classId}`);
+      const foundClass = classResponse.data.data;
       
       if (foundClass) {
         setClassInfo(foundClass);

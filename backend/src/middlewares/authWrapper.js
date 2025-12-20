@@ -6,18 +6,23 @@
 // Dynamic require của compiled TypeScript
 let authenticate;
 
-// Force using fallback for testing
-console.log('✓ Using fallback auth middleware for testing');
-authenticate = (req, res, next) => {
-  console.log('✓ Using fallback auth middleware, setting test TUTOR user');
-  req.user = {
-    userId: 'AAAA1111-AAAA-AAAA-AAAA-AAAAAAAAAAAA',
-    email: 'tutor1@example.com',
-    role: 'TUTOR'
+// For production/testing - use real authentication
+console.log('✓ Using real authentication middleware');
+try {
+  // Try to load the compiled JavaScript auth middleware
+  const authModule = require(__dirname + '/../../dist/middlewares/auth.js');
+  authenticate = authModule.authenticate;
+  console.log('✓ Loaded real authentication from dist/middlewares/auth.js');
+} catch (error) {
+  console.log('⚠️ Could not load auth.js:', error.message);
+  authenticate = (req, res, next) => {
+    res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+      error: 'Auth middleware not available'
+    });
   };
-  console.log('✓ req.user set to:', req.user);
-  next();
-};
+}
 
 module.exports = { authenticate };
 

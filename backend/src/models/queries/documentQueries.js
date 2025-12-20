@@ -251,7 +251,7 @@ const getDocumentById = async (documentId, userId, userRole) => {
     let request = pool.request()
       .input('documentId', sql.UniqueIdentifier, documentId);
 
-    if (userRole === 'TUTOR') {
+    if (userRole === 'tutor') {
       // Tutors can see their own documents
       query = `
         SELECT d.*, u.name as tutor_name, u.email as tutor_email

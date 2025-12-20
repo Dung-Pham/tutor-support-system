@@ -24,7 +24,7 @@ try {
 /**
  * Get classes for a user based on their role
  * @param {string} userId - User ID
- * @param {string} userRole - User role (TUTOR or USER)
+ * @param {string} userRole - User role (tutor or student)
  * @returns {Promise<Array>} Array of class objects
  */
 const getMyClassesQuery = async (userId, userRole) => {
@@ -39,7 +39,7 @@ const getMyClassesQuery = async (userId, userRole) => {
         user: 'sa',
         password: '123456',
         server: 'localhost',
-        database: 'tutorsupportdb0_2',
+        database: 'tutorsupportdb1',
         options: {
           encrypt: false,
           trustServerCertificate: true,
@@ -51,56 +51,58 @@ const getMyClassesQuery = async (userId, userRole) => {
     let query;
     let request = pool.request();
 
-    if (userRole === 'TUTOR') {
+    if (userRole === 'tutor') {
       // Get classes where user is the tutor
       query = `
         SELECT
           c.class_id,
           c.tutor_id,
-          c.user_id as client_id,
-          c.name,
-          c.subject,
-          c.grade_level,
+          c.student_id as client_id,
+          c.description as name,
           c.description,
+          s.name as subject,
+          c.grade_level,
           c.status,
           c.start_date,
           c.end_date,
           ua_tutor.name as tutor_name,
           ua_client.name as client_name,
-          COUNT(s.schedule_id) as session_count
+          COUNT(sc.schedule_id) as session_count
         FROM [Class] c
+        LEFT JOIN [Subjects] s ON c.subject_id = s.subject_id
         LEFT JOIN [UserAccount] ua_tutor ON c.tutor_id = ua_tutor.user_id
-        LEFT JOIN [UserAccount] ua_client ON c.user_id = ua_client.user_id
-        LEFT JOIN [Schedule] s ON c.class_id = s.class_id
+        LEFT JOIN [UserAccount] ua_client ON c.student_id = ua_client.user_id
+        LEFT JOIN [Schedule] sc ON c.class_id = sc.class_id
         WHERE c.tutor_id = @userId
-        GROUP BY c.class_id, c.tutor_id, c.user_id, c.name, c.subject, c.grade_level, 
-                 c.description, c.status, c.start_date, c.end_date, ua_tutor.name, ua_client.name
+        GROUP BY c.class_id, c.tutor_id, c.student_id, c.description, s.name, c.grade_level,
+                 c.status, c.start_date, c.end_date, ua_tutor.name, ua_client.name
         ORDER BY c.start_date DESC
       `;
-    } else if (userRole === 'USER') {
-      // Get classes where user is the client
+    } else if (userRole === 'student') {
+      // Get classes where user is the student
       query = `
         SELECT
           c.class_id,
           c.tutor_id,
-          c.user_id as client_id,
-          c.name,
-          c.subject,
-          c.grade_level,
+          c.student_id as client_id,
+          c.description as name,
           c.description,
+          s.name as subject,
+          c.grade_level,
           c.status,
           c.start_date,
           c.end_date,
           ua_tutor.name as tutor_name,
           ua_client.name as client_name,
-          COUNT(s.schedule_id) as session_count
+          COUNT(sc.schedule_id) as session_count
         FROM [Class] c
+        LEFT JOIN [Subjects] s ON c.subject_id = s.subject_id
         LEFT JOIN [UserAccount] ua_tutor ON c.tutor_id = ua_tutor.user_id
-        LEFT JOIN [UserAccount] ua_client ON c.user_id = ua_client.user_id
-        LEFT JOIN [Schedule] s ON c.class_id = s.class_id
-        WHERE c.user_id = @userId
-        GROUP BY c.class_id, c.tutor_id, c.user_id, c.name, c.subject, c.grade_level,
-                 c.description, c.status, c.start_date, c.end_date, ua_tutor.name, ua_client.name
+        LEFT JOIN [UserAccount] ua_client ON c.student_id = ua_client.user_id
+        LEFT JOIN [Schedule] sc ON c.class_id = sc.class_id
+        WHERE c.student_id = @userId
+        GROUP BY c.class_id, c.tutor_id, c.student_id, c.description, s.name, c.grade_level,
+                 c.status, c.start_date, c.end_date, ua_tutor.name, ua_client.name
         ORDER BY c.start_date DESC
       `;
     } else {

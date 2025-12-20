@@ -25,7 +25,7 @@ async function insertSampleData() {
     const tutorId = 'AAAA1111-AAAA-AAAA-AAAA-AAAAAAAAAAAA'; // tutor1
     const studentResult = await pool.request().query(`
       SELECT user_id FROM UserAccount
-      WHERE email = 'student1@example.com' AND role = 'USER'
+      WHERE email = 'student1@example.com' AND role = 'student'
     `);
 
     if (studentResult.recordset.length > 0) {

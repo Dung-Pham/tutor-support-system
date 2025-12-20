@@ -55,7 +55,7 @@ export const DocumentsPage: React.FC = () => {
     selectedDocumentId,
   } = useSelector((state: RootState) => state.documents);
 
-  const isTutor = user?.role === 'TUTOR';
+  const isTutor = user?.role === 'tutor';
 
   useEffect(() => {
     dispatch(fetchMyDocuments());

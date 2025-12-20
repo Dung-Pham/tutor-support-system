@@ -621,6 +621,7 @@ export const getWeeklySchedulesByUser = async (
   userId: string,
   userRole: 'tutor' | 'student'
 ): Promise<Map<number, Schedule[]>> => {
+  console.log(`getWeeklySchedulesByUser - userId: ${userId}, role: ${userRole}`);
   const userFilter = userRole === 'tutor' ? 'c.tutor_id' : 'c.student_id';
 
   const query = `
@@ -646,6 +647,7 @@ export const getWeeklySchedulesByUser = async (
   `;
 
   const result = await dbConnection.query<Schedule>(query, { userId });
+  console.log(`Query returned ${result.recordset.length} schedules`);
   
   // Group by day_of_week
   const grouped = new Map<number, Schedule[]>();

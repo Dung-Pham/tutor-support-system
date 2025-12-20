@@ -23,6 +23,7 @@ import MainLayout from './components/MainLayout';
 // Teaching Support Module Pages
 import SchedulePage from './pages/SchedulePage';
 import MyClassesPage from './pages/MyClassesPage';
+import { ClassDetailPage } from './pages/ClassDetailPage';
 import SessionDetailPage from './pages/SessionDetailPage';
 import AssignmentsPage from './pages/AssignmentsPage';
 import SubmitAssignmentPage from './pages/SubmitAssignmentPage';
@@ -57,10 +58,11 @@ function App() {
             {/* Teaching Support Module Routes - Protected */}
             <Route path="/schedule" element={<ProtectedRoute><MainLayout><SchedulePage /></MainLayout></ProtectedRoute>} />
             <Route path="/my-classes" element={<ProtectedRoute><MainLayout><MyClassesPage /></MainLayout></ProtectedRoute>} />
+            <Route path="/class-detail/:classId" element={<ProtectedRoute><MainLayout><ClassDetailPage /></MainLayout></ProtectedRoute>} />
             <Route path="/sessions/:sessionId" element={<ProtectedRoute><MainLayout><SessionDetailPage /></MainLayout></ProtectedRoute>} />
             <Route path="/assignments" element={<ProtectedRoute><MainLayout><AssignmentsPage /></MainLayout></ProtectedRoute>} />
             <Route path="/assignments/:assignmentId/submit" element={<ProtectedRoute><MainLayout><SubmitAssignmentPage /></MainLayout></ProtectedRoute>} />
-            <Route path="/assignments/:assignmentId/submissions" element={<ProtectedRoute role="TUTOR"><MainLayout><SubmissionsPage /></MainLayout></ProtectedRoute>} />
+            <Route path="/assignments/:assignmentId/submissions" element={<ProtectedRoute role="tutor"><MainLayout><SubmissionsPage /></MainLayout></ProtectedRoute>} />
             <Route path="/documents" element={<ProtectedRoute><MainLayout><DocumentsPage /></MainLayout></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>

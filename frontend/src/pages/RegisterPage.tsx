@@ -24,7 +24,7 @@ export default function RegisterPage() {
     confirmPassword: '',
     name: '',
     phone: '',
-    role: 'USER' as 'USER' | 'TUTOR',
+    role: 'student' as 'student' | 'tutor',
   });
 
   const [formErrors, setFormErrors] = useState({
@@ -111,7 +111,7 @@ export default function RegisterPage() {
 
     try {
       const { confirmPassword, ...registerData } = formData;
-      await dispatch(register(registerData)).unwrap();
+      await dispatch(register(registerData as Parameters<typeof register>[0])).unwrap();
       // Navigation will be handled by useEffect when isAuthenticated becomes true
     } catch (error) {
       // Error will be displayed from Redux state
@@ -225,8 +225,8 @@ export default function RegisterPage() {
                 }`}
               >
                 <option value="">Chọn vai trò</option>
-                <option value="USER">Học sinh</option>
-                <option value="TUTOR">Gia sư</option>
+                <option value="student">Học sinh</option>
+                <option value="tutor">Gia sư</option>
               </select>
               {formErrors.role && (
                 <p className="mt-1 text-sm text-red-600">{formErrors.role}</p>

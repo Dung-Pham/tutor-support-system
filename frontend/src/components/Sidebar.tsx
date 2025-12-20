@@ -23,7 +23,7 @@ interface MenuItem {
   name: string;
   path: string;
   icon: React.ComponentType<{ className?: string }>;
-  roles?: ('USER' | 'TUTOR')[];
+  roles?: ('student' | 'tutor')[];
 }
 
 const menuItems: MenuItem[] = [
@@ -31,43 +31,43 @@ const menuItems: MenuItem[] = [
     name: 'Lịch học',
     path: '/schedule',
     icon: Calendar,
-    roles: ['USER', 'TUTOR'],
+    roles: ['student', 'tutor'],
   },
   {
     name: 'Lớp học của tôi',
     path: '/my-classes',
     icon: Users,
-    roles: ['USER', 'TUTOR'],
+    roles: ['student', 'tutor'],
   },
   {
     name: 'Bài tập',
     path: '/assignments',
     icon: FileText,
-    roles: ['USER', 'TUTOR'],
+    roles: ['student', 'tutor'],
   },
   {
     name: 'Tài liệu',
     path: '/documents',
     icon: BookOpen,
-    roles: ['USER', 'TUTOR'],
+    roles: ['student', 'tutor'],
   },
   {
     name: 'Thống kê',
     path: '/statistics',
     icon: BarChart3,
-    roles: ['TUTOR'],
+    roles: ['tutor'],
   },
   {
     name: 'Quản lý học sinh',
     path: '/students',
     icon: Users,
-    roles: ['TUTOR'],
+    roles: ['tutor'],
   },
   {
     name: 'Cài đặt',
     path: '/settings',
     icon: Settings,
-    roles: ['USER', 'TUTOR'],
+    roles: ['student', 'tutor'],
   },
 ];
 
@@ -77,7 +77,7 @@ export default function Sidebar() {
 
   // Filter menu items based on user role
   const filteredMenuItems = menuItems.filter(item =>
-    !item.roles || item.roles.includes(user?.role as 'USER' | 'TUTOR')
+    !item.roles || item.roles.includes(user?.role as 'student' | 'tutor')
   );
 
   const isActive = (path: string) => {

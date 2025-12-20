@@ -35,31 +35,31 @@ PRINT 'Inserting UserAccounts...';
 GO
 
 INSERT INTO [UserAccount] (user_id, email, password_hash, [name], phone, [role], [status], child_name, child_grade, created_at)
-VALUES (CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER), 'parent1@example.com', '$2a$10$hash1', N'Nguyen Van Minh', '0901234567', 'USER', 'ACTIVE', N'Nguyen Minh Anh', N'Grade 10', GETDATE());
+VALUES (CAST('11111111-1111-1111-1111-111111111111' AS UNIQUEIDENTIFIER), 'parent1@example.com', '$2a$10$hash1', N'Nguyen Van Minh', '0901234567', 'student', 'ACTIVE', N'Nguyen Minh Anh', N'Grade 10', GETDATE());
 
 INSERT INTO [UserAccount] (user_id, email, password_hash, [name], phone, [role], [status], child_name, child_grade, created_at)
-VALUES (CAST('22222222-2222-2222-2222-222222222222' AS UNIQUEIDENTIFIER), 'parent2@example.com', '$2a$10$hash2', N'Tran Thi Lan', '0902345678', 'USER', 'ACTIVE', N'Tran Hoang Nam', N'Grade 11', GETDATE());
+VALUES (CAST('22222222-2222-2222-2222-222222222222' AS UNIQUEIDENTIFIER), 'parent2@example.com', '$2a$10$hash2', N'Tran Thi Lan', '0902345678', 'student', 'ACTIVE', N'Tran Hoang Nam', N'Grade 11', GETDATE());
 
 INSERT INTO [UserAccount] (user_id, email, password_hash, [name], phone, [role], [status], child_name, child_grade, created_at)
-VALUES (CAST('33333333-3333-3333-3333-333333333333' AS UNIQUEIDENTIFIER), 'student1@example.com', '$2a$10$hash3', N'Le Thi Huong', '0903456789', 'USER', 'ACTIVE', NULL, NULL, GETDATE());
+VALUES (CAST('33333333-3333-3333-3333-333333333333' AS UNIQUEIDENTIFIER), 'student1@example.com', '$2a$10$hash3', N'Le Thi Huong', '0903456789', 'student', 'ACTIVE', NULL, NULL, GETDATE());
 
 INSERT INTO [UserAccount] (user_id, email, password_hash, [name], phone, [role], [status], child_name, child_grade, created_at)
-VALUES (CAST('44444444-4444-4444-4444-444444444444' AS UNIQUEIDENTIFIER), 'parent3@example.com', '$2a$10$hash4', N'Pham Van Hai', '0904567890', 'USER', 'ACTIVE', N'Pham Minh Quan', N'Grade 9', GETDATE());
+VALUES (CAST('44444444-4444-4444-4444-444444444444' AS UNIQUEIDENTIFIER), 'parent3@example.com', '$2a$10$hash4', N'Pham Van Hai', '0904567890', 'student', 'ACTIVE', N'Pham Minh Quan', N'Grade 9', GETDATE());
 
 INSERT INTO [UserAccount] (user_id, email, password_hash, [name], phone, [role], [status], child_name, child_grade, created_at)
-VALUES (CAST('55555555-5555-5555-5555-555555555555' AS UNIQUEIDENTIFIER), 'student2@example.com', '$2a$10$hash5', N'Hoang Thi Mai', '0905678901', 'USER', 'ACTIVE', NULL, NULL, GETDATE());
+VALUES (CAST('55555555-5555-5555-5555-555555555555' AS UNIQUEIDENTIFIER), 'student2@example.com', '$2a$10$hash5', N'Hoang Thi Mai', '0905678901', 'student', 'ACTIVE', NULL, NULL, GETDATE());
 
 INSERT INTO [UserAccount] (user_id, email, password_hash, [name], phone, [role], [status], child_name, child_grade, created_at)
-VALUES (CAST('AAAA1111-AAAA-AAAA-AAAA-AAAAAAAAAAAA' AS UNIQUEIDENTIFIER), 'tutor1@example.com', '$2a$10$hash6', N'Thay Nguyen Van A', '0911111111', 'TUTOR', 'ACTIVE', NULL, NULL, GETDATE());
+VALUES (CAST('AAAA1111-AAAA-AAAA-AAAA-AAAAAAAAAAAA' AS UNIQUEIDENTIFIER), 'tutor1@example.com', '$2a$10$hash6', N'Thay Nguyen Van A', '0911111111', 'tutor', 'ACTIVE', NULL, NULL, GETDATE());
 
 INSERT INTO [UserAccount] (user_id, email, password_hash, [name], phone, [role], [status], child_name, child_grade, created_at)
-VALUES (CAST('BBBB2222-BBBB-BBBB-BBBB-BBBBBBBBBBBB' AS UNIQUEIDENTIFIER), 'tutor2@example.com', '$2a$10$hash7', N'Co Tran Thi B', '0922222222', 'TUTOR', 'ACTIVE', NULL, NULL, GETDATE());
+VALUES (CAST('BBBB2222-BBBB-BBBB-BBBB-BBBBBBBBBBBB' AS UNIQUEIDENTIFIER), 'tutor2@example.com', '$2a$10$hash7', N'Co Tran Thi B', '0922222222', 'tutor', 'ACTIVE', NULL, NULL, GETDATE());
 
 INSERT INTO [UserAccount] (user_id, email, password_hash, [name], phone, [role], [status], child_name, child_grade, created_at)
-VALUES (CAST('CCCC3333-CCCC-CCCC-CCCC-CCCCCCCCCCCC' AS UNIQUEIDENTIFIER), 'tutor3@example.com', '$2a$10$hash8', N'Thay Le Van C', '0933333333', 'TUTOR', 'ACTIVE', NULL, NULL, GETDATE());
+VALUES (CAST('CCCC3333-CCCC-CCCC-CCCC-CCCCCCCCCCCC' AS UNIQUEIDENTIFIER), 'tutor3@example.com', '$2a$10$hash8', N'Thay Le Van C', '0933333333', 'tutor', 'ACTIVE', NULL, NULL, GETDATE());
 
 INSERT INTO [UserAccount] (user_id, email, password_hash, [name], phone, [role], [status], child_name, child_grade, created_at)
-VALUES (CAST('DDDD4444-DDDD-DDDD-DDDD-DDDDDDDDDDDD' AS UNIQUEIDENTIFIER), 'tutor4@example.com', '$2a$10$hash9', N'Co Pham Thi D', '0944444444', 'TUTOR', 'ACTIVE', NULL, NULL, GETDATE());
+VALUES (CAST('DDDD4444-DDDD-DDDD-DDDD-DDDDDDDDDDDD' AS UNIQUEIDENTIFIER), 'tutor4@example.com', '$2a$10$hash9', N'Co Pham Thi D', '0944444444', 'tutor', 'ACTIVE', NULL, NULL, GETDATE());
 GO
 
 PRINT '? 9 UserAccount records inserted';

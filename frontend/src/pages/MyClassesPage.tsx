@@ -4,8 +4,8 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../store';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -30,7 +30,6 @@ interface ClassInfo {
 }
 
 export const MyClassesPage: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
@@ -115,12 +114,12 @@ export const MyClassesPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {user?.role === 'TUTOR' ? 'Lớp học đang dạy' : 'Lớp học của tôi'}
+            {user?.role === 'student' ? 'Lớp học của tôi' : 'Lớp học đang dạy'}
           </h1>
           <p className="text-gray-600 mt-1">
-            {user?.role === 'TUTOR'
-              ? 'Danh sách các lớp học bạn đang dạy'
-              : 'Danh sách các lớp học bạn đang tham gia'
+            {user?.role === 'student'
+              ? 'Danh sách các lớp học bạn đang tham gia'
+              : 'Danh sách các lớp học bạn đang dạy'
             }
           </p>
         </div>
@@ -130,12 +129,12 @@ export const MyClassesPage: React.FC = () => {
         <div className="text-center py-12">
           <Users className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-4 text-lg font-medium text-gray-900">
-            {user?.role === 'TUTOR' ? 'Chưa có lớp học nào' : 'Chưa tham gia lớp học nào'}
+            {user?.role === 'student' ? 'Chưa tham gia lớp học nào' : 'Chưa có lớp học nào'}
           </h3>
           <p className="mt-2 text-gray-500">
-            {user?.role === 'TUTOR'
-              ? 'Bạn chưa được phân công dạy lớp nào.'
-              : 'Bạn chưa đăng ký tham gia lớp học nào.'
+            {user?.role === 'student'
+              ? 'Bạn chưa đăng ký tham gia lớp học nào.'
+              : 'Bạn chưa được phân công dạy lớp nào.'
             }
           </p>
         </div>
@@ -175,15 +174,15 @@ export const MyClassesPage: React.FC = () => {
                   </span>
                 </div>
 
-                {user?.role === 'TUTOR' ? (
+                {user?.role === 'student' ? (
                   <div className="flex items-center space-x-2 text-sm">
                     <Users className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">Học sinh: {classInfo.client_name}</span>
+                    <span className="text-gray-600">Gia sư: {classInfo.tutor_name}</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2 text-sm">
                     <Users className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">Gia sư: {classInfo.tutor_name}</span>
+                    <span className="text-gray-600">Học sinh: {classInfo.client_name}</span>
                   </div>
                 )}
 
@@ -198,9 +197,9 @@ export const MyClassesPage: React.FC = () => {
                   <Button
                     className="w-full"
                     variant="outline"
-                    onClick={() => navigate(`/schedule`)}
+                    onClick={() => navigate(`/class-detail/${classInfo.class_id}`)}
                   >
-                    Xem lịch học
+                    Xem chi tiết
                   </Button>
                 </div>
               </CardContent>

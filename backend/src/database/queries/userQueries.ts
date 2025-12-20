@@ -18,7 +18,7 @@ export interface UserAccount {
   name: string;
   phone: string;
   // avatar_url: string | null;
-  role: 'USER' | 'TUTOR' | 'ADMIN' | string;
+  role: 'student' | 'tutor' | 'admin' | string;
   status: 'active' | 'inactive' | 'suspended';
   created_at: Date;
   updated_at: Date;
@@ -250,7 +250,7 @@ export const getTutorProfile = async (userId: string): Promise<any | null> => {
     SELECT u.*, tp.*
     FROM [UserAccount] u
     LEFT JOIN TutorProfile tp ON TRY_CONVERT(UNIQUEIDENTIFIER, tp.user_id) = u.user_id
-    WHERE u.user_id = @userId AND UPPER(u.role) = 'TUTOR'
+    WHERE u.user_id = @userId AND u.role = 'tutor'
   `;
 
   const result = await dbConnection.query(query, { userId });

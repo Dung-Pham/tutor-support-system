@@ -47,7 +47,7 @@ export const SchedulePage: React.FC = () => {
       fetchSessionsByWeek({
         weekStartDate: weekStartStr,
         userId: user.user_id,
-        role: user.role === 'TUTOR' ? 'tutor' : 'student',
+        role: user.role === 'tutor' ? 'tutor' : 'student',
       })
     );
   };
@@ -87,7 +87,7 @@ export const SchedulePage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold">Lịch học</h1>
           <p className="mt-1 text-gray-600">
-            Xem và quản lý lịch {user?.role === 'TUTOR' ? 'dạy' : 'học'} của bạn
+            Xem và quản lý lịch {user?.role === 'tutor' ? 'dạy' : 'học'} của bạn
           </p>
         </div>
 

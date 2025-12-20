@@ -14,7 +14,7 @@ import { RootState } from '../store';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  role?: 'USER' | 'TUTOR';
+  role?: 'student' | 'tutor';
 }
 
 export default function ProtectedRoute({ children, role }: ProtectedRouteProps) {
@@ -36,7 +36,7 @@ export default function ProtectedRoute({ children, role }: ProtectedRouteProps) 
             Bạn không có quyền truy cập vào trang này.
           </p>
           <p className="text-sm text-gray-500">
-            Yêu cầu: {role === 'TUTOR' ? 'Gia sư' : 'Học sinh'}
+            Yêu cầu: {role === 'tutor' ? 'Gia sư' : 'Học sinh'}
           </p>
         </div>
       </div>
