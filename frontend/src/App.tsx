@@ -33,6 +33,7 @@ import StudentHomeworkPage from './pages/StudentHomeworkPage';
 import TutorHomeworkPage from './pages/TutorHomeworkPage';
 import HomeworkDetailPage from './pages/HomeworkDetailPage';
 import StudentHomeworkDetailPage from './pages/StudentHomeworkDetailPage';
+import StudentsPage from './pages/StudentsPage';
 
 // Cấu hình React Query client
 const queryClient = new QueryClient({
@@ -82,6 +83,7 @@ function App() {
             <Route path="/assignments/:assignmentId/submissions" element={<ProtectedRoute role="tutor"><MainLayout><SubmissionsPage /></MainLayout></ProtectedRoute>} />
             
             <Route path="/documents" element={<ProtectedRoute><MainLayout><DocumentsPage /></MainLayout></ProtectedRoute>} />
+            <Route path="/students" element={<ProtectedRoute role="tutor"><MainLayout><StudentsPage /></MainLayout></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </QueryClientProvider>

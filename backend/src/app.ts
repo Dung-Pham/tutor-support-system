@@ -29,6 +29,7 @@ import lessonPlanRoutes from './routes/lessonPlans';
 import homeworkRoutes from './routes/homework';
 import uploadRoutes from './routes/upload';
 import documentRoutes from './routes/documents';
+import studentRoutes from './routes/students';
 
 // Module VI - Teaching & Learning Support Routes
 import scheduleRoutes from './routes/schedules';
@@ -126,6 +127,7 @@ app.use('/api/lesson-plans', lessonPlanRoutes);
 app.use('/api/homework', homeworkRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/students', studentRoutes);
 
 // Module VI Routes - Teaching & Learning Support
 app.use('/api/schedules', scheduleRoutes);
