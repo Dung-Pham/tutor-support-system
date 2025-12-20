@@ -41,7 +41,7 @@ const menuItems: MenuItem[] = [
   },
   {
     name: 'Bài tập',
-    path: '/assignments',
+    path: '/homework',
     icon: FileText,
     roles: ['student', 'tutor'],
   },
@@ -84,7 +84,19 @@ export default function Sidebar() {
     if (path === '/schedule') {
       return location.pathname === '/schedule';
     }
+    if (path === '/homework') {
+      return location.pathname.startsWith('/homework');
+    }
     return location.pathname.startsWith(path);
+  };
+
+  // Get dynamic path based on role
+  const getDynamicPath = (path: string) => {
+    if (path === '/homework') {
+      const role = user?.role?.toUpperCase();
+      return role === 'TUTOR' ? '/homework/tutor' : '/homework/student';
+    }
+    return path;
   };
 
   return (
@@ -99,7 +111,7 @@ export default function Sidebar() {
             return (
               <li key={item.path}>
                 <Link
-                  to={item.path}
+                  to={getDynamicPath(item.path)}
                   className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                     active
                       ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'

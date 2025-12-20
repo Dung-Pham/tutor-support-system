@@ -264,7 +264,7 @@ const TutorHomeworkPage: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/homework/${homework.homework_id}`)}
+                      onClick={() => navigate(`/homework/tutor/${homework.homework_id}`)}
                     >
                       <Eye className="h-4 w-4 mr-1" />
                       Chi tiết

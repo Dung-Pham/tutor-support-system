@@ -29,15 +29,19 @@ export interface Material {
  */
 export interface Homework {
   homework_id: string; // UNIQUEIDENTIFIER
-  class_id: string;
+  class_id?: string;
   schedule_id?: string;
   title: string;
   description?: string;
-  instructions?: string;
-  due_date: Date;
-  status: string; // 'ACTIVE', 'CLOSED', 'CANCELLED'
+  due_date?: Date;
   assigned_by: string;
-  created_at: Date;
+  tutor_id?: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
+  max_score?: number;
+  status?: string; // 'ACTIVE', 'CLOSED', 'CANCELLED'
+  created_at?: Date;
   updated_at?: Date;
 }
 
@@ -47,17 +51,21 @@ export interface Homework {
 export interface HomeworkSubmission {
   submission_id: string; // UNIQUEIDENTIFIER
   homework_id: string;
-  student_id: string;
-  file_name: string;
-  file_url: string;
-  file_size?: number;
-  submitted_at: Date;
+  submitted_by: string;
+  assignment_id?: string;
+  student_id?: string;
+  content?: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
+  submitted_at?: Date;
   score?: number;
-  max_score: number; // DEFAULT 100
   feedback?: string;
   graded_at?: Date;
   graded_by?: string;
-  created_at: Date;
+  is_late?: boolean;
+  status?: string;
+  created_at?: Date;
   updated_at?: Date;
 }
 
@@ -74,29 +82,38 @@ export interface CreateMaterialDTO {
 }
 
 export interface CreateHomeworkDTO {
-  class_id: string;
+  class_id?: string;
   schedule_id?: string;
   title: string;
   description?: string;
-  instructions?: string;
-  due_date: Date | string;
+  due_date?: Date | string;
   assigned_by: string;
+  tutor_id?: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
+  max_score?: number;
 }
 
 export interface UpdateHomeworkDTO {
   title?: string;
   description?: string;
-  instructions?: string;
   due_date?: Date | string;
   status?: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
+  max_score?: number;
 }
 
 export interface SubmitHomeworkDTO {
   homework_id: string;
-  student_id: string;
-  file_name: string;
-  file_url: string;
-  file_size?: number;
+  assignment_id?: string;
+  student_id: string; // will map to submitted_by
+  content?: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
 }
 
 export interface GradeHomeworkDTO {
@@ -186,11 +203,11 @@ export const getMaterials = async (filters: {
   // Get materials
   const query = `
     SELECT m.*,
-           c.[name] as class_name,
-           u.[name] as uploader_name
+           c.description as class_name,
+           u.name as uploader_name
     FROM [Material] m
     LEFT JOIN [Class] c ON m.class_id = c.class_id
-    LEFT JOIN [User] u ON m.uploaded_by = u.user_id
+    LEFT JOIN [UserAccount] u ON m.uploaded_by = u.user_id
     WHERE ${whereClause}
     ORDER BY m.created_at DESC
     OFFSET @offset ROWS
@@ -214,11 +231,11 @@ export const getMaterials = async (filters: {
 export const getMaterialById = async (materialId: string): Promise<Material | null> => {
   const query = `
     SELECT m.*,
-           c.[name] as class_name,
-           u.[name] as uploader_name
+           c.description as class_name,
+           u.name as uploader_name
     FROM [Material] m
     LEFT JOIN [Class] c ON m.class_id = c.class_id
-    LEFT JOIN [User] u ON m.uploaded_by = u.user_id
+    LEFT JOIN [UserAccount] u ON m.uploaded_by = u.user_id
     WHERE m.material_id = @materialId
   `;
 
@@ -249,26 +266,32 @@ export const deleteMaterial = async (materialId: string): Promise<boolean> => {
 export const createHomework = async (data: CreateHomeworkDTO): Promise<Homework> => {
   const query = `
     INSERT INTO [Homework] (
-      class_id, schedule_id, title, description,
-      instructions, due_date, [status], assigned_by,
+      homework_id, class_id, schedule_id, title, description,
+      due_date, [status], assigned_by, tutor_id,
+      attachment_url, attachment_name, attachment_type, max_score,
       created_at, updated_at
     )
     OUTPUT INSERTED.*
     VALUES (
-      @class_id, @schedule_id, @title, @description,
-      @instructions, @due_date, 'ACTIVE', @assigned_by,
+      NEWID(), @class_id, @schedule_id, @title, @description,
+      @due_date, 'ACTIVE', @assigned_by, @tutor_id,
+      @attachment_url, @attachment_name, @attachment_type, @max_score,
       GETDATE(), GETDATE()
     )
   `;
 
   const result = await dbConnection.query<Homework>(query, {
-    class_id: data.class_id,
+    class_id: data.class_id || null,
     schedule_id: data.schedule_id || null,
     title: data.title,
     description: data.description || null,
-    instructions: data.instructions || null,
-    due_date: data.due_date,
+    due_date: data.due_date || null,
     assigned_by: data.assigned_by,
+    tutor_id: data.tutor_id || data.assigned_by,
+    attachment_url: data.attachment_url || null,
+    attachment_name: data.attachment_name || null,
+    attachment_type: data.attachment_type || null,
+    max_score: data.max_score || 100,
   });
 
   return result.recordset[0];
@@ -280,12 +303,12 @@ export const createHomework = async (data: CreateHomeworkDTO): Promise<Homework>
 export const getHomeworkById = async (homeworkId: string): Promise<Homework | null> => {
   const query = `
     SELECT h.*,
-           c.[name] as class_name,
-           u.[name] as assigned_by_name,
+           c.description as class_name,
+           u.name as assigned_by_name,
            (SELECT COUNT(*) FROM [HomeworkSubmission] WHERE homework_id = h.homework_id) as submission_count
     FROM [Homework] h
     LEFT JOIN [Class] c ON h.class_id = c.class_id
-    LEFT JOIN [User] u ON h.assigned_by = u.user_id
+    LEFT JOIN [UserAccount] u ON h.assigned_by = u.user_id
     WHERE h.homework_id = @homeworkId
   `;
 
@@ -362,14 +385,15 @@ export const getHomework = async (filters: {
   // Get homework
   const query = `
     SELECT h.*,
-           c.[name] as class_name,
-           u.[name] as assigned_by_name,
-           (SELECT COUNT(*) FROM [HomeworkSubmission] WHERE homework_id = h.homework_id) as submission_count
+           c.description as class_name,
+           u.name as assigned_by_name,
+           (SELECT COUNT(*) FROM [HomeworkAssignment] WHERE homework_id = h.homework_id) as assigned_count,
+           (SELECT COUNT(*) FROM [HomeworkSubmission] WHERE homework_id = h.homework_id) as submitted_count
     FROM [Homework] h
     LEFT JOIN [Class] c ON h.class_id = c.class_id
-    LEFT JOIN [User] u ON h.assigned_by = u.user_id
+    LEFT JOIN [UserAccount] u ON h.assigned_by = u.user_id
     WHERE ${whereClause}
-    ORDER BY h.due_date DESC
+    ORDER BY h.created_at DESC
     OFFSET @offset ROWS
     FETCH NEXT @limit ROWS ONLY
   `;
@@ -405,9 +429,19 @@ export const updateHomework = async (
     params.description = data.description;
   }
 
-  if (data.instructions !== undefined) {
-    updateFields.push('instructions = @instructions');
-    params.instructions = data.instructions;
+  if (data.attachment_url !== undefined) {
+    updateFields.push('attachment_url = @attachment_url');
+    params.attachment_url = data.attachment_url;
+  }
+
+  if (data.attachment_name !== undefined) {
+    updateFields.push('attachment_name = @attachment_name');
+    params.attachment_name = data.attachment_name;
+  }
+
+  if (data.max_score !== undefined) {
+    updateFields.push('max_score = @max_score');
+    params.max_score = data.max_score;
   }
 
   if (data.due_date !== undefined) {
@@ -458,7 +492,7 @@ export const submitHomework = async (data: SubmitHomeworkDTO): Promise<HomeworkS
   const checkQuery = `
     SELECT submission_id
     FROM [HomeworkSubmission]
-    WHERE homework_id = @homework_id AND student_id = @student_id
+    WHERE homework_id = @homework_id AND submitted_by = @student_id
   `;
 
   const existing = await dbConnection.query<{ submission_id: string }>(checkQuery, {
@@ -470,21 +504,24 @@ export const submitHomework = async (data: SubmitHomeworkDTO): Promise<HomeworkS
     // Update existing submission
     const updateQuery = `
       UPDATE [HomeworkSubmission]
-      SET file_name = @file_name,
-          file_url = @file_url,
-          file_size = @file_size,
+      SET content = @content,
+          attachment_url = @attachment_url,
+          attachment_name = @attachment_name,
+          attachment_type = @attachment_type,
           submitted_at = GETDATE(),
-          updated_at = GETDATE()
+          updated_at = GETDATE(),
+          status = 'SUBMITTED'
       OUTPUT INSERTED.*
-      WHERE homework_id = @homework_id AND student_id = @student_id
+      WHERE homework_id = @homework_id AND submitted_by = @student_id
     `;
 
     const result = await dbConnection.query<HomeworkSubmission>(updateQuery, {
       homework_id: data.homework_id,
       student_id: data.student_id,
-      file_name: data.file_name,
-      file_url: data.file_url,
-      file_size: data.file_size || null,
+      content: data.content || null,
+      attachment_url: data.attachment_url || null,
+      attachment_name: data.attachment_name || null,
+      attachment_type: data.attachment_type || null,
     });
 
     return result.recordset[0];
@@ -493,22 +530,26 @@ export const submitHomework = async (data: SubmitHomeworkDTO): Promise<HomeworkS
   // Create new submission
   const insertQuery = `
     INSERT INTO [HomeworkSubmission] (
-      homework_id, student_id, file_name, file_url, file_size,
-      submitted_at, max_score, created_at, updated_at
+      submission_id, homework_id, submitted_by, assignment_id, student_id,
+      content, attachment_url, attachment_name, attachment_type,
+      submitted_at, status, created_at, updated_at
     )
     OUTPUT INSERTED.*
     VALUES (
-      @homework_id, @student_id, @file_name, @file_url, @file_size,
-      GETDATE(), 100, GETDATE(), GETDATE()
+      NEWID(), @homework_id, @student_id, @assignment_id, @student_id,
+      @content, @attachment_url, @attachment_name, @attachment_type,
+      GETDATE(), 'SUBMITTED', GETDATE(), GETDATE()
     )
   `;
 
   const result = await dbConnection.query<HomeworkSubmission>(insertQuery, {
     homework_id: data.homework_id,
     student_id: data.student_id,
-    file_name: data.file_name,
-    file_url: data.file_url,
-    file_size: data.file_size || null,
+    assignment_id: data.assignment_id || null,
+    content: data.content || null,
+    attachment_url: data.attachment_url || null,
+    attachment_name: data.attachment_name || null,
+    attachment_type: data.attachment_type || null,
   });
 
   return result.recordset[0];
@@ -552,12 +593,12 @@ export const getSubmissionsByHomework = async (
 ): Promise<HomeworkSubmission[]> => {
   const query = `
     SELECT hs.*,
-           u.[name] as student_name,
+           u.name as student_name,
            u.email as student_email,
-           g.[name] as grader_name
+           g.name as grader_name
     FROM [HomeworkSubmission] hs
-    LEFT JOIN [User] u ON hs.student_id = u.user_id
-    LEFT JOIN [User] g ON hs.graded_by = g.user_id
+    LEFT JOIN [UserAccount] u ON hs.submitted_by = u.user_id
+    LEFT JOIN [UserAccount] g ON hs.graded_by = g.user_id
     WHERE hs.homework_id = @homeworkId
     ORDER BY hs.submitted_at DESC
   `;
@@ -576,13 +617,13 @@ export const getSubmissionById = async (
     SELECT hs.*,
            h.title as homework_title,
            h.due_date,
-           u.[name] as student_name,
+           u.name as student_name,
            u.email as student_email,
-           g.[name] as grader_name
+           g.name as grader_name
     FROM [HomeworkSubmission] hs
     LEFT JOIN [Homework] h ON hs.homework_id = h.homework_id
-    LEFT JOIN [User] u ON hs.student_id = u.user_id
-    LEFT JOIN [User] g ON hs.graded_by = g.user_id
+    LEFT JOIN [UserAccount] u ON hs.submitted_by = u.user_id
+    LEFT JOIN [UserAccount] g ON hs.graded_by = g.user_id
     WHERE hs.submission_id = @submissionId
   `;
 
@@ -601,11 +642,11 @@ export const getStudentSubmission = async (
     SELECT hs.*,
            h.title as homework_title,
            h.due_date,
-           g.[name] as grader_name
+           g.name as grader_name
     FROM [HomeworkSubmission] hs
     LEFT JOIN [Homework] h ON hs.homework_id = h.homework_id
-    LEFT JOIN [User] g ON hs.graded_by = g.user_id
-    WHERE hs.homework_id = @homeworkId AND hs.student_id = @studentId
+    LEFT JOIN [UserAccount] g ON hs.graded_by = g.user_id
+    WHERE hs.homework_id = @homeworkId AND hs.submitted_by = @studentId
   `;
 
   const result = await dbConnection.query<HomeworkSubmission>(query, {
@@ -664,4 +705,202 @@ export const getHomeworkStatistics = async (classId: string): Promise<{
   }>(query, { classId });
 
   return result.recordset[0];
+};
+
+/**
+ * Assign homework to student
+ */
+export const assignHomeworkToStudent = async (data: {
+  homework_id: string;
+  student_id: string;
+  assigned_by: string;
+  due_date?: string;
+  note?: string;
+}): Promise<any> => {
+  const query = `
+    INSERT INTO [HomeworkAssignment] (
+      assignment_id, homework_id, student_id, assigned_by, due_date, note, status, assigned_at
+    )
+    VALUES (
+      NEWID(), @homework_id, @student_id, @assigned_by, @due_date, @note, 'PENDING', GETDATE()
+    )
+  `;
+
+  await dbConnection.query(query, data);
+  return { success: true };
+};
+
+/**
+ * Get student assignments with homework details
+ */
+export const getStudentAssignments = async (studentId: string): Promise<any[]> => {
+  const query = `
+    SELECT
+      ha.assignment_id,
+      ha.homework_id,
+      ha.student_id,
+      ha.assigned_by,
+      ha.due_date as assignment_due_date,
+      ha.note,
+      ha.status as assignment_status,
+      ha.assigned_at,
+      h.title,
+      h.description,
+      h.class_id,
+      h.due_date as homework_due_date,
+      h.attachment_url as homework_attachment_url,
+      h.attachment_name as homework_attachment_name,
+      h.max_score,
+      u.name as tutor_name,
+      u.email as tutor_email,
+      hs.submission_id,
+      hs.submitted_at,
+      hs.attachment_url as submission_attachment_url,
+      hs.attachment_name as submission_attachment_name,
+      hs.score,
+      hs.feedback,
+      hs.graded_at,
+      hs.status as submission_status
+    FROM [HomeworkAssignment] ha
+    INNER JOIN [Homework] h ON ha.homework_id = h.homework_id
+    INNER JOIN [UserAccount] u ON ha.assigned_by = u.user_id
+    LEFT JOIN [HomeworkSubmission] hs ON ha.assignment_id = hs.assignment_id
+    WHERE ha.student_id = @studentId
+    ORDER BY ha.due_date DESC
+  `;
+
+  const result = await dbConnection.query(query, { studentId });
+  return result.recordset;
+};
+
+/**
+ * Get assignment by ID
+ */
+export const getAssignmentById = async (assignmentId: string): Promise<any | null> => {
+  const query = `
+    SELECT 
+      ha.*,
+      h.title,
+      h.description,
+      h.attachment_url as homework_attachment_url,
+      h.attachment_name as homework_attachment_name,
+      h.max_score,
+      h.status as homework_status,
+      u.name as tutor_name,
+      hs.submission_id,
+      hs.submitted_at,
+      hs.score,
+      hs.feedback,
+      hs.status as submission_status,
+      hs.attachment_url as submission_attachment_url,
+      hs.attachment_name as submission_attachment_name
+    FROM [HomeworkAssignment] ha
+    INNER JOIN [Homework] h ON ha.homework_id = h.homework_id
+    INNER JOIN [UserAccount] u ON h.assigned_by = u.user_id
+    LEFT JOIN [HomeworkSubmission] hs ON ha.assignment_id = hs.assignment_id
+    WHERE ha.assignment_id = @assignmentId
+  `;
+
+  const result = await dbConnection.query(query, { assignmentId });
+  return result.recordset[0] || null;
+};
+
+/**
+ * Delete assignment
+ */
+export const deleteAssignment = async (homeworkId: string, studentId: string): Promise<boolean> => {
+  const query = `
+    DELETE FROM [HomeworkAssignment]
+    WHERE homework_id = @homeworkId AND student_id = @studentId
+  `;
+
+  const result = await dbConnection.query(query, { homeworkId, studentId });
+  return result.rowsAffected[0] > 0;
+};
+
+/**
+ * Get tutor's students from classes
+ */
+export const getTutorStudents = async (tutorId: string): Promise<any[]> => {
+  const query = `
+    SELECT DISTINCT
+      u.user_id,
+      u.name,
+      u.email,
+      c.class_id,
+      c.description as class_name
+    FROM [UserAccount] u
+    INNER JOIN [Class] c ON u.user_id = c.student_id
+    WHERE c.tutor_id = @tutorId AND UPPER(u.role) = 'STUDENT'
+    ORDER BY c.description, u.name
+  `;
+
+  const result = await dbConnection.query(query, { tutorId });
+  return result.recordset;
+};
+/**
+ * Get homework detail with assignments (for tutor detail page)
+ */
+export const getHomeworkDetailWithAssignments = async (homeworkId: string): Promise<any | null> => {
+  // Get homework details
+  const homeworkQuery = `
+    SELECT h.*,
+           c.description as class_name,
+           u.name as assigned_by_name,
+           (SELECT COUNT(*) FROM [HomeworkAssignment] WHERE homework_id = h.homework_id) as assigned_count,
+           (SELECT COUNT(*) FROM [HomeworkSubmission] WHERE homework_id = h.homework_id) as submitted_count
+    FROM [Homework] h
+    LEFT JOIN [Class] c ON h.class_id = c.class_id
+    LEFT JOIN [UserAccount] u ON h.assigned_by = u.user_id
+    WHERE h.homework_id = @homeworkId
+  `;
+
+  const homeworkResult = await dbConnection.query(homeworkQuery, { homeworkId });
+  if (homeworkResult.recordset.length === 0) {
+    return null;
+  }
+
+  const homework = homeworkResult.recordset[0];
+
+  // Get assignments with submission details
+  const assignmentsQuery = `
+    SELECT 
+      ha.assignment_id,
+      ha.homework_id,
+      ha.student_id,
+      ha.due_date,
+      ha.note,
+      ha.status as assignment_status,
+      ha.assigned_at,
+      u.name as student_name,
+      u.email as student_email,
+      hs.submission_id,
+      hs.content as submission_content,
+      hs.attachment_url as submission_attachment_url,
+      hs.attachment_name as submission_attachment_name,
+      hs.submitted_at,
+      hs.is_late,
+      hs.score,
+      hs.feedback,
+      hs.graded_at,
+      hs.status as submission_status,
+      CASE 
+        WHEN hs.score IS NOT NULL THEN 'GRADED'
+        WHEN hs.submitted_at IS NOT NULL THEN 'SUBMITTED'
+        WHEN ha.due_date < GETDATE() THEN 'OVERDUE'
+        ELSE 'PENDING'
+      END as overall_status
+    FROM [HomeworkAssignment] ha
+    INNER JOIN [UserAccount] u ON ha.student_id = u.user_id
+    LEFT JOIN [HomeworkSubmission] hs ON ha.assignment_id = hs.assignment_id
+    WHERE ha.homework_id = @homeworkId
+    ORDER BY ha.assigned_at DESC
+  `;
+
+  const assignmentsResult = await dbConnection.query(assignmentsQuery, { homeworkId });
+
+  return {
+    ...homework,
+    assignments: assignmentsResult.recordset || [],
+  };
 };

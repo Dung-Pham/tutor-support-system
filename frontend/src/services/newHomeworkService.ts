@@ -143,7 +143,7 @@ export interface GradeSubmissionData {
  * Lấy danh sách bài tập của gia sư
  */
 export const getTutorHomeworks = async (): Promise<Homework[]> => {
-  const response = await apiClient.get('/new-homework/tutor');
+  const response = await apiClient.get('/homework/tutor');
   return response.data.data;
 };
 
@@ -151,7 +151,21 @@ export const getTutorHomeworks = async (): Promise<Homework[]> => {
  * Lấy chi tiết bài tập (kèm danh sách học viên)
  */
 export const getHomeworkDetail = async (homeworkId: string): Promise<HomeworkDetail> => {
-  const response = await apiClient.get(`/new-homework/tutor/${homeworkId}`);
+  const response = await apiClient.get(`/homework/tutor/${homeworkId}`);
+  return response.data.data;
+};
+
+/**
+ * Upload file trước, sau đó tạo homework với URL file
+ */
+const uploadFile = async (file: File, type: 'homework' | 'submission'): Promise<{ url: string; name: string; type: string }> => {
+  const formData = new FormData();
+  formData.append('attachment', file);
+  
+  const response = await apiClient.post(`/upload/${type}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  
   return response.data.data;
 };
 
@@ -159,18 +173,25 @@ export const getHomeworkDetail = async (homeworkId: string): Promise<HomeworkDet
  * Tạo bài tập mới
  */
 export const createHomework = async (data: CreateHomeworkData): Promise<Homework> => {
-  const formData = new FormData();
-  formData.append('title', data.title);
-  if (data.description) formData.append('description', data.description);
-  if (data.classId) formData.append('classId', data.classId);
-  if (data.maxScore) formData.append('maxScore', data.maxScore.toString());
-  if (data.dueDate) formData.append('dueDate', data.dueDate);
-  if (data.attachment) formData.append('attachment', data.attachment);
-  if (data.attachmentUrl) formData.append('attachmentUrl', data.attachmentUrl);
+  let attachmentData: { url: string; name: string; type: string } | null = null;
+  
+  // Upload file first if provided
+  if (data.attachment) {
+    attachmentData = await uploadFile(data.attachment, 'homework');
+  }
 
-  const response = await apiClient.post('/new-homework/tutor', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const requestData = {
+    title: data.title,
+    description: data.description || null,
+    classId: data.classId || null,
+    maxScore: data.maxScore || 10,
+    dueDate: data.dueDate || null,
+    attachmentUrl: attachmentData?.url || data.attachmentUrl || null,
+    attachmentName: attachmentData?.name || null,
+    attachmentType: attachmentData?.type || null,
+  };
+
+  const response = await apiClient.post('/homework/tutor', requestData);
   return response.data.data;
 };
 
@@ -178,7 +199,7 @@ export const createHomework = async (data: CreateHomeworkData): Promise<Homework
  * Cập nhật bài tập
  */
 export const updateHomework = async (homeworkId: string, data: Partial<CreateHomeworkData>): Promise<Homework> => {
-  const response = await apiClient.put(`/new-homework/tutor/${homeworkId}`, data);
+  const response = await apiClient.put(`/homework/tutor/${homeworkId}`, data);
   return response.data.data;
 };
 
@@ -186,14 +207,14 @@ export const updateHomework = async (homeworkId: string, data: Partial<CreateHom
  * Xóa bài tập
  */
 export const deleteHomework = async (homeworkId: string): Promise<void> => {
-  await apiClient.delete(`/new-homework/tutor/${homeworkId}`);
+  await apiClient.delete(`/homework/tutor/${homeworkId}`);
 };
 
 /**
  * Giao bài tập cho học viên
  */
 export const assignHomework = async (homeworkId: string, data: AssignHomeworkData): Promise<HomeworkAssignment> => {
-  const response = await apiClient.post(`/new-homework/tutor/${homeworkId}/assign`, data);
+  const response = await apiClient.post(`/homework/tutor/${homeworkId}/assign`, data);
   return response.data.data;
 };
 
@@ -201,14 +222,14 @@ export const assignHomework = async (homeworkId: string, data: AssignHomeworkDat
  * Hủy giao bài tập
  */
 export const unassignHomework = async (homeworkId: string, studentId: string): Promise<void> => {
-  await apiClient.delete(`/new-homework/tutor/${homeworkId}/assign/${studentId}`);
+  await apiClient.delete(`/homework/tutor/${homeworkId}/assign/${studentId}`);
 };
 
 /**
  * Chấm điểm bài nộp
  */
 export const gradeSubmission = async (submissionId: string, data: GradeSubmissionData): Promise<any> => {
-  const response = await apiClient.post(`/new-homework/tutor/grade/${submissionId}`, data);
+  const response = await apiClient.post(`/homework/tutor/grade/${submissionId}`, data);
   return response.data.data;
 };
 
@@ -216,7 +237,7 @@ export const gradeSubmission = async (submissionId: string, data: GradeSubmissio
  * Lấy danh sách học viên để giao bài
  */
 export const getTutorStudentsForHomework = async (): Promise<Student[]> => {
-  const response = await apiClient.get('/new-homework/tutor/students');
+  const response = await apiClient.get('/homework/tutor/students');
   return response.data.data;
 };
 
@@ -228,7 +249,7 @@ export const getTutorStudentsForHomework = async (): Promise<Student[]> => {
  * Lấy danh sách bài tập được giao
  */
 export const getStudentHomeworks = async (): Promise<StudentHomework[]> => {
-  const response = await apiClient.get('/new-homework/student');
+  const response = await apiClient.get('/homework/student');
   return response.data.data;
 };
 
@@ -236,7 +257,7 @@ export const getStudentHomeworks = async (): Promise<StudentHomework[]> => {
  * Lấy chi tiết bài tập được giao
  */
 export const getStudentHomeworkDetail = async (assignmentId: string): Promise<StudentHomework> => {
-  const response = await apiClient.get(`/new-homework/student/${assignmentId}`);
+  const response = await apiClient.get(`/homework/student/${assignmentId}`);
   return response.data.data;
 };
 
@@ -244,13 +265,22 @@ export const getStudentHomeworkDetail = async (assignmentId: string): Promise<St
  * Nộp bài tập
  */
 export const submitHomework = async (assignmentId: string, data: SubmitHomeworkData): Promise<any> => {
-  const formData = new FormData();
-  if (data.content) formData.append('content', data.content);
-  if (data.file) formData.append('attachment', data.file);
+  let attachmentData: { url: string; name: string; type: string } | null = null;
+  
+  // Upload file first if provided
+  if (data.file) {
+    attachmentData = await uploadFile(data.file, 'submission');
+  }
 
-  const response = await apiClient.post(`/new-homework/student/${assignmentId}/submit`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const requestData = {
+    content: data.content || null,
+    attachment_url: attachmentData?.url || null,
+    attachment_name: attachmentData?.name || null,
+    attachment_type: attachmentData?.type || null,
+    assignment_id: assignmentId,
+  };
+
+  const response = await apiClient.post(`/homework/student/${assignmentId}/submit`, requestData);
   return response.data.data;
 };
 

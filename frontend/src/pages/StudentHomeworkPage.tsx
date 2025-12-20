@@ -244,7 +244,7 @@ const StudentHomeworkPage: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <Button
-                        onClick={() => navigate(`/my-homework/${homework.assignment_id}`)}
+                        onClick={() => navigate(`/homework/student/${homework.assignment_id}`)}
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         Chi tiết

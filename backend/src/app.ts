@@ -17,6 +17,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
+import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger';
 import errorHandler from './middlewares/errorHandler';
@@ -25,6 +26,8 @@ import errorHandler from './middlewares/errorHandler';
 import authRoutes from './routes/auth';
 import classRoutes from './routes/classes';
 import lessonPlanRoutes from './routes/lessonPlans';
+import homeworkRoutes from './routes/homework';
+import uploadRoutes from './routes/upload';
 
 // Module VI - Teaching & Learning Support Routes
 import scheduleRoutes from './routes/schedules';
@@ -63,6 +66,8 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/lesson-plans', lessonPlanRoutes);
+app.use('/api/homework', homeworkRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Module VI Routes - Teaching & Learning Support
 app.use('/api/schedules', scheduleRoutes);
@@ -71,6 +76,9 @@ app.use('/api/attendance', attendanceRoutes);
 // app.use('/api/evaluations', evaluationRoutes); // TODO: Fix type issues in evaluationService
 // app.use('/api/homework', homeworkRoutes); // TODO: Fix type issues in homeworkService
 // app.use('/api/chat', chatRoutes); // TODO: Fix type issues in chatService
+
+// Static file serving - Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // 404 Handler - Route không tồn tại
 app.use((req: Request, res: Response) => {

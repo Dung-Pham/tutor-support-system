@@ -241,11 +241,13 @@ const newHomeworkSlice = createSlice({
       })
       .addCase(fetchTutorHomeworks.fulfilled, (state, action) => {
         state.loading = false;
-        state.homeworks = action.payload;
+        // Ensure we always have an array
+        state.homeworks = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchTutorHomeworks.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        state.homeworks = []; // Reset to empty array on error
       })
 
       // Fetch Homework Detail
@@ -347,11 +349,13 @@ const newHomeworkSlice = createSlice({
       })
       .addCase(fetchStudentHomeworks.fulfilled, (state, action) => {
         state.loading = false;
-        state.studentHomeworks = action.payload;
+        // Ensure we always have an array
+        state.studentHomeworks = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchStudentHomeworks.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        state.studentHomeworks = []; // Reset to empty array on error
       })
 
       // Fetch Student Homework Detail

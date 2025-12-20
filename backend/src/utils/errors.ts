@@ -261,8 +261,8 @@ export const logError = (error: Error, context?: Record<string, any>): void => {
   };
 
   if (error instanceof ApplicationError) {
-    errorLog['statusCode'] = error.statusCode;
-    errorLog['details'] = error.details;
+    (errorLog as any)['statusCode'] = error.statusCode;
+    (errorLog as any)['details'] = error.details;
   }
 
   console.error('❌ Error:', JSON.stringify(errorLog, null, 2));

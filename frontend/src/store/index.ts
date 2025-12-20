@@ -16,6 +16,7 @@ import sessionsReducer from './slices/sessionsSlice';
 import assignmentsReducer from './slices/assignmentsSlice';
 import submissionsReducer from './slices/submissionsSlice';
 import documentsReducer from './slices/documentsSlice';
+import newHomeworkReducer from './slices/newHomeworkSlice';
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     assignments: assignmentsReducer,
     submissions: submissionsReducer,
     documents: documentsReducer,
+    newHomework: newHomeworkReducer,
   },
 });
 

@@ -162,3 +162,79 @@ export const createFilePreview = (file: File): Promise<string> => {
     reader.readAsDataURL(file);
   });
 };
+
+/**
+ * Get file URL (handle both relative and absolute URLs)
+ * @param url - File URL
+ * @returns Full URL
+ */
+export const getFileUrl = (url: string | null | undefined): string => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // Assuming backend serves files from /uploads
+  return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
+};
+
+/**
+ * Check if URL is external link
+ * @param url - URL to check
+ * @returns true if external link
+ */
+export const isExternalLink = (url: string | null | undefined): boolean => {
+  if (!url) return false;
+  return url.startsWith('http://') || url.startsWith('https://');
+};
+
+/**
+ * Check if file is image
+ * @param type - MIME type or file extension
+ * @returns true if image
+ */
+export const isImageFile = (type: string | null | undefined): boolean => {
+  if (!type) return false;
+  return type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(type.toLowerCase());
+};
+
+/**
+ * Check if file is PDF
+ * @param type - MIME type or file extension
+ * @returns true if PDF
+ */
+export const isPdfFile = (type: string | null | undefined): boolean => {
+  if (!type) return false;
+  return type === 'application/pdf' || type.toLowerCase() === 'pdf';
+};
+
+/**
+ * Get emoji icon for file type
+ * @param type - MIME type or file extension
+ * @returns Emoji string
+ */
+export const getFileEmoji = (type: string | null | undefined): string => {
+  if (!type) return '📄';
+  
+  const lowerType = type.toLowerCase();
+  
+  if (lowerType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(lowerType)) {
+    return '🖼️';
+  }
+  if (lowerType === 'application/pdf' || lowerType === 'pdf') {
+    return '📕';
+  }
+  if (lowerType.includes('word') || lowerType === 'doc' || lowerType === 'docx') {
+    return '📘';
+  }
+  if (lowerType.includes('excel') || lowerType.includes('spreadsheet') || ['xls', 'xlsx'].includes(lowerType)) {
+    return '📊';
+  }
+  if (lowerType.includes('powerpoint') || lowerType.includes('presentation') || ['ppt', 'pptx'].includes(lowerType)) {
+    return '📙';
+  }
+  if (lowerType === 'application/zip' || lowerType === 'zip') {
+    return '📦';
+  }
+  
+  return '📄';
+};

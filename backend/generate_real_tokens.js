@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const sql = require('mssql');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = 'your-secret-key-change-in-production';
 
 const config = {
   user: 'sa',

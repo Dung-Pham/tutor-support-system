@@ -7,8 +7,12 @@
 import { Router } from 'express';
 import * as homeworkController from '../controllers/homeworkController';
 import { body, param } from 'express-validator';
+import { authenticate } from '../middlewares/auth';
 
 const router = Router();
+
+// Apply authentication middleware
+router.use(authenticate);
 
 // ============================================================
 // VALIDATION MIDDLEWARE
@@ -26,11 +30,16 @@ const uploadMaterialValidation = () => [
 ];
 
 const createHomeworkValidation = () => [
-  body('class_id').isUUID().withMessage('class_id must be a valid UUID'),
-  body('schedule_id').optional().isUUID().withMessage('schedule_id must be a valid UUID'),
   body('title').notEmpty().withMessage('title is required'),
   body('description').optional().isString(),
-  body('due_date').isISO8601().withMessage('due_date must be a valid date'),
+  // Accept both snake_case and camelCase
+  body('class_id').optional().isUUID().withMessage('class_id must be a valid UUID'),
+  body('classId').optional().isUUID().withMessage('classId must be a valid UUID'),
+  body('schedule_id').optional().isUUID().withMessage('schedule_id must be a valid UUID'),
+  body('due_date').optional().isISO8601().withMessage('due_date must be a valid date'),
+  body('dueDate').optional().isISO8601().withMessage('dueDate must be a valid date'),
+  body('maxScore').optional().isNumeric().withMessage('maxScore must be a number'),
+  body('max_score').optional().isNumeric().withMessage('max_score must be a number'),
 ];
 
 const updateHomeworkValidation = () => [
@@ -48,9 +57,101 @@ const submitHomeworkValidation = () => [
 
 const gradeHomeworkValidation = () => [
   param('submissionId').isUUID().withMessage('submissionId must be a valid UUID'),
-  body('score').isInt({ min: 0, max: 100 }).withMessage('score must be between 0 and 100'),
+  body('score').isNumeric().withMessage('score must be a number'),
   body('feedback').optional().isString(),
 ];
+
+// ============================================================
+// TUTOR ROUTES - /api/homework/tutor/*
+// ============================================================
+
+/**
+ * @route   GET /api/homework/tutor
+ * @desc    Get all homeworks created by tutor
+ * @access  Private (Tutor only)
+ */
+router.get('/tutor', homeworkController.getHomeworkList);
+
+/**
+ * @route   POST /api/homework/tutor
+ * @desc    Create new homework
+ * @access  Private (Tutor only)
+ */
+router.post('/tutor', createHomeworkValidation(), homeworkController.createHomework);
+
+/**
+ * @route   GET /api/homework/tutor/:homeworkId
+ * @desc    Get homework detail with assignments
+ * @access  Private (Tutor only)
+ */
+router.get('/tutor/:homeworkId', uuidValidation('homeworkId'), homeworkController.getHomeworkById);
+
+/**
+ * @route   PUT /api/homework/tutor/:homeworkId
+ * @desc    Update homework
+ * @access  Private (Tutor only)
+ */
+router.put('/tutor/:homeworkId', updateHomeworkValidation(), homeworkController.updateHomework);
+
+/**
+ * @route   DELETE /api/homework/tutor/:homeworkId
+ * @desc    Delete homework
+ * @access  Private (Tutor only)
+ */
+router.delete('/tutor/:homeworkId', uuidValidation('homeworkId'), homeworkController.deleteHomework);
+
+/**
+ * @route   POST /api/homework/tutor/:homeworkId/assign
+ * @desc    Assign homework to student
+ * @access  Private (Tutor only)
+ */
+router.post('/tutor/:homeworkId/assign', uuidValidation('homeworkId'), homeworkController.assignHomeworkToStudent);
+
+/**
+ * @route   DELETE /api/homework/tutor/:homeworkId/assign/:studentId
+ * @desc    Unassign homework from student
+ * @access  Private (Tutor only)
+ */
+router.delete('/tutor/:homeworkId/assign/:studentId', homeworkController.deleteAssignment);
+
+/**
+ * @route   POST /api/homework/tutor/grade/:submissionId
+ * @desc    Grade student submission
+ * @access  Private (Tutor only)
+ */
+router.post('/tutor/grade/:submissionId', gradeHomeworkValidation(), homeworkController.gradeSubmission);
+
+/**
+ * @route   GET /api/homework/tutor/students
+ * @desc    Get list of students for homework assignment
+ * @access  Private (Tutor only)
+ */
+router.get('/tutor/students', homeworkController.getTutorStudents);
+
+// ============================================================
+// STUDENT ROUTES - /api/homework/student/*
+// ============================================================
+
+/**
+ * @route   GET /api/homework/student
+ * @desc    Get all homeworks assigned to student
+ * @access  Private (Student only)
+ */
+router.get('/student', homeworkController.getStudentAssignments);
+
+/**
+ * @route   GET /api/homework/student/:assignmentId
+ * @desc    Get assignment detail
+ * @access  Private (Student only)
+ */
+router.get('/student/:assignmentId', uuidValidation('assignmentId'), homeworkController.getAssignmentById);
+
+/**
+ * @route   POST /api/homework/student/:assignmentId/submit
+ * @desc    Submit homework
+ * @access  Private (Student only)
+ */
+router.post('/student/:assignmentId/submit', submitHomeworkValidation(), homeworkController.submitHomework);
 
 // ============================================================
 // MATERIAL ROUTES

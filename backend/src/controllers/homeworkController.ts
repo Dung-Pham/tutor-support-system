@@ -84,16 +84,30 @@ export const createHomework = async (req: AuthenticatedRequest, res: Response): 
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ success: false, message: 'Validation error', error: errors.array() } as ApiResponse);
     }
 
-    const homework = await homeworkService.createHomework({
-      ...req.body,
+    // Map camelCase to snake_case
+    const homeworkData = {
+      title: req.body.title,
+      description: req.body.description,
+      class_id: req.body.classId || req.body.class_id,
+      schedule_id: req.body.scheduleId || req.body.schedule_id,
+      due_date: req.body.dueDate || req.body.due_date,
+      max_score: req.body.maxScore || req.body.max_score || 10,
+      attachment_url: req.body.attachmentUrl || req.body.attachment_url,
+      attachment_name: req.body.attachmentName || req.body.attachment_name,
+      attachment_type: req.body.attachmentType || req.body.attachment_type,
       assigned_by: req.user!.userId,
-    });
+      tutor_id: req.user!.userId,
+    };
+
+    const homework = await homeworkService.createHomework(homeworkData);
 
     return res.status(201).json({ success: true, message: 'Homework created', data: homework } as ApiResponse);
   } catch (error: any) {
+    console.error('Create homework error:', error);
     return res.status(500).json({ success: false, message: 'Failed to create homework', error: error.message } as ApiResponse);
   }
 };
@@ -101,7 +115,8 @@ export const createHomework = async (req: AuthenticatedRequest, res: Response): 
 export const getHomeworkById = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const homeworkId = req.params.homeworkId; // UUID
-    const homework = await homeworkService.getHomeworkById(homeworkId);
+    // Get homework with assignments for tutor detail page
+    const homework = await homeworkService.getHomeworkDetailWithAssignments(homeworkId);
 
     if (!homework) {
       return res.status(404).json({ success: false, message: 'Homework not found' } as ApiResponse);
@@ -120,15 +135,16 @@ export const getHomeworkList = async (req: AuthenticatedRequest, res: Response):
       schedule_id: req.query.scheduleId as string | undefined,
       student_id: req.query.studentId as string | undefined,
       status: req.query.status as string | undefined,
-      assigned_by: req.query.assignedBy as string | undefined,
+      assigned_by: req.user!.userId, // Only get homework created by this tutor
     };
 
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
 
     const result = await homeworkService.getHomework(filters, page, limit);
 
-    return res.status(200).json({ success: true, message: 'Homework retrieved', data: result } as ApiResponse);
+    // Return array directly for frontend compatibility
+    return res.status(200).json({ success: true, message: 'Homework retrieved', data: result.homework } as ApiResponse);
   } catch (error: any) {
     return res.status(500).json({ success: false, message: 'Failed to get homework', error: error.message } as ApiResponse);
   }
@@ -174,10 +190,12 @@ export const submitHomework = async (req: AuthenticatedRequest, res: Response): 
 
     const submission = await homeworkService.submitHomework({
       homework_id: req.body.homework_id || req.params.homeworkId,
+      assignment_id: req.body.assignment_id || req.params.assignmentId,
       student_id: req.user!.userId,
-      file_name: req.body.file_name,
-      file_url: req.body.file_url,
-      file_size: req.body.file_size,
+      content: req.body.content,
+      attachment_url: req.body.attachment_url,
+      attachment_name: req.body.attachment_name,
+      attachment_type: req.body.attachment_type,
     });
 
     return res.status(201).json({ success: true, message: 'Homework submitted', data: submission } as ApiResponse);
@@ -270,5 +288,87 @@ export const getHomeworkStatistics = async (req: AuthenticatedRequest, res: Resp
     return res.status(200).json({ success: true, message: 'Statistics retrieved', data: stats } as ApiResponse);
   } catch (error: any) {
     return res.status(500).json({ success: false, message: 'Failed to get statistics', error: error.message } as ApiResponse);
+  }
+};
+
+/**
+ * Assign homework to student
+ */
+export const assignHomeworkToStudent = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+  try {
+    const homeworkId = req.params.homeworkId;
+    const { studentId, dueDate, note } = req.body;
+
+    const assignment = await homeworkService.assignHomeworkToStudent({
+      homework_id: homeworkId,
+      student_id: studentId,
+      assigned_by: req.user!.userId,
+      due_date: dueDate,
+      note: note,
+    });
+
+    return res.status(201).json({ success: true, message: 'Homework assigned', data: assignment } as ApiResponse);
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to assign homework', error: error.message } as ApiResponse);
+  }
+};
+
+/**
+ * Get student assignments
+ */
+export const getStudentAssignments = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+  try {
+    const studentId = req.user!.userId; // Current logged-in student
+    const assignments = await homeworkService.getStudentAssignments(studentId);
+
+    return res.status(200).json({ success: true, message: 'Assignments retrieved', data: assignments } as ApiResponse);
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to get assignments', error: error.message } as ApiResponse);
+  }
+};
+
+/**
+ * Get assignment by ID
+ */
+export const getAssignmentById = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+  try {
+    const assignmentId = req.params.assignmentId;
+    const assignment = await homeworkService.getAssignmentById(assignmentId);
+
+    if (!assignment) {
+      return res.status(404).json({ success: false, message: 'Assignment not found' } as ApiResponse);
+    }
+
+    return res.status(200).json({ success: true, message: 'Assignment retrieved', data: assignment } as ApiResponse);
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to get assignment', error: error.message } as ApiResponse);
+  }
+};
+
+/**
+ * Delete assignment
+ */
+export const deleteAssignment = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+  try {
+    const { homeworkId, studentId } = req.params;
+    await homeworkService.deleteAssignment(homeworkId, studentId);
+
+    return res.status(200).json({ success: true, message: 'Assignment deleted' } as ApiResponse);
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to delete assignment', error: error.message } as ApiResponse);
+  }
+};
+
+/**
+ * Get tutor's students for homework assignment
+ */
+export const getTutorStudents = async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
+  try {
+    const tutorId = req.user!.userId;
+    const students = await homeworkService.getTutorStudents(tutorId);
+
+    return res.status(200).json({ success: true, message: 'Students retrieved', data: students } as ApiResponse);
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Failed to get students', error: error.message } as ApiResponse);
   }
 };

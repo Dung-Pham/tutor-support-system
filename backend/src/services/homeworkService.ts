@@ -88,10 +88,12 @@ export const deleteMaterial = async (materialId: string): Promise<boolean> => {
  * Create homework
  */
 export const createHomework = async (data: CreateHomeworkDTO): Promise<Homework> => {
-  // Validate due date is in the future
-  const dueDate = new Date(data.due_date);
-  if (dueDate < new Date()) {
-    throw new Error('Due date must be in the future');
+  // Validate due date is in the future if provided
+  if (data.due_date) {
+    const dueDate = new Date(data.due_date);
+    if (dueDate < new Date()) {
+      throw new Error('Due date must be in the future');
+    }
   }
 
   return await homeworkQueries.createHomework(data);
@@ -102,6 +104,13 @@ export const createHomework = async (data: CreateHomeworkDTO): Promise<Homework>
  */
 export const getHomeworkById = async (homeworkId: string): Promise<Homework | null> => {
   return await homeworkQueries.getHomeworkById(homeworkId);
+};
+
+/**
+ * Get homework detail with assignments (for tutor detail page)
+ */
+export const getHomeworkDetailWithAssignments = async (homeworkId: string): Promise<any | null> => {
+  return await homeworkQueries.getHomeworkDetailWithAssignments(homeworkId);
 };
 
 /**
@@ -193,17 +202,19 @@ export const submitHomework = async (data: SubmitHomeworkDTO): Promise<HomeworkS
     throw new Error('Homework not found');
   }
 
-  if (homework.status !== 'ACTIVE') {
+  if (homework.status && homework.status !== 'ACTIVE') {
     throw new Error('Homework is not active');
   }
 
   // Check if past due date (allow late submissions but mark them)
-  const now = new Date();
-  const dueDate = new Date(homework.due_date);
-  const isLate = now > dueDate;
+  if (homework.due_date) {
+    const now = new Date();
+    const dueDate = new Date(homework.due_date);
+    const isLate = now > dueDate;
 
-  if (isLate) {
-    console.warn(`Late submission for homework ${homework.homework_id}`);
+    if (isLate) {
+      console.warn(`Late submission for homework ${homework.homework_id}`);
+    }
   }
 
   return await homeworkQueries.submitHomework(data);
@@ -292,4 +303,45 @@ export const getHomeworkStatistics = async (
   completion_rate: number;
 }> => {
   return await homeworkQueries.getHomeworkStatistics(classId);
+};
+
+/**
+ * Assign homework to student
+ */
+export const assignHomeworkToStudent = async (data: {
+  homework_id: string;
+  student_id: string;
+  assigned_by: string;
+  due_date?: string;
+  note?: string;
+}): Promise<any> => {
+  return await homeworkQueries.assignHomeworkToStudent(data);
+};
+
+/**
+ * Get student assignments
+ */
+export const getStudentAssignments = async (studentId: string): Promise<any[]> => {
+  return await homeworkQueries.getStudentAssignments(studentId);
+};
+
+/**
+ * Get assignment by ID
+ */
+export const getAssignmentById = async (assignmentId: string): Promise<any | null> => {
+  return await homeworkQueries.getAssignmentById(assignmentId);
+};
+
+/**
+ * Delete assignment
+ */
+export const deleteAssignment = async (homeworkId: string, studentId: string): Promise<boolean> => {
+  return await homeworkQueries.deleteAssignment(homeworkId, studentId);
+};
+
+/**
+ * Get tutor's students
+ */
+export const getTutorStudents = async (tutorId: string): Promise<any[]> => {
+  return await homeworkQueries.getTutorStudents(tutorId);
 };

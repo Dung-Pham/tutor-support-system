@@ -29,6 +29,10 @@ import AssignmentsPage from './pages/AssignmentsPage';
 import SubmitAssignmentPage from './pages/SubmitAssignmentPage';
 import SubmissionsPage from './pages/SubmissionsPage';
 import DocumentsPage from './pages/DocumentsPage';
+import StudentHomeworkPage from './pages/StudentHomeworkPage';
+import TutorHomeworkPage from './pages/TutorHomeworkPage';
+import HomeworkDetailPage from './pages/HomeworkDetailPage';
+import StudentHomeworkDetailPage from './pages/StudentHomeworkDetailPage';
 
 // Cấu hình React Query client
 const queryClient = new QueryClient({
@@ -60,9 +64,23 @@ function App() {
             <Route path="/my-classes" element={<ProtectedRoute><MainLayout><MyClassesPage /></MainLayout></ProtectedRoute>} />
             <Route path="/class-detail/:classId" element={<ProtectedRoute><MainLayout><ClassDetailPage /></MainLayout></ProtectedRoute>} />
             <Route path="/sessions/:sessionId" element={<ProtectedRoute><MainLayout><SessionDetailPage /></MainLayout></ProtectedRoute>} />
+            
+            {/* Homework Routes - Role-based */}
+            <Route path="/homework/student" element={<ProtectedRoute role="student"><MainLayout><StudentHomeworkPage /></MainLayout></ProtectedRoute>} />
+            <Route path="/homework/student/:assignmentId" element={<ProtectedRoute role="student"><MainLayout><StudentHomeworkDetailPage /></MainLayout></ProtectedRoute>} />
+            <Route path="/homework/tutor" element={<ProtectedRoute role="tutor"><MainLayout><TutorHomeworkPage /></MainLayout></ProtectedRoute>} />
+            <Route path="/homework/tutor/:homeworkId" element={<ProtectedRoute role="tutor"><MainLayout><HomeworkDetailPage /></MainLayout></ProtectedRoute>} />
+            
+            {/* My Homework Routes - Alias routes for both roles */}
+            <Route path="/my-homework" element={<ProtectedRoute role="tutor"><MainLayout><TutorHomeworkPage /></MainLayout></ProtectedRoute>} />
+            <Route path="/my-homework/:homeworkId" element={<ProtectedRoute role="tutor"><MainLayout><HomeworkDetailPage /></MainLayout></ProtectedRoute>} />
+            <Route path="/student-homework/:assignmentId" element={<ProtectedRoute role="student"><MainLayout><StudentHomeworkDetailPage /></MainLayout></ProtectedRoute>} />
+            
+            {/* Legacy assignment routes - kept for compatibility */}
             <Route path="/assignments" element={<ProtectedRoute><MainLayout><AssignmentsPage /></MainLayout></ProtectedRoute>} />
             <Route path="/assignments/:assignmentId/submit" element={<ProtectedRoute><MainLayout><SubmitAssignmentPage /></MainLayout></ProtectedRoute>} />
             <Route path="/assignments/:assignmentId/submissions" element={<ProtectedRoute role="tutor"><MainLayout><SubmissionsPage /></MainLayout></ProtectedRoute>} />
+            
             <Route path="/documents" element={<ProtectedRoute><MainLayout><DocumentsPage /></MainLayout></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
