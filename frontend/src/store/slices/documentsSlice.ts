@@ -283,13 +283,23 @@ const documentsSlice = createSlice({
         state.students = action.payload;
       })
 
-      // Grant permission
+      // Grant permission - Update existing or add new
       .addCase(grantPermissionAsync.fulfilled, (state, action) => {
-        state.permissions.push(action.payload);
-        // Update shared count for the document
-        const document = state.documents.find(doc => doc.document_id === action.payload.document_id);
-        if (document && document.shared_count !== undefined) {
-          document.shared_count += 1;
+        const existingIndex = state.permissions.findIndex(
+          p => p.document_id === action.payload.document_id && p.user_id === action.payload.user_id
+        );
+        
+        if (existingIndex !== -1) {
+          // Update existing permission
+          state.permissions[existingIndex] = action.payload;
+        } else {
+          // Add new permission
+          state.permissions.push(action.payload);
+          // Update shared count for the document (only for new permissions)
+          const document = state.documents.find(doc => doc.document_id === action.payload.document_id);
+          if (document && document.shared_count !== undefined) {
+            document.shared_count += 1;
+          }
         }
       })
 

@@ -5,14 +5,14 @@
  *   - Hiển thị danh sách tài liệu của tutor hoặc tài liệu được share cho student
  *   - Upload tài liệu mới (tutor only)
  *   - Quản lý quyền truy cập (tutor only)
- *   - Download tài liệu
+ *   - Download và xem tài liệu
  * Lưu ý:
  *   - Phân biệt UI cho tutor và student
  *   - Modal upload và permissions management
  *   - Responsive design với shadcn/ui
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -31,6 +31,14 @@ import {
   Share2,
   Calendar,
   User,
+  Eye,
+  X,
+  ExternalLink,
+  Printer,
+  ZoomIn,
+  ZoomOut,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { formatFileSize } from '../utils/fileHelper';
 import {
@@ -42,6 +50,7 @@ import {
 } from '../store/slices/documentsSlice';
 import { DocumentUploadModal } from '../components/DocumentUploadModal';
 import { DocumentPermissionsModal } from '../components/DocumentPermissionsModal';
+import { AttachmentPreview } from '../components/AttachmentPreview';
 
 export const DocumentsPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -55,24 +64,27 @@ export const DocumentsPage: React.FC = () => {
     selectedDocumentId,
   } = useSelector((state: RootState) => state.documents);
 
+  // State for viewing document
+  const [viewingDocument, setViewingDocument] = useState<any>(null);
+
   const isTutor = user?.role === 'tutor';
 
   useEffect(() => {
     dispatch(fetchMyDocuments());
   }, [dispatch]);
 
-  const handleDownload = async (document: any) => {
+  const handleDownload = async (doc: any) => {
     try {
-      const result = await dispatch(downloadDocumentAsync(document.document_id)).unwrap();
+      const result = await dispatch(downloadDocumentAsync(doc.document_id)).unwrap();
 
       // Create download link
       const url = window.URL.createObjectURL(result.blob);
-      const link = document.createElement('a');
+      const link = window.document.createElement('a');
       link.href = url;
-      link.download = document.file_name;
-      document.body.appendChild(link);
+      link.download = doc.file_name;
+      window.document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      window.document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Download failed:', error);
@@ -267,12 +279,22 @@ export const DocumentsPage: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDownload(document)}
+                    onClick={() => setViewingDocument(document)}
                     className="flex-1"
                   >
-                    <Download className="h-4 w-4 mr-2" />
-                    {document.permission_type === 'VIEW' && !isTutor ? 'Xem' : 'Tải xuống'}
+                    <Eye className="h-4 w-4 mr-2" />
+                    Xem
                   </Button>
+                  
+                  {(isTutor || document.permission_type === 'DOWNLOAD') && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownload(document)}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  )}
 
                   {isTutor && (
                     <Button
@@ -288,6 +310,42 @@ export const DocumentsPage: React.FC = () => {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Document Preview Modal - Google Drive Style */}
+      {viewingDocument && (
+        <>
+          {/* Dark backdrop - muted */}
+          <div 
+            className="fixed top-0 left-0 right-0 bottom-0 z-[100] bg-black/50"
+            onClick={() => setViewingDocument(null)}
+          />
+          
+          {/* Close button - top right of screen */}
+          <button
+            onClick={() => setViewingDocument(null)}
+            className="fixed top-4 right-4 z-[110] p-2 bg-gray-700/90 hover:bg-gray-600 rounded-full transition-colors"
+          >
+            <X className="h-6 w-6 text-white" />
+          </button>
+
+          {/* Modal Container - full screen */}
+          <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
+            <div className="w-[70%] h-[85%] flex flex-col bg-[#202124] rounded-lg shadow-2xl pointer-events-auto">
+              {/* Main Content Area */}
+              <div className="flex-1 overflow-hidden relative">
+                <AttachmentPreview
+                  url={viewingDocument.file_url || `/uploads/documents/${viewingDocument.file_name}`}
+                  name={viewingDocument.file_name}
+                  type={viewingDocument.file_type}
+                  size={viewingDocument.file_size}
+                  showPreview={true}
+                  className="h-full"
+                />
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Modals */}

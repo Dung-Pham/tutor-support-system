@@ -311,10 +311,11 @@ export const grantDocumentPermission = async (
     throw new Error('Document not found or access denied');
   }
 
-  // Check if permission already exists
+  // Check if permission already exists (get all matching)
   const existingQuery = `
     SELECT permission_id, status FROM [DocumentPermissions]
     WHERE document_id = @documentId AND user_id = @studentId
+    ORDER BY created_at DESC
   `;
 
   const existingResult = await dbConnection.query<{ permission_id: string; status: string }>(
@@ -323,9 +324,9 @@ export const grantDocumentPermission = async (
   );
 
   if (existingResult.recordset.length > 0) {
-    const existing = existingResult.recordset[0];
-
-    // Update existing permission
+    // Update the first (newest) permission
+    const firstPermission = existingResult.recordset[0];
+    
     const updateQuery = `
       UPDATE [DocumentPermissions]
       SET permission_type = @permissionType, 
@@ -337,9 +338,19 @@ export const grantDocumentPermission = async (
     `;
 
     await dbConnection.query<DocumentPermission>(updateQuery, {
-      permissionId: existing.permission_id,
+      permissionId: firstPermission.permission_id,
       permissionType,
     });
+
+    // Delete duplicate permissions (keep only the first one)
+    if (existingResult.recordset.length > 1) {
+      const duplicateIds = existingResult.recordset.slice(1).map(p => `'${p.permission_id}'`).join(',');
+      const deleteQuery = `
+        DELETE FROM [DocumentPermissions]
+        WHERE permission_id IN (${duplicateIds})
+      `;
+      await dbConnection.query(deleteQuery, {});
+    }
   } else {
     // Create new permission
     const insertQuery = `
@@ -426,13 +437,14 @@ export const getDocumentPermissions = async (
       dp.updated_at,
       u.[name] as user_name,
       u.email as user_email,
-      c.description as class_name,
-      c.class_id
+      (SELECT TOP 1 c.description FROM [Class] c 
+       WHERE c.student_id = u.user_id AND c.tutor_id = @tutorId) as class_name
     FROM [DocumentPermissions] dp
     INNER JOIN [UserAccount] u ON dp.user_id = u.user_id
     INNER JOIN [Documents] d ON dp.document_id = d.document_id
-    LEFT JOIN [Class] c ON c.student_id = u.user_id AND c.tutor_id = @tutorId
-    WHERE dp.document_id = @documentId AND d.tutor_id = @tutorId
+    WHERE dp.document_id = @documentId 
+      AND d.tutor_id = @tutorId
+      AND dp.status = 'ACTIVE'
     ORDER BY dp.granted_date DESC
   `;
 
@@ -598,4 +610,68 @@ export const getDocumentAccessStats = async (
   }>(query, { documentId });
 
   return result.recordset[0];
+};
+/**
+ * Create access log entry
+ */
+export const createAccessLog = async (data: {
+  document_id: string;
+  user_id: string;
+  access_type: string;
+  ip_address?: string;
+  user_agent?: string;
+}): Promise<void> => {
+  const query = `
+    INSERT INTO [DocumentAccessLogs] (document_id, user_id, access_type, ip_address, user_agent)
+    VALUES (@document_id, @user_id, @access_type, @ip_address, @user_agent)
+  `;
+
+  await dbConnection.query(query, {
+    document_id: data.document_id,
+    user_id: data.user_id,
+    access_type: data.access_type,
+    ip_address: data.ip_address || null,
+    user_agent: data.user_agent || null,
+  });
+};
+
+/**
+ * Grant permission (wrapper for grantDocumentPermission)
+ */
+export const grantPermission = async (data: {
+  document_id: string;
+  user_id: string;
+  granted_by: string;
+  permission_type: string;
+}): Promise<any> => {
+  return await grantDocumentPermission(
+    data.document_id,
+    data.granted_by,
+    data.user_id,
+    data.permission_type
+  );
+};
+
+/**
+ * Revoke permission (wrapper for revokeDocumentPermission)
+ */
+export const revokePermission = async (
+  permissionId: string,
+  documentId: string,
+  tutorId: string
+): Promise<boolean> => {
+  // Get student_id from permission
+  const query = `
+    SELECT user_id FROM [DocumentPermissions]
+    WHERE permission_id = @permissionId AND document_id = @documentId
+  `;
+  
+  const result = await dbConnection.query<{ user_id: string }>(query, { permissionId, documentId });
+  
+  if (result.recordset.length === 0) {
+    return false;
+  }
+  
+  const studentId = result.recordset[0].user_id;
+  return await revokeDocumentPermission(documentId, tutorId, studentId);
 };

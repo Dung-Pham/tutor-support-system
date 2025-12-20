@@ -38,7 +38,7 @@ interface AttachmentPreviewProps {
   className?: string;
 }
 
-// PDF Viewer Component using PDF.js - renders ALL pages for scrolling
+// PDF Viewer Component using PDF.js - Google Drive style
 const PDFViewer: React.FC<{
   url: string;
   name?: string;
@@ -49,13 +49,21 @@ const PDFViewer: React.FC<{
   const pagesContainerRef = useRef<HTMLDivElement>(null);
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [totalPages, setTotalPages] = useState(0);
-  const [scale, setScale] = useState(1.0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [scale, setScale] = useState(0.6);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [renderedPages, setRenderedPages] = useState<Set<number>>(new Set());
 
   // Load PDF document
   useEffect(() => {
+    // Don't load if URL is invalid
+    if (!url || typeof url !== 'string') {
+      setError('URL không hợp lệ');
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     
     const loadPdf = async () => {
@@ -77,10 +85,17 @@ const PDFViewer: React.FC<{
           setTotalPages(pdf.numPages);
           setLoading(false);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error loading PDF:', err);
         if (!cancelled) {
-          setError('Không thể tải file PDF');
+          // Check for specific error types
+          if (err?.name === 'MissingPDFException') {
+            setError('File PDF không tồn tại trên server');
+          } else if (err?.message?.includes('404')) {
+            setError('File PDF không tìm thấy (404)');
+          } else {
+            setError('Không thể tải file PDF. Vui lòng thử tải về.');
+          }
           setLoading(false);
         }
       }
@@ -156,30 +171,69 @@ const PDFViewer: React.FC<{
   const zoomIn = () => setScale(s => Math.min(2.5, s + 0.2));
   const zoomOut = () => setScale(s => Math.max(0.5, s - 0.2));
   const resetZoom = () => setScale(1.0);
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      // Scroll to page
+      const pageElement = pagesContainerRef.current?.children[page - 1] as HTMLElement;
+      if (pageElement) {
+        pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
+
+  // Track current page on scroll
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const pages = pagesContainerRef.current?.children;
+      if (!pages) return;
+
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i] as HTMLElement;
+        const rect = page.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        
+        if (rect.top >= containerRect.top - 100 && rect.top <= containerRect.top + 200) {
+          setCurrentPage(i + 1);
+          break;
+        }
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [totalPages]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full min-h-[400px] bg-gray-100">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-        <span className="ml-2 text-gray-600">Đang tải PDF...</span>
+      <div className="flex items-center justify-center h-full bg-[#525659]">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+        <span className="ml-2 text-gray-300">Đang tải PDF...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[400px] bg-gray-100 p-8">
-        <FileText className="h-16 w-16 text-gray-300 mb-4" />
-        <p className="text-gray-500 mb-4">{error}</p>
+      <div className="flex flex-col items-center justify-center h-full bg-[#525659] p-8">
+        <FileText className="h-16 w-16 text-gray-400 mb-4" />
+        <p className="text-white font-medium mb-2">Không thể hiển thị file</p>
+        <p className="text-gray-400 mb-4 text-sm text-center">{error}</p>
+        <p className="text-gray-500 text-xs mb-4 text-center">
+          File có thể đã bị xóa hoặc chưa được upload thực sự
+        </p>
         <div className="flex gap-2">
           <a href={url} target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="bg-transparent border-gray-500 text-white hover:bg-gray-600">
               <ExternalLink className="h-4 w-4 mr-2" />
-              Mở trong tab mới
+              Thử mở trong tab mới
             </Button>
           </a>
           <a href={url} download={name}>
-            <Button size="sm">
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
               <Download className="h-4 w-4 mr-2" />
               Tải xuống
             </Button>
@@ -190,72 +244,61 @@ const PDFViewer: React.FC<{
   }
 
   return (
-    <div className={`flex flex-col ${isFullscreen ? 'h-full' : ''}`}>
-      {/* Controls */}
-      <div className={`flex items-center justify-between p-2 border-b bg-gray-50 sticky top-0 z-10 ${isFullscreen ? 'bg-gray-800 border-gray-700' : ''}`}>
-        {/* Page info */}
-        <div className="flex items-center gap-2">
-          <span className={`text-sm ${isFullscreen ? 'text-white' : 'text-gray-600'}`}>
-            {totalPages} trang {renderedPages.size < totalPages && `(đang tải ${renderedPages.size}/${totalPages})`}
-          </span>
-        </div>
-
-        {/* Zoom controls */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={zoomOut}
-            disabled={scale <= 0.5}
-            title="Thu nhỏ"
-            className={isFullscreen ? 'text-white hover:bg-gray-700' : ''}
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <button
-            onClick={resetZoom}
-            className={`text-xs px-2 min-w-[50px] text-center hover:bg-gray-200 rounded ${isFullscreen ? 'text-white hover:bg-gray-700' : 'text-gray-600'}`}
-            title="Reset zoom"
-          >
-            {Math.round(scale * 100)}%
-          </button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={zoomIn}
-            disabled={scale >= 2.5}
-            title="Phóng to"
-            className={isFullscreen ? 'text-white hover:bg-gray-700' : ''}
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-          
-          {!isFullscreen && onFullscreen && (
-            <>
-              <div className="w-px h-5 bg-gray-300 mx-1" />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onFullscreen}
-                title="Toàn màn hình"
-              >
-                <Maximize2 className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Pages container - scrollable */}
+    <div className="flex flex-col h-full bg-[#525659] relative">
+      {/* PDF Content Area - scrollable */}
       <div 
         ref={containerRef}
-        className={`overflow-auto ${isFullscreen ? 'flex-1 bg-gray-900' : 'bg-gray-300'}`}
-        style={{ height: isFullscreen ? 'calc(100vh - 120px)' : '600px' }}
+        className="flex-1 overflow-auto"
       >
         <div 
           ref={pagesContainerRef}
-          className="flex flex-col items-center py-4 px-2"
+          className="flex flex-col items-center py-6 px-4"
         />
+      </div>
+
+      {/* Floating Zoom Toolbar - middle center, above bottom bar */}
+      <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 flex items-center gap-1.5 bg-gray-700/40 rounded-full px-3 py-2 shadow-lg z-50 backdrop-blur-md border border-gray-500/20">
+        <button
+          onClick={zoomOut}
+          disabled={scale <= 0.5}
+          className="p-1.5 text-gray-200 hover:bg-gray-500/50 rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          title="Thu nhỏ"
+        >
+          <ZoomOut className="h-4 w-4" />
+        </button>
+        <div className="w-px h-5 bg-gray-400/50" />
+        <span className="text-gray-200 text-xs px-2 min-w-[36px] text-center font-medium">
+          {Math.round(scale * 100)}%
+        </span>
+        <div className="w-px h-5 bg-gray-400/50" />
+        <button
+          onClick={zoomIn}
+          disabled={scale >= 2.5}
+          className="p-1.5 text-gray-200 hover:bg-gray-500/50 rounded-full disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          title="Phóng to"
+        >
+          <ZoomIn className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Bottom Control Bar - Google Drive style */}
+      <div className="flex items-center justify-center gap-4 py-3 px-4 bg-[#323232]">
+        {/* Page navigation */}
+        <div className="flex items-center gap-2">
+          <span className="text-gray-300 text-sm">Trang</span>
+          <input
+            type="number"
+            value={currentPage}
+            onChange={(e) => goToPage(parseInt(e.target.value) || 1)}
+            className="w-12 px-2 py-1 text-center text-sm bg-[#525659] text-white border border-gray-500 rounded focus:outline-none focus:border-blue-400"
+            min={1}
+            max={totalPages}
+          />
+          <span className="text-gray-300 text-sm">/ {totalPages}</span>
+        </div>
+
+        {/* Divider */}
+        <div className="w-px h-6 bg-gray-600" />
       </div>
     </div>
   );

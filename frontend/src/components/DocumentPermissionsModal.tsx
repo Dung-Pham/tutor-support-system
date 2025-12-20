@@ -125,8 +125,23 @@ export const DocumentPermissionsModal: React.FC<DocumentPermissionsModalProps> =
     student => !permissions.some(permission => permission.user_id === student.user_id)
   );
 
+  // Dedupe permissions by user_id (keep the latest or highest permission)
+  const uniquePermissions = permissions.reduce((acc, permission) => {
+    const existingIndex = acc.findIndex(p => p.user_id === permission.user_id);
+    if (existingIndex === -1) {
+      acc.push(permission);
+    } else {
+      // Keep DOWNLOAD over VIEW, or keep the newer one
+      if (permission.permission_type === 'DOWNLOAD' || 
+          (permission.permission_id > acc[existingIndex].permission_id)) {
+        acc[existingIndex] = permission;
+      }
+    }
+    return acc;
+  }, [] as typeof permissions);
+
   // Get current permissions with student info
-  const permissionsWithStudentInfo = permissions.map(permission => {
+  const permissionsWithStudentInfo = uniquePermissions.map(permission => {
     const student = students.find(s => s.user_id === permission.user_id);
     return {
       ...permission,
@@ -219,7 +234,7 @@ export const DocumentPermissionsModal: React.FC<DocumentPermissionsModalProps> =
               <div className="space-y-3">
                 {permissionsWithStudentInfo.map((permission) => (
                   <div
-                    key={permission.permission_id}
+                    key={`permission-${permission.user_id}`}
                     className="flex items-center justify-between p-4 border rounded-lg"
                   >
                     <div className="flex-1">
