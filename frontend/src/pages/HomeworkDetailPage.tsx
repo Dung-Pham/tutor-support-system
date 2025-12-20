@@ -125,13 +125,18 @@ const HomeworkDetailPage: React.FC = () => {
 
   const handleGrade = async (e: React.FormEvent) => {
     e.preventDefault();
-    await dispatch(gradeSubmissionAsync({
+    const result = await dispatch(gradeSubmissionAsync({
       submissionId: gradeForm.submissionId,
       data: {
         score: gradeForm.score,
         feedback: gradeForm.feedback,
       },
     }));
+    
+    // Refetch homework detail to get updated scores
+    if (result.meta.requestStatus === 'fulfilled' && homeworkId) {
+      dispatch(fetchHomeworkDetail(homeworkId));
+    }
   };
 
   const formatDate = (dateString: string | null) => {
@@ -547,22 +552,20 @@ const HomeworkDetailPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* File Attachment - Full Width and Page-height */}
+                {/* File Attachment - Full Width */}
                 <div>
                   <h4 className="font-medium mb-3 flex items-center gap-2 text-lg">
                     <FileText className="h-5 w-5" />
                     File đính kèm
                   </h4>
                   {selectedSubmission.submission_attachment_url ? (
-                    <div className="bg-white rounded-lg border border-gray-200 p-6 overflow-auto" style={{ height: '900px' }}>
-                      <AttachmentPreview
-                        url={selectedSubmission.submission_attachment_url}
-                        name={selectedSubmission.submission_attachment_name}
-                        type={selectedSubmission.submission_attachment_type}
-                      />
-                    </div>
+                    <AttachmentPreview
+                      url={selectedSubmission.submission_attachment_url}
+                      name={selectedSubmission.submission_attachment_name}
+                      type={selectedSubmission.submission_attachment_type}
+                    />
                   ) : (
-                    <div className="h-[900px] flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 p-8">
+                    <div className="h-[200px] flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 p-8">
                       <div className="text-center text-gray-400">
                         <FileText className="h-16 w-16 mx-auto mb-3" />
                         <p className="text-lg">Không có file đính kèm</p>

@@ -60,6 +60,7 @@ export interface HomeworkAssignment {
   submission_content?: string;
   submission_attachment_url?: string;
   submission_attachment_name?: string;
+  submission_attachment_type?: string;
   submitted_at?: string;
   is_late?: boolean;
   score?: number;
@@ -185,7 +186,8 @@ export const createHomework = async (data: CreateHomeworkData): Promise<Homework
     description: data.description || null,
     classId: data.classId || null,
     maxScore: data.maxScore || 10,
-    dueDate: data.dueDate || null,
+    // Convert empty string to null for proper validation
+    dueDate: data.dueDate && data.dueDate.trim() !== '' ? data.dueDate : null,
     attachmentUrl: attachmentData?.url || data.attachmentUrl || null,
     attachmentName: attachmentData?.name || null,
     attachmentType: attachmentData?.type || null,

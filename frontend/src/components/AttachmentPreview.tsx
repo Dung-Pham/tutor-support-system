@@ -1,10 +1,10 @@
 /**
  * File: components/AttachmentPreview.tsx
  * Mục đích: Component hiển thị file đính kèm (hình ảnh, PDF, link, etc.)
- * Hỗ trợ xem inline ngay trong trang với PDF viewer và image viewer
+ * Sử dụng PDF.js để render PDF thành canvas - không dùng iframe
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Download, 
   ExternalLink,
@@ -13,7 +13,7 @@ import {
   FileText,
   ZoomIn,
   ZoomOut,
-  RotateCw
+  Loader2
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { 
@@ -24,6 +24,10 @@ import {
   getFileEmoji,
   formatFileSize 
 } from '../utils/fileHelper';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Set worker source for PDF.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface AttachmentPreviewProps {
   url: string | null | undefined;
@@ -33,6 +37,229 @@ interface AttachmentPreviewProps {
   showPreview?: boolean;
   className?: string;
 }
+
+// PDF Viewer Component using PDF.js - renders ALL pages for scrolling
+const PDFViewer: React.FC<{
+  url: string;
+  name?: string;
+  onFullscreen?: () => void;
+  isFullscreen?: boolean;
+}> = ({ url, name, onFullscreen, isFullscreen = false }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pagesContainerRef = useRef<HTMLDivElement>(null);
+  const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
+  const [totalPages, setTotalPages] = useState(0);
+  const [scale, setScale] = useState(1.0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [renderedPages, setRenderedPages] = useState<Set<number>>(new Set());
+
+  // Load PDF document
+  useEffect(() => {
+    let cancelled = false;
+    
+    const loadPdf = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        setRenderedPages(new Set());
+        
+        const loadingTask = pdfjsLib.getDocument({
+          url: url,
+          cMapUrl: `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
+          cMapPacked: true,
+        });
+        
+        const pdf = await loadingTask.promise;
+        
+        if (!cancelled) {
+          setPdfDoc(pdf);
+          setTotalPages(pdf.numPages);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Error loading PDF:', err);
+        if (!cancelled) {
+          setError('Không thể tải file PDF');
+          setLoading(false);
+        }
+      }
+    };
+
+    loadPdf();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  // Render a single page to canvas
+  const renderPageToCanvas = useCallback(async (pageNum: number, canvas: HTMLCanvasElement) => {
+    if (!pdfDoc) return;
+
+    try {
+      const page = await pdfDoc.getPage(pageNum);
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) return;
+
+      // Use device pixel ratio for sharp rendering
+      const pixelRatio = window.devicePixelRatio || 1;
+      const viewport = page.getViewport({ scale: scale * pixelRatio });
+      
+      // Set canvas dimensions accounting for pixel ratio
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      canvas.style.width = `${viewport.width / pixelRatio}px`;
+      canvas.style.height = `${viewport.height / pixelRatio}px`;
+
+      const renderContext = {
+        canvasContext: ctx,
+        viewport: viewport,
+      };
+
+      await page.render(renderContext).promise;
+      
+      setRenderedPages(prev => new Set(prev).add(pageNum));
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'name' in err && err.name !== 'RenderingCancelledException') {
+        console.error('Error rendering page:', err);
+      }
+    }
+  }, [pdfDoc, scale]);
+
+  // Render all pages when PDF is loaded or scale changes
+  useEffect(() => {
+    if (!pdfDoc || !pagesContainerRef.current) return;
+
+    const container = pagesContainerRef.current;
+    container.innerHTML = ''; // Clear previous pages
+    setRenderedPages(new Set());
+
+    // Create and render all pages
+    for (let i = 1; i <= totalPages; i++) {
+      const pageWrapper = document.createElement('div');
+      pageWrapper.className = 'pdf-page-wrapper mb-4 shadow-lg bg-white';
+      pageWrapper.style.display = 'flex';
+      pageWrapper.style.justifyContent = 'center';
+      
+      const canvas = document.createElement('canvas');
+      canvas.className = 'pdf-page-canvas';
+      pageWrapper.appendChild(canvas);
+      container.appendChild(pageWrapper);
+      
+      // Render page
+      renderPageToCanvas(i, canvas);
+    }
+  }, [pdfDoc, totalPages, scale, renderPageToCanvas]);
+
+  const zoomIn = () => setScale(s => Math.min(2.5, s + 0.2));
+  const zoomOut = () => setScale(s => Math.max(0.5, s - 0.2));
+  const resetZoom = () => setScale(1.0);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[400px] bg-gray-100">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <span className="ml-2 text-gray-600">Đang tải PDF...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[400px] bg-gray-100 p-8">
+        <FileText className="h-16 w-16 text-gray-300 mb-4" />
+        <p className="text-gray-500 mb-4">{error}</p>
+        <div className="flex gap-2">
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            <Button variant="outline" size="sm">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Mở trong tab mới
+            </Button>
+          </a>
+          <a href={url} download={name}>
+            <Button size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              Tải xuống
+            </Button>
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex flex-col ${isFullscreen ? 'h-full' : ''}`}>
+      {/* Controls */}
+      <div className={`flex items-center justify-between p-2 border-b bg-gray-50 sticky top-0 z-10 ${isFullscreen ? 'bg-gray-800 border-gray-700' : ''}`}>
+        {/* Page info */}
+        <div className="flex items-center gap-2">
+          <span className={`text-sm ${isFullscreen ? 'text-white' : 'text-gray-600'}`}>
+            {totalPages} trang {renderedPages.size < totalPages && `(đang tải ${renderedPages.size}/${totalPages})`}
+          </span>
+        </div>
+
+        {/* Zoom controls */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={zoomOut}
+            disabled={scale <= 0.5}
+            title="Thu nhỏ"
+            className={isFullscreen ? 'text-white hover:bg-gray-700' : ''}
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <button
+            onClick={resetZoom}
+            className={`text-xs px-2 min-w-[50px] text-center hover:bg-gray-200 rounded ${isFullscreen ? 'text-white hover:bg-gray-700' : 'text-gray-600'}`}
+            title="Reset zoom"
+          >
+            {Math.round(scale * 100)}%
+          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={zoomIn}
+            disabled={scale >= 2.5}
+            title="Phóng to"
+            className={isFullscreen ? 'text-white hover:bg-gray-700' : ''}
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          
+          {!isFullscreen && onFullscreen && (
+            <>
+              <div className="w-px h-5 bg-gray-300 mx-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onFullscreen}
+                title="Toàn màn hình"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Pages container - scrollable */}
+      <div 
+        ref={containerRef}
+        className={`overflow-auto ${isFullscreen ? 'flex-1 bg-gray-900' : 'bg-gray-300'}`}
+        style={{ height: isFullscreen ? 'calc(100vh - 120px)' : '600px' }}
+      >
+        <div 
+          ref={pagesContainerRef}
+          className="flex flex-col items-center py-4 px-2"
+        />
+      </div>
+    </div>
+  );
+};
 
 export const AttachmentPreview: React.FC<AttachmentPreviewProps> = ({
   url,
@@ -44,28 +271,39 @@ export const AttachmentPreview: React.FC<AttachmentPreviewProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [pdfError, setPdfError] = useState(false);
   const [zoom, setZoom] = useState(100);
-  const [rotation, setRotation] = useState(0);
 
-  if (!url) return null;
-
-  const fullUrl = getFileUrl(url);
-  const isExternal = isExternalLink(url);
+  const fullUrl = url ? getFileUrl(url) : null;
+  const isExternal = url ? isExternalLink(url) : false;
   const isImage = isImageFile(type);
   const isPdf = isPdfFile(type);
   const emoji = getFileEmoji(type);
 
-  if (!fullUrl) return null;
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowModal(false);
+    };
+    if (showModal) {
+      window.addEventListener('keydown', handleEsc);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = '';
+    };
+  }, [showModal]);
 
-  // Fullscreen Modal for both Image and PDF
+  if (!url || !fullUrl) return null;
+
+  // Fullscreen Modal
   const FullscreenModal = () => (
     <div 
       className="fixed inset-0 z-50 bg-black/95 flex flex-col"
       onClick={() => setShowModal(false)}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 bg-gray-900/80 backdrop-blur">
+      <div className="flex items-center justify-between p-3 bg-gray-900/80 backdrop-blur shrink-0">
         <div className="flex items-center gap-3 text-white">
           <span className="text-xl">{emoji}</span>
           <span className="font-medium truncate max-w-md text-sm">{name}</span>
@@ -87,13 +325,6 @@ export const AttachmentPreview: React.FC<AttachmentPreviewProps> = ({
                 title="Phóng to"
               >
                 <ZoomIn className="h-4 w-4" />
-              </button>
-              <button
-                className="p-2 text-white hover:bg-white/10 rounded transition-colors"
-                onClick={(e) => { e.stopPropagation(); setRotation(r => (r + 90) % 360); }}
-                title="Xoay"
-              >
-                <RotateCw className="h-4 w-4" />
               </button>
               <div className="w-px h-5 bg-white/20 mx-1" />
             </>
@@ -129,32 +360,33 @@ export const AttachmentPreview: React.FC<AttachmentPreviewProps> = ({
 
       {/* Content */}
       <div 
-        className="flex-1 flex items-center justify-center overflow-auto p-4"
+        className="flex-1 flex items-center justify-center overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {isImage && (
           <img
             src={fullUrl}
             alt={name || 'Image'}
-            className="max-w-full max-h-full object-contain transition-transform duration-200"
+            className="max-w-full max-h-full object-contain transition-transform duration-200 p-4"
             style={{ 
-              transform: `scale(${zoom/100}) rotate(${rotation}deg)`,
+              transform: `scale(${zoom/100})`,
             }}
           />
         )}
         {isPdf && (
-          <iframe
-            src={fullUrl}
-            className="w-full h-full bg-white rounded shadow-2xl"
-            title={name || 'PDF Document'}
-            style={{ minHeight: '80vh' }}
-          />
+          <div className="w-full h-full">
+            <PDFViewer 
+              url={fullUrl} 
+              name={name || undefined}
+              isFullscreen={true}
+            />
+          </div>
         )}
       </div>
     </div>
   );
 
-  // Image preview - inline with larger display
+  // Image preview
   if (isImage && showPreview && !imageError) {
     return (
       <>
@@ -195,11 +427,11 @@ export const AttachmentPreview: React.FC<AttachmentPreviewProps> = ({
     );
   }
 
-  // PDF preview - inline with iframe viewer
+  // PDF preview using PDF.js
   if (isPdf && showPreview) {
     return (
       <>
-        <div className={`border rounded-lg overflow-hidden shadow-sm ${className}`}>
+        <div className={`border rounded-lg overflow-hidden shadow-sm bg-white ${className}`}>
           {/* Header */}
           <div className="bg-gray-100 p-3 flex items-center justify-between border-b">
             <div className="flex items-center gap-2">
@@ -210,14 +442,6 @@ export const AttachmentPreview: React.FC<AttachmentPreviewProps> = ({
               </div>
             </div>
             <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowModal(true)}
-                title="Xem toàn màn hình"
-              >
-                <Maximize2 className="h-4 w-4" />
-              </Button>
               <a href={fullUrl} target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="sm" title="Mở trong tab mới">
                   <ExternalLink className="h-4 w-4" />
@@ -231,39 +455,12 @@ export const AttachmentPreview: React.FC<AttachmentPreviewProps> = ({
             </div>
           </div>
 
-          {/* PDF Inline Viewer */}
-          {!pdfError ? (
-            <div className="bg-gray-200 w-full overflow-auto">
-              <iframe
-                src={fullUrl}
-                className="w-full border-0"
-                style={{ height: '600px', display: 'block' }}
-                title={name || 'PDF Preview'}
-                onError={() => setPdfError(true)}
-                scrolling="yes"
-                sandbox="allow-same-origin allow-scripts"
-              />
-            </div>
-          ) : (
-            <div className="p-8 text-center bg-gray-50">
-              <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500 mb-4">Không thể hiển thị PDF trực tiếp</p>
-              <div className="flex justify-center gap-2">
-                <a href={fullUrl} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="sm">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Mở trong tab mới
-                  </Button>
-                </a>
-                <a href={fullUrl} download={name}>
-                  <Button size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Tải xuống
-                  </Button>
-                </a>
-              </div>
-            </div>
-          )}
+          {/* PDF Viewer using PDF.js canvas rendering */}
+          <PDFViewer 
+            url={fullUrl} 
+            name={name || undefined}
+            onFullscreen={() => setShowModal(true)}
+          />
         </div>
 
         {showModal && <FullscreenModal />}

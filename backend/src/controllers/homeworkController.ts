@@ -299,6 +299,8 @@ export const assignHomeworkToStudent = async (req: AuthenticatedRequest, res: Re
     const homeworkId = req.params.homeworkId;
     const { studentId, dueDate, note } = req.body;
 
+    console.log('Assign homework request:', { homeworkId, studentId, dueDate, note });
+
     const assignment = await homeworkService.assignHomeworkToStudent({
       homework_id: homeworkId,
       student_id: studentId,
@@ -309,6 +311,7 @@ export const assignHomeworkToStudent = async (req: AuthenticatedRequest, res: Re
 
     return res.status(201).json({ success: true, message: 'Homework assigned', data: assignment } as ApiResponse);
   } catch (error: any) {
+    console.error('Assign homework error:', error);
     return res.status(500).json({ success: false, message: 'Failed to assign homework', error: error.message } as ApiResponse);
   }
 };

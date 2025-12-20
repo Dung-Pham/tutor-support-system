@@ -39,11 +39,67 @@ import attendanceRoutes from './routes/attendance';
 
 const app = express();
 
-// Security & Performance Middlewares
-app.use(helmet()); // Bảo vệ app khỏi các lỗ hổng web phổ biến
+// ============================================================
+// STATIC FILE SERVING - MUST BE BEFORE HELMET
+// This allows PDF/images to be embedded in iframes without X-Frame-Options blocking
+// ============================================================
+app.use('/uploads', (req, res, next): void => {
+  // Set headers to allow cross-origin file viewing and iframe embedding
+  const origin = req.headers.origin || 'http://localhost:3000';
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Range, Accept');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Content-Disposition');
+  
+  // Set Content-Disposition to inline for all viewable files
+  const ext = path.extname(req.path).toLowerCase();
+  if (['.pdf', '.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) {
+    res.setHeader('Content-Disposition', 'inline');
+  }
+  
+  // Handle OPTIONS preflight
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+}, express.static(path.join(__dirname, '..', 'uploads'), {
+  setHeaders: (res, filePath) => {
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === '.pdf') {
+      res.setHeader('Content-Type', 'application/pdf');
+    } else if (['.jpg', '.jpeg'].includes(ext)) {
+      res.setHeader('Content-Type', 'image/jpeg');
+    } else if (ext === '.png') {
+      res.setHeader('Content-Type', 'image/png');
+    } else if (ext === '.gif') {
+      res.setHeader('Content-Type', 'image/gif');
+    } else if (ext === '.webp') {
+      res.setHeader('Content-Type', 'image/webp');
+    }
+  }
+}));
+
+// CORS configuration - allow frontend to access API and files
+// IMPORTANT: CORS must be before helmet for proper cross-origin file access
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true,
+  exposedHeaders: ['Content-Disposition', 'Content-Type'],
+}));
+
+// Security & Performance Middlewares
+// COMPLETELY DISABLE security headers that block PDF viewing
+// This is safe for localhost development
+app.use(helmet({
+  contentSecurityPolicy: false,  // Disable CSP completely
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false,
+  crossOriginOpenerPolicy: false,
+  frameguard: false,  // Disable X-Frame-Options completely
 }));
 app.use(compression()); // Nén response để tăng tốc
 app.use(morgan('dev')); // Log HTTP requests
@@ -76,9 +132,6 @@ app.use('/api/attendance', attendanceRoutes);
 // app.use('/api/evaluations', evaluationRoutes); // TODO: Fix type issues in evaluationService
 // app.use('/api/homework', homeworkRoutes); // TODO: Fix type issues in homeworkService
 // app.use('/api/chat', chatRoutes); // TODO: Fix type issues in chatService
-
-// Static file serving - Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // 404 Handler - Route không tồn tại
 app.use((req: Request, res: Response) => {

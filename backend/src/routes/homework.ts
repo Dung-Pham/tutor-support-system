@@ -31,15 +31,15 @@ const uploadMaterialValidation = () => [
 
 const createHomeworkValidation = () => [
   body('title').notEmpty().withMessage('title is required'),
-  body('description').optional().isString(),
-  // Accept both snake_case and camelCase
-  body('class_id').optional().isUUID().withMessage('class_id must be a valid UUID'),
-  body('classId').optional().isUUID().withMessage('classId must be a valid UUID'),
-  body('schedule_id').optional().isUUID().withMessage('schedule_id must be a valid UUID'),
-  body('due_date').optional().isISO8601().withMessage('due_date must be a valid date'),
-  body('dueDate').optional().isISO8601().withMessage('dueDate must be a valid date'),
-  body('maxScore').optional().isNumeric().withMessage('maxScore must be a number'),
-  body('max_score').optional().isNumeric().withMessage('max_score must be a number'),
+  body('description').optional({ values: 'null' }).isString(),
+  // Accept both snake_case and camelCase - use { values: 'falsy' } to treat empty strings as optional
+  body('class_id').optional({ values: 'falsy' }).isUUID().withMessage('class_id must be a valid UUID'),
+  body('classId').optional({ values: 'falsy' }).isUUID().withMessage('classId must be a valid UUID'),
+  body('schedule_id').optional({ values: 'falsy' }).isUUID().withMessage('schedule_id must be a valid UUID'),
+  body('due_date').optional({ values: 'falsy' }).isISO8601().withMessage('due_date must be a valid date'),
+  body('dueDate').optional({ values: 'falsy' }).isISO8601().withMessage('dueDate must be a valid date'),
+  body('maxScore').optional({ values: 'falsy' }).isNumeric().withMessage('maxScore must be a number'),
+  body('max_score').optional({ values: 'falsy' }).isNumeric().withMessage('max_score must be a number'),
 ];
 
 const updateHomeworkValidation = () => [
@@ -63,7 +63,24 @@ const gradeHomeworkValidation = () => [
 
 // ============================================================
 // TUTOR ROUTES - /api/homework/tutor/*
+// IMPORTANT: Static routes must be defined BEFORE dynamic :param routes
 // ============================================================
+
+/**
+ * @route   GET /api/homework/tutor/students
+ * @desc    Get list of students for homework assignment
+ * @access  Private (Tutor only)
+ * NOTE: This static route MUST come before /tutor/:homeworkId
+ */
+router.get('/tutor/students', homeworkController.getTutorStudents);
+
+/**
+ * @route   POST /api/homework/tutor/grade/:submissionId
+ * @desc    Grade student submission
+ * @access  Private (Tutor only)
+ * NOTE: This static route MUST come before /tutor/:homeworkId
+ */
+router.post('/tutor/grade/:submissionId', gradeHomeworkValidation(), homeworkController.gradeSubmission);
 
 /**
  * @route   GET /api/homework/tutor
@@ -113,20 +130,6 @@ router.post('/tutor/:homeworkId/assign', uuidValidation('homeworkId'), homeworkC
  * @access  Private (Tutor only)
  */
 router.delete('/tutor/:homeworkId/assign/:studentId', homeworkController.deleteAssignment);
-
-/**
- * @route   POST /api/homework/tutor/grade/:submissionId
- * @desc    Grade student submission
- * @access  Private (Tutor only)
- */
-router.post('/tutor/grade/:submissionId', gradeHomeworkValidation(), homeworkController.gradeSubmission);
-
-/**
- * @route   GET /api/homework/tutor/students
- * @desc    Get list of students for homework assignment
- * @access  Private (Tutor only)
- */
-router.get('/tutor/students', homeworkController.getTutorStudents);
 
 // ============================================================
 // STUDENT ROUTES - /api/homework/student/*

@@ -384,11 +384,21 @@ const newHomeworkSlice = createSlice({
         if (hw) {
           hw.submission_id = action.payload.submission_id;
           hw.submitted_at = action.payload.submitted_at;
+          hw.submission_content = action.payload.content;
+          hw.submission_attachment_url = action.payload.attachment_url;
+          hw.submission_attachment_name = action.payload.attachment_name;
+          hw.submission_attachment_type = action.payload.attachment_type;
+          hw.is_late = action.payload.is_late;
           hw.overall_status = 'SUBMITTED';
         }
         if (state.currentAssignment && state.currentAssignment.assignment_id === action.payload.assignment_id) {
           state.currentAssignment.submission_id = action.payload.submission_id;
           state.currentAssignment.submitted_at = action.payload.submitted_at;
+          state.currentAssignment.submission_content = action.payload.content;
+          state.currentAssignment.submission_attachment_url = action.payload.attachment_url;
+          state.currentAssignment.submission_attachment_name = action.payload.attachment_name;
+          state.currentAssignment.submission_attachment_type = action.payload.attachment_type;
+          state.currentAssignment.is_late = action.payload.is_late;
           state.currentAssignment.overall_status = 'SUBMITTED';
         }
         state.showSubmitModal = false;

@@ -67,7 +67,7 @@ const StudentHomeworkDetailPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (assignmentId) {
-      await dispatch(submitHomeworkAsync({
+      const result = await dispatch(submitHomeworkAsync({
         assignmentId,
         data: {
           content: submitForm.content,
@@ -76,6 +76,11 @@ const StudentHomeworkDetailPage: React.FC = () => {
       }));
       setShowSubmitModal(false);
       setSubmitForm({ content: '', file: null });
+      
+      // Refetch to get updated submission data with attachment URLs
+      if (result.meta.requestStatus === 'fulfilled') {
+        dispatch(fetchStudentHomeworkDetail(assignmentId));
+      }
     }
   };
 

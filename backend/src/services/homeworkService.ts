@@ -88,11 +88,15 @@ export const deleteMaterial = async (materialId: string): Promise<boolean> => {
  * Create homework
  */
 export const createHomework = async (data: CreateHomeworkDTO): Promise<Homework> => {
-  // Validate due date is in the future if provided
+  // Validate due date is in the future if provided (compare dates only, not time)
   if (data.due_date) {
     const dueDate = new Date(data.due_date);
-    if (dueDate < new Date()) {
-      throw new Error('Due date must be in the future');
+    const today = new Date();
+    // Reset time to start of day for comparison
+    dueDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    if (dueDate < today) {
+      throw new Error('Due date must be today or in the future');
     }
   }
 
@@ -195,25 +199,25 @@ export const deleteHomework = async (homeworkId: string): Promise<boolean> => {
  * Submit homework
  */
 export const submitHomework = async (data: SubmitHomeworkDTO): Promise<HomeworkSubmission> => {
+  // If assignment_id is provided, get homework_id from assignment
+  if (data.assignment_id && !data.homework_id) {
+    const assignment = await homeworkQueries.getAssignmentById(data.assignment_id);
+    if (!assignment) {
+      throw new Error('Assignment not found');
+    }
+    data.homework_id = assignment.homework_id;
+  }
+
   // Check if homework exists
-  const homework = await homeworkQueries.getHomeworkById(data.homework_id);
+  if (data.homework_id) {
+    const homework = await homeworkQueries.getHomeworkById(data.homework_id);
 
-  if (!homework) {
-    throw new Error('Homework not found');
-  }
+    if (!homework) {
+      throw new Error('Homework not found');
+    }
 
-  if (homework.status && homework.status !== 'ACTIVE') {
-    throw new Error('Homework is not active');
-  }
-
-  // Check if past due date (allow late submissions but mark them)
-  if (homework.due_date) {
-    const now = new Date();
-    const dueDate = new Date(homework.due_date);
-    const isLate = now > dueDate;
-
-    if (isLate) {
-      console.warn(`Late submission for homework ${homework.homework_id}`);
+    if (homework.status && homework.status !== 'ACTIVE') {
+      throw new Error('Homework is not active');
     }
   }
 

@@ -264,6 +264,16 @@ export const deleteMaterial = async (materialId: string): Promise<boolean> => {
  * Create homework
  */
 export const createHomework = async (data: CreateHomeworkDTO): Promise<Homework> => {
+  // Convert due_date string to proper Date object for SQL Server
+  let dueDate: Date | null = null;
+  if (data.due_date) {
+    dueDate = new Date(data.due_date);
+    // Ensure it's a valid date
+    if (isNaN(dueDate.getTime())) {
+      dueDate = null;
+    }
+  }
+
   const query = `
     INSERT INTO [Homework] (
       homework_id, class_id, schedule_id, title, description,
@@ -285,7 +295,7 @@ export const createHomework = async (data: CreateHomeworkDTO): Promise<Homework>
     schedule_id: data.schedule_id || null,
     title: data.title,
     description: data.description || null,
-    due_date: data.due_date || null,
+    due_date: dueDate,
     assigned_by: data.assigned_by,
     tutor_id: data.tutor_id || data.assigned_by,
     attachment_url: data.attachment_url || null,
@@ -488,41 +498,91 @@ export const deleteHomework = async (homeworkId: string): Promise<boolean> => {
  * Submit homework
  */
 export const submitHomework = async (data: SubmitHomeworkDTO): Promise<HomeworkSubmission> => {
-  // Check if already submitted
-  const checkQuery = `
+  // First, get assignment info to check due date and get homework_id
+  let homeworkId = data.homework_id;
+  let assignmentId = data.assignment_id;
+  let isLate = false;
+
+  if (data.assignment_id) {
+    const assignmentQuery = `
+      SELECT ha.assignment_id, ha.homework_id, ha.due_date
+      FROM [HomeworkAssignment] ha
+      WHERE ha.assignment_id = @assignment_id
+    `;
+    const assignmentResult = await dbConnection.query<{ assignment_id: string; homework_id: string; due_date: Date }>(
+      assignmentQuery,
+      { assignment_id: data.assignment_id }
+    );
+    if (assignmentResult.recordset.length > 0) {
+      const assignment = assignmentResult.recordset[0];
+      homeworkId = assignment.homework_id;
+      assignmentId = assignment.assignment_id;
+      isLate = assignment.due_date ? new Date() > new Date(assignment.due_date) : false;
+    }
+  }
+
+  // Check if already submitted (by assignment_id or homework_id + student_id)
+  // Try with assignment_id first, then fallback to homework_id + submitted_by
+  let checkQuery = `
     SELECT submission_id
     FROM [HomeworkSubmission]
     WHERE homework_id = @homework_id AND submitted_by = @student_id
   `;
+  
+  // If we have assignment_id, also check by that
+  if (assignmentId) {
+    checkQuery = `
+      SELECT submission_id
+      FROM [HomeworkSubmission]
+      WHERE assignment_id = @assignment_id 
+         OR (homework_id = @homework_id AND submitted_by = @student_id)
+    `;
+  }
 
   const existing = await dbConnection.query<{ submission_id: string }>(checkQuery, {
-    homework_id: data.homework_id,
+    homework_id: homeworkId,
     student_id: data.student_id,
+    assignment_id: assignmentId || null,
   });
 
   if (existing.recordset.length > 0) {
-    // Update existing submission
+    // Update existing submission - use column names that exist in the schema
+    // Try with new columns first, fallback to old column names
     const updateQuery = `
       UPDATE [HomeworkSubmission]
-      SET content = @content,
-          attachment_url = @attachment_url,
-          attachment_name = @attachment_name,
+      SET content = COALESCE(@content, content),
+          attachment_url = COALESCE(@attachment_url, attachment_url),
+          attachment_name = COALESCE(@attachment_name, attachment_name),
           attachment_type = @attachment_type,
           submitted_at = GETDATE(),
           updated_at = GETDATE(),
+          is_late = @is_late,
           status = 'SUBMITTED'
       OUTPUT INSERTED.*
-      WHERE homework_id = @homework_id AND submitted_by = @student_id
+      WHERE submission_id = @submission_id
     `;
 
     const result = await dbConnection.query<HomeworkSubmission>(updateQuery, {
-      homework_id: data.homework_id,
-      student_id: data.student_id,
+      submission_id: existing.recordset[0].submission_id,
       content: data.content || null,
       attachment_url: data.attachment_url || null,
       attachment_name: data.attachment_name || null,
       attachment_type: data.attachment_type || null,
+      is_late: isLate ? 1 : 0,
     });
+
+    // Update assignment status
+    if (assignmentId) {
+      try {
+        await dbConnection.query(`
+          UPDATE [HomeworkAssignment]
+          SET status = 'SUBMITTED', updated_at = GETDATE()
+          WHERE assignment_id = @assignment_id
+        `, { assignment_id: assignmentId });
+      } catch (err) {
+        console.warn('Could not update assignment status:', err);
+      }
+    }
 
     return result.recordset[0];
   }
@@ -532,25 +592,39 @@ export const submitHomework = async (data: SubmitHomeworkDTO): Promise<HomeworkS
     INSERT INTO [HomeworkSubmission] (
       submission_id, homework_id, submitted_by, assignment_id, student_id,
       content, attachment_url, attachment_name, attachment_type,
-      submitted_at, status, created_at, updated_at
+      submitted_at, is_late, status, created_at, updated_at
     )
     OUTPUT INSERTED.*
     VALUES (
       NEWID(), @homework_id, @student_id, @assignment_id, @student_id,
       @content, @attachment_url, @attachment_name, @attachment_type,
-      GETDATE(), 'SUBMITTED', GETDATE(), GETDATE()
+      GETDATE(), @is_late, 'SUBMITTED', GETDATE(), GETDATE()
     )
   `;
 
   const result = await dbConnection.query<HomeworkSubmission>(insertQuery, {
-    homework_id: data.homework_id,
+    homework_id: homeworkId,
     student_id: data.student_id,
-    assignment_id: data.assignment_id || null,
+    assignment_id: assignmentId || null,
     content: data.content || null,
     attachment_url: data.attachment_url || null,
     attachment_name: data.attachment_name || null,
     attachment_type: data.attachment_type || null,
+    is_late: isLate ? 1 : 0,
   });
+
+  // Update assignment status
+  if (assignmentId) {
+    try {
+      await dbConnection.query(`
+        UPDATE [HomeworkAssignment]
+        SET status = 'SUBMITTED', updated_at = GETDATE()
+        WHERE assignment_id = @assignment_id
+      `, { assignment_id: assignmentId });
+    } catch (err) {
+      console.warn('Could not update assignment status:', err);
+    }
+  }
 
   return result.recordset[0];
 };
@@ -565,11 +639,11 @@ export const gradeSubmission = async (
   const query = `
     UPDATE [HomeworkSubmission]
     SET score = @score,
-        max_score = @max_score,
         feedback = @feedback,
         graded_by = @graded_by,
         graded_at = GETDATE(),
-        updated_at = GETDATE()
+        updated_at = GETDATE(),
+        status = 'GRADED'
     OUTPUT INSERTED.*
     WHERE submission_id = @submissionId
   `;
@@ -577,10 +651,22 @@ export const gradeSubmission = async (
   const result = await dbConnection.query<HomeworkSubmission>(query, {
     submissionId,
     score: grading.score,
-    max_score: grading.max_score || 100,
     feedback: grading.feedback || null,
     graded_by: grading.graded_by,
   });
+
+  // Update assignment status to GRADED
+  if (result.recordset.length > 0 && result.recordset[0].assignment_id) {
+    try {
+      await dbConnection.query(`
+        UPDATE [HomeworkAssignment]
+        SET status = 'GRADED', updated_at = GETDATE()
+        WHERE assignment_id = @assignment_id
+      `, { assignment_id: result.recordset[0].assignment_id });
+    } catch (err) {
+      console.warn('Could not update assignment status:', err);
+    }
+  }
 
   return result.recordset[0];
 };
@@ -717,17 +803,57 @@ export const assignHomeworkToStudent = async (data: {
   due_date?: string;
   note?: string;
 }): Promise<any> => {
-  const query = `
+  // Check if already assigned
+  const checkQuery = `
+    SELECT assignment_id FROM [HomeworkAssignment]
+    WHERE homework_id = @homework_id AND student_id = @student_id
+  `;
+  const existing = await dbConnection.query(checkQuery, { 
+    homework_id: data.homework_id, 
+    student_id: data.student_id 
+  });
+  
+  if (existing.recordset.length > 0) {
+    throw new Error('Học viên này đã được giao bài tập này rồi');
+  }
+
+  // Convert due_date string to Date object for SQL Server
+  let dueDate: Date | null = null;
+  if (data.due_date) {
+    dueDate = new Date(data.due_date);
+    if (isNaN(dueDate.getTime())) {
+      dueDate = null;
+    }
+  }
+
+  // Insert assignment and get the ID
+  const insertQuery = `
+    DECLARE @newId UNIQUEIDENTIFIER = NEWID();
+    
     INSERT INTO [HomeworkAssignment] (
-      assignment_id, homework_id, student_id, assigned_by, due_date, note, status, assigned_at
+      assignment_id, homework_id, student_id, assigned_by, due_date, note, status, assigned_at, updated_at
     )
     VALUES (
-      NEWID(), @homework_id, @student_id, @assigned_by, @due_date, @note, 'PENDING', GETDATE()
-    )
+      @newId, @homework_id, @student_id, @assigned_by, @due_date, @note, 'ASSIGNED', GETDATE(), GETDATE()
+    );
+    
+    SELECT 
+      ha.*,
+      u.name as student_name,
+      u.email as student_email
+    FROM [HomeworkAssignment] ha
+    LEFT JOIN [UserAccount] u ON ha.student_id = u.user_id
+    WHERE ha.assignment_id = @newId;
   `;
 
-  await dbConnection.query(query, data);
-  return { success: true };
+  const result = await dbConnection.query(insertQuery, {
+    homework_id: data.homework_id,
+    student_id: data.student_id,
+    assigned_by: data.assigned_by,
+    due_date: dueDate,
+    note: data.note || null,
+  });
+  return result.recordset[0];
 };
 
 /**
@@ -740,27 +866,34 @@ export const getStudentAssignments = async (studentId: string): Promise<any[]> =
       ha.homework_id,
       ha.student_id,
       ha.assigned_by,
-      ha.due_date as assignment_due_date,
+      ha.due_date,
       ha.note,
       ha.status as assignment_status,
       ha.assigned_at,
       h.title,
       h.description,
       h.class_id,
-      h.due_date as homework_due_date,
-      h.attachment_url as homework_attachment_url,
-      h.attachment_name as homework_attachment_name,
+      h.attachment_url,
+      h.attachment_name,
+      h.attachment_type,
       h.max_score,
       u.name as tutor_name,
       u.email as tutor_email,
       hs.submission_id,
       hs.submitted_at,
+      hs.is_late,
       hs.attachment_url as submission_attachment_url,
       hs.attachment_name as submission_attachment_name,
       hs.score,
       hs.feedback,
       hs.graded_at,
-      hs.status as submission_status
+      hs.status as submission_status,
+      CASE 
+        WHEN hs.score IS NOT NULL THEN 'GRADED'
+        WHEN hs.submitted_at IS NOT NULL THEN 'SUBMITTED'
+        WHEN ha.due_date < GETDATE() THEN 'OVERDUE'
+        ELSE 'PENDING'
+      END as overall_status
     FROM [HomeworkAssignment] ha
     INNER JOIN [Homework] h ON ha.homework_id = h.homework_id
     INNER JOIN [UserAccount] u ON ha.assigned_by = u.user_id
@@ -779,21 +912,39 @@ export const getStudentAssignments = async (studentId: string): Promise<any[]> =
 export const getAssignmentById = async (assignmentId: string): Promise<any | null> => {
   const query = `
     SELECT 
-      ha.*,
+      ha.assignment_id,
+      ha.homework_id,
+      ha.student_id,
+      ha.due_date,
+      ha.note,
+      ha.status as assignment_status,
+      ha.assigned_at,
       h.title,
       h.description,
-      h.attachment_url as homework_attachment_url,
-      h.attachment_name as homework_attachment_name,
+      h.attachment_url,
+      h.attachment_name,
+      h.attachment_type,
       h.max_score,
       h.status as homework_status,
       u.name as tutor_name,
+      u.email as tutor_email,
       hs.submission_id,
+      hs.content as submission_content,
       hs.submitted_at,
+      hs.is_late,
       hs.score,
       hs.feedback,
+      hs.graded_at,
       hs.status as submission_status,
       hs.attachment_url as submission_attachment_url,
-      hs.attachment_name as submission_attachment_name
+      hs.attachment_name as submission_attachment_name,
+      hs.attachment_type as submission_attachment_type,
+      CASE 
+        WHEN hs.score IS NOT NULL THEN 'GRADED'
+        WHEN hs.submitted_at IS NOT NULL THEN 'SUBMITTED'
+        WHEN ha.due_date < GETDATE() THEN 'OVERDUE'
+        ELSE 'PENDING'
+      END as overall_status
     FROM [HomeworkAssignment] ha
     INNER JOIN [Homework] h ON ha.homework_id = h.homework_id
     INNER JOIN [UserAccount] u ON h.assigned_by = u.user_id
@@ -878,6 +1029,7 @@ export const getHomeworkDetailWithAssignments = async (homeworkId: string): Prom
       hs.content as submission_content,
       hs.attachment_url as submission_attachment_url,
       hs.attachment_name as submission_attachment_name,
+      hs.attachment_type as submission_attachment_type,
       hs.submitted_at,
       hs.is_late,
       hs.score,
