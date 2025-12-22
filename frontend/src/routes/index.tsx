@@ -4,6 +4,7 @@ import HomePage from '../pages/public/HomePage';
 import LoginPage from '../pages/public/LoginPage';
 import StudentRegistrationPage from '../pages/public/StudentRegistrationPage';
 import TutorRegistrationPage from '../pages/public/TutorRegistrationPage';
+import PublicLayout from '../pages/public/PublicLayout';
 import CommunityPosts from '../pages/public/CommunityPosts';
 import PostDetailPage from '../pages/public/PostDetail';
 import NotFound from '../pages/public/NotFound';
@@ -47,9 +48,13 @@ export const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/student" element={<StudentRegistrationPage />} />
       <Route path="/register/tutor" element={<TutorRegistrationPage />} />
-      <Route path="/posts" element={<CommunityPosts />} />
-      <Route path="/posts/:id" element={<PostDetailPage />} />
-      <Route path="/posts/:id/:slug" element={<PostDetailPage />} />
+
+      {/* Public posts with layout (Header + Footer) */}
+      <Route element={<PublicLayout />}>
+        <Route path="/posts" element={<CommunityPosts />} />
+        <Route path="/posts/:id" element={<PostDetailPage />} />
+        <Route path="/posts/:id/:slug" element={<PostDetailPage />} />
+      </Route>
 
       {/* Protected Routes cho Student - Lazy loaded */}
       <Route element={<ProtectedRoute />}>
