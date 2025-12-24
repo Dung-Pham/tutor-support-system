@@ -1,8 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { userService, User } from '@/services/userService';
+import { userService } from '@/services/userService';
 
 /**
- * Hook lấy danh sách tất cả users
+ * Hook lấy thông tin user hiện tại
+ */
+export const useCurrentUser = () => {
+  return useQuery({
+    queryKey: ['currentUser'],
+    queryFn: userService.getMe,
+  });
+};
+
+/**
+ * Hook lấy danh sách tất cả users (Admin only)
  */
 export const useUsers = () => {
   return useQuery({
@@ -12,39 +22,25 @@ export const useUsers = () => {
 };
 
 /**
- * Hook lấy thông tin user theo ID
+ * Hook lấy thông tin user theo ID (Admin only)
  */
 export const useUser = (id: string) => {
   return useQuery({
     queryKey: ['user', id],
     queryFn: () => userService.getById(id),
-    enabled: !!id, // Chỉ fetch khi có id
+    enabled: !!id,
   });
 };
 
 /**
- * Hook tạo user mới
+ * Hook cập nhật status user (Admin only)
  */
-export const useCreateUser = () => {
+export const useUpdateUserStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (userData: Partial<User>) => userService.create(userData),
-    onSuccess: () => {
-      // Invalidate users cache để refetch danh sách
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-  });
-};
-
-/**
- * Hook cập nhật user
- */
-export const useUpdateUser = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<User> }) => userService.update(id, data),
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      userService.updateStatus(id, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
@@ -52,7 +48,7 @@ export const useUpdateUser = () => {
 };
 
 /**
- * Hook xóa user
+ * Hook xóa user (Admin only)
  */
 export const useDeleteUser = () => {
   const queryClient = useQueryClient();

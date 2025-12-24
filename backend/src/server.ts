@@ -4,7 +4,7 @@
  */
 
 // Load environment variables FIRST - this import MUST be first
-import "./config/env.js";
+import "dotenv/config";
 
 import app from "./app.js";
 import { createServer } from "http";
@@ -35,7 +35,7 @@ const startServer = async (): Promise<void> => {
     });
 
     process.on("SIGTERM", () => {
-      console.log("🛑 SIGTERM received, shutting down gracefully");
+      console.warn("🛑 SIGTERM received, shutting down gracefully");
       server.close(() => {
         console.log("✅ Process terminated");
       });
@@ -44,7 +44,7 @@ const startServer = async (): Promise<void> => {
     process.on(
       "unhandledRejection",
       (reason: unknown, promise: Promise<unknown>) => {
-        console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
+        console.error("❌ Unhandled Rejection", { promise, reason });
         server.close(() => {
           process.exit(1);
         });
@@ -52,7 +52,7 @@ const startServer = async (): Promise<void> => {
     );
   } catch (error) {
     const err = error as Error;
-    console.error("❌ Failed to start server:", err.message);
+    console.error(`❌ Failed to start server: ${err.message}`);
     process.exit(1);
   }
 };

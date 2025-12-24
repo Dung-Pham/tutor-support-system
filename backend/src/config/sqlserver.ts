@@ -5,12 +5,24 @@
 
 import { Sequelize } from "sequelize";
 
+// Validate required environment variables
+const requiredEnvVars = ["MSSQL_DATABASE", "MSSQL_USER", "MSSQL_PASSWORD"];
+const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  throw new Error(
+    `Missing required SQL Server environment variables: ${missingEnvVars.join(
+      ", "
+    )}`
+  );
+}
+
 const instanceName = process.env.MSSQL_INSTANCE;
 
 const sequelize = new Sequelize(
-  process.env.MSSQL_DATABASE || "tutor_support_system",
-  process.env.MSSQL_USER || "sa",
-  process.env.MSSQL_PASSWORD || "",
+  process.env.MSSQL_DATABASE!,
+  process.env.MSSQL_USER!,
+  process.env.MSSQL_PASSWORD!,
   {
     host: process.env.MSSQL_HOST || "localhost",
     // Không dùng port khi có instanceName (SQL Browser sẽ tìm port)
@@ -27,7 +39,10 @@ const sequelize = new Sequelize(
         ...(instanceName && { instanceName }),
       },
     },
-    logging: process.env.NODE_ENV === "development" ? console.log : false,
+    logging:
+      process.env.NODE_ENV === "development"
+        ? (msg) => console.log(msg)
+        : false,
   }
 );
 
@@ -38,7 +53,7 @@ const connectSQLServer = async (): Promise<void> => {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    console.error("❌ SQL Server Connection Error:", errorMessage);
+    console.error(`❌ SQL Server Connection Error: ${errorMessage}`);
     process.exit(1);
   }
 };

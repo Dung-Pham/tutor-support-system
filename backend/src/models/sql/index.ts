@@ -38,6 +38,7 @@ Session.belongsTo(User, { foreignKey: "userId", as: "user" });
 PostHeader.belongsTo(User, { foreignKey: "authorId", as: "author" });
 PostHeader.belongsTo(User, { foreignKey: "approvedBy", as: "approver" });
 PostHeader.belongsTo(User, { foreignKey: "rejectedBy", as: "rejecter" });
+PostHeader.belongsTo(User, { foreignKey: "deletedBy", as: "deletedByUser" });
 PostHeader.hasMany(PostComment, { foreignKey: "postId", as: "comments" });
 PostHeader.hasMany(PostLike, { foreignKey: "postId", as: "likes" });
 PostHeader.hasMany(Notification, { foreignKey: "postId", as: "notifications" });

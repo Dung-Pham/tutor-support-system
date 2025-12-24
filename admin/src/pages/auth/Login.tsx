@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuthStore } from "@/store/authStore";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { login, clearError } from "@/store/slices/authSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,11 +27,17 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const { isLoading: authLoading, error: authError } = useAppSelector(
+    (state) => state.auth
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const from = location.state?.from?.pathname || "/";
+
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
 
   const {
     register,
@@ -41,18 +48,21 @@ export function LoginPage() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
-    setError(null);
-
+    setIsSubmitting(true);
     try {
-      await login(data);
-      navigate(from, { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Đăng nhập thất bại");
+      const result = await dispatch(login(data)).unwrap();
+      if (result) {
+        navigate(from, { replace: true });
+      }
+    } catch {
+      // Error is handled by Redux slice
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  const isLoading = isSubmitting || authLoading;
+  const error = authError;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">

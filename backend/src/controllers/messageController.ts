@@ -9,7 +9,7 @@ import { Response } from "express";
 import { Conversation, Participant, User } from "../models/sql/index.js";
 import { Message } from "../models/mongo/index.js";
 import { emitToConversation, emitToUser } from "../config/socket.js";
-import { AuthRequest } from "../types/index.js";
+import { AuthRequest } from "../types/common.js";
 import { Op } from "sequelize";
 
 interface SendDirectMessageBody {
@@ -35,7 +35,7 @@ export const sendDirectMessage = async (
     const senderId = req.user?._id;
 
     if (!senderId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     if (!content && (!imgUrls || imgUrls.length === 0)) {
@@ -134,10 +134,14 @@ export const sendDirectMessage = async (
       conversationId: conversation.id,
     });
 
-    return res.status(201).json({ message });
+    return res
+      .status(201)
+      .json({ success: true, message: "Message sent", data: message });
   } catch (error) {
-    console.error("Error in sendDirectMessage:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Error in sendDirectMessage", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -151,13 +155,15 @@ export const sendGroupMessage = async (
     const senderId = req.user?._id;
 
     if (!senderId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     // Verify conversation exists and user is participant
     const conversation = await Conversation.findByPk(conversationId);
     if (!conversation) {
-      return res.status(404).json({ message: "Conversation not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Conversation not found" });
     }
 
     const isParticipant = await Participant.findOne({
@@ -215,37 +221,181 @@ export const sendGroupMessage = async (
       conversationId,
     });
 
-    return res.status(201).json({ message });
+    return res
+      .status(201)
+      .json({ success: true, message: "Message sent", data: message });
   } catch (error) {
-    console.error("Error in sendGroupMessage:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Error in sendGroupMessage", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
-// Mark messages as read
-export const markAsRead = async (
-  req: AuthRequest & { params: { conversationId: string } },
+// Mark a single message as seen
+export const markMessageAsSeen = async (
+  req: AuthRequest & { params: { messageId: string } },
   res: Response
 ): Promise<Response> => {
   try {
-    const { conversationId } = req.params;
+    const { messageId } = req.params;
     const userId = req.user?._id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    // Reset unread count for this participant
-    await Participant.update(
-      { unreadCount: 0 },
-      {
-        where: { conversationId, userId },
-      }
-    );
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Message not found" });
+    }
 
-    return res.status(200).json({ message: "Marked as read" });
+    // Verify user is a participant of this conversation
+    const isParticipant = await Participant.findOne({
+      where: { conversationId: message.conversationId, userId },
+    });
+    if (!isParticipant) {
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this conversation" });
+    }
+
+    // Check if user already read this message
+    const alreadyRead = message.readBy.some((r) => r.userId === userId);
+    if (!alreadyRead) {
+      message.readBy.push({ userId, readAt: new Date() });
+      await message.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Message marked as seen",
+    });
   } catch (error) {
-    console.error("Error in markAsRead:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Error in markMessageAsSeen", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+// Delete a message
+export const deleteMessage = async (
+  req: AuthRequest & { params: { messageId: string } },
+  res: Response
+): Promise<Response> => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Message not found" });
+    }
+
+    // Only sender can delete their message
+    if (message.senderId !== userId) {
+      return res
+        .status(403)
+        .json({ message: "You can only delete your own messages" });
+    }
+
+    // Soft delete - mark as deleted instead of removing
+    message.isDeleted = true;
+    message.content = "";
+    message.imgUrls = [];
+    await message.save();
+
+    // Emit socket event for real-time update
+    emitToConversation(message.conversationId, "message_deleted", {
+      messageId,
+      conversationId: message.conversationId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Message deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error in deleteMessage", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+// Edit a message
+export const editMessage = async (
+  req: AuthRequest & {
+    params: { messageId: string };
+    body: { content: string };
+  },
+  res: Response
+): Promise<Response> => {
+  try {
+    const { messageId } = req.params;
+    const { content } = req.body;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (!content || content.trim() === "") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Content is required" });
+    }
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Message not found" });
+    }
+
+    // Only sender can edit their message
+    if (message.senderId !== userId) {
+      return res
+        .status(403)
+        .json({ message: "You can only edit your own messages" });
+    }
+
+    // Cannot edit deleted messages
+    if (message.isDeleted) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Cannot edit a deleted message" });
+    }
+
+    message.content = content.trim();
+    message.isEdited = true;
+    await message.save();
+
+    // Emit socket event for real-time update
+    emitToConversation(message.conversationId, "message_edited", {
+      messageId,
+      content: message.content,
+      conversationId: message.conversationId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Message updated successfully",
+      data: message,
+    });
+  } catch (error) {
+    console.error("Error in editMessage", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };

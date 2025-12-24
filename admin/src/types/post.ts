@@ -1,27 +1,33 @@
 export interface Post {
-  _id: string;
+  id: string;
   title: string;
   slug: string;
   contentJson: Record<string, unknown>;
   contentPlain: string;
   author: {
-    _id: string;
+    id: string;
     displayName: string;
     avatarUrl?: string;
     role: string;
   };
-  status: "draft" | "pending" | "approved" | "rejected";
+  status: "draft" | "pending" | "approved" | "rejected" | "deleted";
   rejectionReason?: string;
   approvedBy?: {
-    _id: string;
+    id: string;
     displayName: string;
   };
   approvedAt?: string;
   rejectedBy?: {
-    _id: string;
+    id: string;
     displayName: string;
   };
   rejectedAt?: string;
+  deletedByUser?: {
+    id: string;
+    displayName: string;
+  };
+  deletedAt?: string;
+  deleteReason?: string;
   viewCount: number;
   likeCount: number;
   commentCount: number;

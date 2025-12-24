@@ -87,10 +87,9 @@ export function UserList() {
 
     setIsUpdating(true);
     try {
-      await userService.updateUserStatus(
-        selectedUser._id,
-        !selectedUser.isActive
-      );
+      await userService.updateUser(selectedUser.id, {
+        isActive: !selectedUser.isActive,
+      });
       await fetchUsers();
       setDialogOpen(false);
     } catch (error) {
@@ -202,7 +201,7 @@ export function UserList() {
               </TableRow>
             ) : (
               users.map((user) => (
-                <TableRow key={user._id}>
+                <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, Navigate, useLocation } from "react-router-dom";
-import { useAuthStore } from "@/store/authStore";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { checkAuth } from "@/store/slices/authSlice";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { cn } from "@/lib/utils";
@@ -8,12 +9,15 @@ import { Loader2 } from "lucide-react";
 
 export function AdminLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { isAuthenticated, isLoading, checkAuth, user } = useAuthStore();
+  const dispatch = useAppDispatch();
+  const { isAuthenticated, isLoading, user } = useAppSelector(
+    (state) => state.auth
+  );
   const location = useLocation();
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    dispatch(checkAuth());
+  }, [dispatch]);
 
   if (isLoading) {
     return (

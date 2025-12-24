@@ -1,6 +1,7 @@
 /**
  * File: routes/uploadRoute.ts
  * Mục đích: Upload routes (Cloudinary)
+ * Note: Đã được bảo vệ bởi global protectedRoute trong app.ts
  */
 
 import { Router } from "express";
@@ -10,7 +11,6 @@ import {
   deleteImage,
   generateSignature,
 } from "../controllers/uploadController.js";
-import { authenticateToken } from "../middlewares/userMiddleware.js";
 
 const router = Router();
 
@@ -35,15 +35,10 @@ const upload = multer({
   },
 });
 
-router.post("/signature", authenticateToken, wrap(generateSignature));
+router.post("/signature", wrap(generateSignature));
 
-router.post(
-  "/images",
-  authenticateToken,
-  upload.array("images", 10),
-  wrap(uploadImages)
-);
+router.post("/images", upload.array("images", 10), wrap(uploadImages));
 
-router.delete("/images/:publicId", authenticateToken, wrap(deleteImage));
+router.delete("/images/:publicId", wrap(deleteImage));
 
 export default router;

@@ -10,7 +10,7 @@ import {
   PostHeader,
   User,
 } from "../models/sql/index.js";
-import { AuthRequest } from "../types/index.js";
+import { AuthRequest } from "../types/common.js";
 
 interface PostParams {
   postId: string;
@@ -47,7 +47,6 @@ export const createComment = async (
       return res.status(401).json({
         success: false,
         message: "Vui lòng đăng nhập",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -55,7 +54,6 @@ export const createComment = async (
       return res.status(400).json({
         success: false,
         message: "Nội dung comment không được để trống",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -66,7 +64,6 @@ export const createComment = async (
       return res.status(404).json({
         success: false,
         message: "Bài viết không tồn tại",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -74,7 +71,6 @@ export const createComment = async (
       return res.status(400).json({
         success: false,
         message: "Chỉ có thể comment bài viết đã được duyệt",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -100,14 +96,12 @@ export const createComment = async (
         ...comment.toJSON(),
         author,
       },
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Create comment error:", error);
+    console.error("Create comment error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi tạo comment",
-      timestamp: new Date().toISOString(),
     });
   }
 };
@@ -130,7 +124,6 @@ export const getComments = async (
       return res.status(404).json({
         success: false,
         message: "Bài viết không tồn tại",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -158,14 +151,12 @@ export const getComments = async (
       limit,
       total,
       totalPages,
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Get comments error:", error);
+    console.error("Get comments error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi lấy danh sách comment",
-      timestamp: new Date().toISOString(),
     });
   }
 };
@@ -184,7 +175,6 @@ export const updateComment = async (
       return res.status(401).json({
         success: false,
         message: "Vui lòng đăng nhập",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -192,7 +182,6 @@ export const updateComment = async (
       return res.status(400).json({
         success: false,
         message: "Nội dung comment không được để trống",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -201,7 +190,6 @@ export const updateComment = async (
       return res.status(404).json({
         success: false,
         message: "Comment không tồn tại",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -209,7 +197,6 @@ export const updateComment = async (
       return res.status(403).json({
         success: false,
         message: "Bạn không có quyền sửa comment này",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -219,14 +206,12 @@ export const updateComment = async (
       success: true,
       message: "Comment đã được cập nhật",
       data: comment,
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Update comment error:", error);
+    console.error("Update comment error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi cập nhật comment",
-      timestamp: new Date().toISOString(),
     });
   }
 };
@@ -245,7 +230,6 @@ export const deleteComment = async (
       return res.status(401).json({
         success: false,
         message: "Vui lòng đăng nhập",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -254,7 +238,6 @@ export const deleteComment = async (
       return res.status(404).json({
         success: false,
         message: "Comment không tồn tại",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -265,7 +248,6 @@ export const deleteComment = async (
       return res.status(403).json({
         success: false,
         message: "Bạn không có quyền xóa comment này",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -280,14 +262,12 @@ export const deleteComment = async (
     return res.json({
       success: true,
       message: "Comment đã được xóa",
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Delete comment error:", error);
+    console.error("Delete comment error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi xóa comment",
-      timestamp: new Date().toISOString(),
     });
   }
 };
@@ -306,7 +286,6 @@ export const createReply = async (
       return res.status(401).json({
         success: false,
         message: "Vui lòng đăng nhập",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -314,7 +293,6 @@ export const createReply = async (
       return res.status(400).json({
         success: false,
         message: "Nội dung reply không được để trống",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -325,7 +303,6 @@ export const createReply = async (
       return res.status(404).json({
         success: false,
         message: "Comment không tồn tại",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -351,14 +328,12 @@ export const createReply = async (
         ...reply.toJSON(),
         author,
       },
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Create reply error:", error);
+    console.error("Create reply error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi tạo reply",
-      timestamp: new Date().toISOString(),
     });
   }
 };
@@ -381,7 +356,6 @@ export const getReplies = async (
       return res.status(404).json({
         success: false,
         message: "Comment không tồn tại",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -409,14 +383,12 @@ export const getReplies = async (
       limit,
       total,
       totalPages,
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Get replies error:", error);
+    console.error("Get replies error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi lấy danh sách reply",
-      timestamp: new Date().toISOString(),
     });
   }
 };
@@ -435,7 +407,6 @@ export const deleteReply = async (
       return res.status(401).json({
         success: false,
         message: "Vui lòng đăng nhập",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -444,7 +415,6 @@ export const deleteReply = async (
       return res.status(404).json({
         success: false,
         message: "Reply không tồn tại",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -455,7 +425,6 @@ export const deleteReply = async (
       return res.status(403).json({
         success: false,
         message: "Bạn không có quyền xóa reply này",
-        timestamp: new Date().toISOString(),
       });
     }
 
@@ -470,14 +439,12 @@ export const deleteReply = async (
     return res.json({
       success: true,
       message: "Reply đã được xóa",
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Delete reply error:", error);
+    console.error("Delete reply error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi xóa reply",
-      timestamp: new Date().toISOString(),
     });
   }
 };

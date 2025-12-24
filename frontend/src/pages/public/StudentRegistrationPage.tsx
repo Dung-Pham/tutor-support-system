@@ -136,6 +136,7 @@ export default function StudentRegistrationPage(): JSX.Element {
               <Input
                 type="password"
                 placeholder="Tối thiểu 6 ký tự"
+                autoComplete="new-password"
                 {...register('password')}
                 className={`h-10 ${errors.password ? 'border-destructive' : ''}`}
               />
@@ -153,6 +154,7 @@ export default function StudentRegistrationPage(): JSX.Element {
               <Input
                 type="password"
                 placeholder="Nhập lại mật khẩu"
+                autoComplete="new-password"
                 {...register('confirmPassword')}
                 className={`h-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
               />

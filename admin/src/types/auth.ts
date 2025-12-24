@@ -2,7 +2,7 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   user?: {
-    _id: string;
+    id: string;
     email: string;
     displayName: string;
     avatarUrl?: string;

@@ -13,16 +13,24 @@ import {
   getMyPosts,
   getPendingPosts,
   getRejectedPosts,
+  getDeletedPosts,
   approvePost,
   rejectPost,
+  restorePost,
+  hardDeletePost,
 } from "../controllers/postController.js";
 import {
   togglePostLike,
   checkPostLike,
   getPostLikes,
 } from "../controllers/likeController.js";
-import { protectedRoute } from "../middlewares/userMiddleware.js";
-import { sanitizePostContent } from "../middlewares/sanitizeHtml.js";
+import { protectedRoute, adminOnly } from "../middlewares/userMiddleware.js";
+import { validateBody } from "../validators/validate.js";
+import {
+  createPostSchema,
+  updatePostSchema,
+  rejectPostSchema,
+} from "../validators/schemas/postSchema.js";
 
 const router = Router();
 
@@ -31,16 +39,40 @@ const wrap = (fn: any) => fn;
 
 router.get("/", wrap(getApprovedPosts));
 router.get("/my", protectedRoute, wrap(getMyPosts));
-router.get("/pending", protectedRoute, wrap(getPendingPosts));
-router.get("/rejected", protectedRoute, wrap(getRejectedPosts));
+router.get("/pending", protectedRoute, adminOnly, wrap(getPendingPosts));
+router.get("/rejected", protectedRoute, adminOnly, wrap(getRejectedPosts));
+router.get("/deleted", protectedRoute, adminOnly, wrap(getDeletedPosts));
 router.get("/:id", wrap(getPostDetail));
 
-router.post("/", protectedRoute, sanitizePostContent, wrap(createPost));
-router.patch("/:id", protectedRoute, sanitizePostContent, wrap(updatePost));
+router.post(
+  "/",
+  protectedRoute,
+  validateBody(createPostSchema),
+  wrap(createPost)
+);
+router.patch(
+  "/:id",
+  protectedRoute,
+  validateBody(updatePostSchema),
+  wrap(updatePost)
+);
 router.delete("/:id", protectedRoute, wrap(deletePost));
+router.delete(
+  "/:id/permanent",
+  protectedRoute,
+  adminOnly,
+  wrap(hardDeletePost)
+);
 
-router.patch("/:id/approve", protectedRoute, wrap(approvePost));
-router.patch("/:id/reject", protectedRoute, wrap(rejectPost));
+router.patch("/:id/approve", protectedRoute, adminOnly, wrap(approvePost));
+router.patch(
+  "/:id/reject",
+  protectedRoute,
+  adminOnly,
+  validateBody(rejectPostSchema),
+  wrap(rejectPost)
+);
+router.patch("/:id/restore", protectedRoute, adminOnly, wrap(restorePost));
 
 // Like routes
 router.post("/:id/like", protectedRoute, wrap(togglePostLike));

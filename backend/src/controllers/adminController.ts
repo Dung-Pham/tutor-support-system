@@ -5,7 +5,8 @@
 
 import { Response } from "express";
 import { User, PostHeader, PostComment } from "../models/sql/index.js";
-import { AuthRequest, UserRole } from "../types/index.js";
+import { AuthRequest } from "../types/common.js";
+import { UserRole } from "../types/user.js";
 import { Op, fn, col, literal } from "sequelize";
 
 interface StatsRequest extends AuthRequest {
@@ -159,7 +160,7 @@ export const getStats = async (
       },
     });
   } catch (error) {
-    console.error("Error in getStats:", error);
+    console.error("Error in getStats", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch stats",
@@ -232,7 +233,7 @@ export const getUsers = async (
       },
     });
   } catch (error) {
-    console.error("Error in getUsers:", error);
+    console.error("Error in getUsers", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch users",
@@ -274,7 +275,7 @@ export const getUserById = async (
       },
     });
   } catch (error) {
-    console.error("Error in getUserById:", error);
+    console.error("Error in getUserById", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch user",
@@ -319,7 +320,7 @@ export const updateUser = async (
       data: updatedUser,
     });
   } catch (error) {
-    console.error("Error in updateUser:", error);
+    console.error("Error in updateUser", error);
     return res.status(500).json({
       success: false,
       message: "Failed to update user",
@@ -360,7 +361,7 @@ export const deleteUser = async (
       data: user,
     });
   } catch (error) {
-    console.error("Error in deleteUser:", error);
+    console.error("Error in deleteUser", error);
     return res.status(500).json({
       success: false,
       message: "Failed to delete user",
@@ -438,7 +439,7 @@ export const getPosts = async (
       },
     });
   } catch (error) {
-    console.error("Error in getPosts:", error);
+    console.error("Error in getPosts", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch posts",
@@ -482,7 +483,7 @@ export const getPostById = async (
       data: post,
     });
   } catch (error) {
-    console.error("Error in getPostById:", error);
+    console.error("Error in getPostById", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch post",
@@ -519,7 +520,7 @@ export const deletePost = async (
       message: "Post deleted successfully",
     });
   } catch (error) {
-    console.error("Error in deletePost:", error);
+    console.error("Error in deletePost", error);
     return res.status(500).json({
       success: false,
       message: "Failed to delete post",

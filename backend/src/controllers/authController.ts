@@ -8,7 +8,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { User, Session } from "../models/sql/index.js";
-import { JwtPayload } from "../types/index.js";
+import { JwtPayload } from "../types/auth.js";
 
 const ACCESS_TOKEN_TTL = "30m";
 const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
@@ -70,7 +70,7 @@ export const registerStudent = async (
       message: "Student account created successfully",
     });
   } catch (error) {
-    console.error("Error in registerStudent:", error);
+    console.error("Error in registerStudent", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -117,7 +117,7 @@ export const registerTutor = async (
       message: "Tutor account created successfully",
     });
   } catch (error) {
-    console.error("Error in registerTutor:", error);
+    console.error("Error in registerTutor", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -145,6 +145,14 @@ export const signIn = async (
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
+      });
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Account has been deactivated. Please contact support.",
       });
     }
 
@@ -198,7 +206,7 @@ export const signIn = async (
       },
     });
   } catch (error) {
-    console.error("Error in signIn:", error);
+    console.error("Error in signIn", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -220,12 +228,9 @@ export const signOut = async (
 
     res.clearCookie("refreshToken");
 
-    return res.status(204).json({
-      success: true,
-      message: "User signed out successfully",
-    });
+    return res.status(204).send();
   } catch (error) {
-    console.error("Error in signOut:", error);
+    console.error("Error in signOut", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -290,7 +295,7 @@ export const refreshToken = async (
       accessToken,
     });
   } catch (error) {
-    console.error("Error in refreshToken:", error);
+    console.error("Error in refreshToken", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

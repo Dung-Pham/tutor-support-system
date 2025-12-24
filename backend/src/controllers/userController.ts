@@ -5,7 +5,7 @@
 
 import { Request, Response } from "express";
 import { User } from "../models/sql/index.js";
-import { AuthRequest } from "../types/index.js";
+import { AuthRequest } from "../types/common.js";
 import { Op } from "sequelize";
 
 interface PaginationQuery {
@@ -30,7 +30,7 @@ export const authMe = (req: AuthRequest, res: Response): Response => {
       user: req.user,
     });
   } catch (error) {
-    console.error("Error in authMe:", error);
+    console.error("Error in authMe", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -67,7 +67,7 @@ export const getAllUsers = async (
       },
     });
   } catch (error) {
-    console.error("Error getting users:", error);
+    console.error("Error getting users", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -107,7 +107,7 @@ export const updateUserStatus = async (
       data: user,
     });
   } catch (error) {
-    console.error("Error updating user status:", error);
+    console.error("Error updating user status", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

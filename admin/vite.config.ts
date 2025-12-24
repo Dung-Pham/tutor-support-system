@@ -10,6 +10,29 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-ui": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-slot",
+          ],
+          "vendor-utils": [
+            "axios",
+            "clsx",
+            "tailwind-merge",
+            "class-variance-authority",
+          ],
+          "vendor-icons": ["lucide-react"],
+          "vendor-charts": ["recharts"],
+        },
+      },
+    },
+  },
   server: {
     port: 3002,
     proxy: {

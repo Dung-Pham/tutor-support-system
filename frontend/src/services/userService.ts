@@ -1,39 +1,46 @@
 import { apiClient } from './api';
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  avatar?: string;
-}
+import type { User } from '@/types/user';
 
 export const userService = {
+  /**
+   * Lấy thông tin user hiện tại
+   */
+  getMe: async () => {
+    const response = await apiClient.get<{ success: boolean; data: User }>('/users/me');
+    return response.data.data;
+  },
+
+  /**
+   * Lấy danh sách tất cả users (Admin only)
+   */
   getAll: async () => {
     const response = await apiClient.get<{ success: boolean; data: User[] }>('/users');
     return response.data.data;
   },
 
+  /**
+   * Lấy user theo ID (Admin only - dùng /admin/users)
+   */
   getById: async (id: string) => {
-    const response = await apiClient.get<{ success: boolean; data: User }>(`/users/${id}`);
+    const response = await apiClient.get<{ success: boolean; data: User }>(`/admin/users/${id}`);
     return response.data.data;
   },
 
-  create: async (userData: Partial<User>) => {
-    const response = await apiClient.post<{ success: boolean; data: User }>('/users', userData);
+  /**
+   * Cập nhật status user (Admin only)
+   */
+  updateStatus: async (id: string, isActive: boolean) => {
+    const response = await apiClient.patch<{ success: boolean; data: User }>(`/users/${id}`, {
+      isActive,
+    });
     return response.data.data;
   },
 
-  update: async (id: string, userData: Partial<User>) => {
-    const response = await apiClient.put<{ success: boolean; data: User }>(
-      `/users/${id}`,
-      userData
-    );
-    return response.data.data;
-  },
-
+  /**
+   * Xóa/Deactivate user (Admin only - dùng /admin/users)
+   */
   delete: async (id: string) => {
-    const response = await apiClient.delete(`/users/${id}`);
+    const response = await apiClient.delete(`/admin/users/${id}`);
     return response.data;
   },
 };

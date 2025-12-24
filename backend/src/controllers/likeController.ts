@@ -13,7 +13,7 @@ import {
   ReplyComment,
   User,
 } from "../models/sql/index.js";
-import { AuthRequest } from "../types/index.js";
+import { AuthRequest } from "../types/common.js";
 
 interface PostParams {
   id: string;
@@ -97,7 +97,7 @@ export const togglePostLike = async (
       });
     }
   } catch (error) {
-    console.error("Toggle post like error:", error);
+    console.error("Toggle post like error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi thao tác like",
@@ -134,7 +134,7 @@ export const checkPostLike = async (
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Check post like error:", error);
+    console.error("Check post like error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi kiểm tra like",
@@ -181,7 +181,7 @@ export const getPostLikes = async (
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Get post likes error:", error);
+    console.error("Get post likes error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi lấy danh sách like",
@@ -244,7 +244,7 @@ export const toggleCommentLike = async (
       });
     }
   } catch (error) {
-    console.error("Toggle comment like error:", error);
+    console.error("Toggle comment like error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi thao tác like",
@@ -281,7 +281,7 @@ export const checkCommentLike = async (
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Check comment like error:", error);
+    console.error("Check comment like error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi kiểm tra like",
@@ -344,7 +344,7 @@ export const toggleReplyLike = async (
       });
     }
   } catch (error) {
-    console.error("Toggle reply like error:", error);
+    console.error("Toggle reply like error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi thao tác like",
@@ -381,7 +381,7 @@ export const checkReplyLike = async (
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Check reply like error:", error);
+    console.error("Check reply like error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi kiểm tra like",

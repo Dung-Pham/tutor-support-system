@@ -8,7 +8,7 @@
 import { Response } from "express";
 import { Conversation, Participant, User } from "../models/sql/index.js";
 import { Message } from "../models/mongo/index.js";
-import { AuthRequest } from "../types/index.js";
+import { AuthRequest } from "../types/common.js";
 import { Op } from "sequelize";
 
 interface CreateConversationBody {
@@ -36,7 +36,7 @@ export const createConversation = async (
     const userId = req.user?._id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     if (!type || !Array.isArray(memberIds) || memberIds.length === 0) {
@@ -133,10 +133,18 @@ export const createConversation = async (
       ],
     });
 
-    return res.status(201).json({ conversation: fullConversation });
+    return res
+      .status(201)
+      .json({
+        success: true,
+        message: "Conversation created",
+        data: fullConversation,
+      });
   } catch (error) {
-    console.error("Error in createConversation:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    console.error("Error in createConversation", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error." });
   }
 };
 
@@ -149,7 +157,7 @@ export const getConversations = async (
     const userId = req.user?._id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     // Get conversation IDs where user is a participant
@@ -199,10 +207,18 @@ export const getConversations = async (
       };
     });
 
-    return res.status(200).json({ conversations: formatted });
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Conversations retrieved",
+        data: formatted,
+      });
   } catch (error) {
-    console.error("Error in getConversations:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    console.error("Error in getConversations", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error." });
   }
 };
 
@@ -213,13 +229,33 @@ export const getMessages = async (
 ): Promise<Response> => {
   try {
     const { conversationId } = req.params;
+    const userId = req.user?._id;
     const limit = parseInt(req.query.limit || "20", 10);
     const { cursor } = req.query;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
 
     // Verify conversation exists
     const conversation = await Conversation.findByPk(conversationId);
     if (!conversation) {
-      return res.status(404).json({ message: "Conversation not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Conversation not found" });
+    }
+
+    // Verify user is a participant
+    const isParticipant = await Participant.findOne({
+      where: { conversationId, userId },
+    });
+    if (!isParticipant) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "You are not a member of this conversation",
+        });
     }
 
     // Build query for MongoDB messages
@@ -260,9 +296,67 @@ export const getMessages = async (
       sender: senderMap.get(m.senderId) || null,
     }));
 
-    return res.status(200).json({ messages: messagesWithSender, nextCursor });
+    return res
+      .status(200)
+      .json({ success: true, data: messagesWithSender, nextCursor });
   } catch (error) {
-    console.error("Error in getMessages:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    console.error("Error in getMessages", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error." });
+  }
+};
+
+// Mark conversation as seen (reset unread count)
+export const markConversationAsSeen = async (
+  req: AuthRequest & { params: ConversationParams },
+  res: Response
+): Promise<Response> => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Verify user is a participant
+    const participant = await Participant.findOne({
+      where: { conversationId, userId },
+    });
+
+    if (!participant) {
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this conversation" });
+    }
+
+    // Reset unread count
+    await Participant.update(
+      { unreadCount: 0 },
+      { where: { conversationId, userId } }
+    );
+
+    // Mark all messages in this conversation as read by this user
+    await Message.updateMany(
+      {
+        conversationId,
+        senderId: { $ne: userId },
+        "readBy.userId": { $ne: userId },
+      },
+      {
+        $push: { readBy: { userId, readAt: new Date() } },
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Conversation marked as seen",
+    });
+  } catch (error) {
+    console.error("Error in markConversationAsSeen", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error." });
   }
 };

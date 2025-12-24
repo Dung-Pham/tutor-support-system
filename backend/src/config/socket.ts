@@ -6,7 +6,7 @@
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import jwt from "jsonwebtoken";
-import { JwtPayload } from "../types/index.js";
+import { JwtPayload } from "../types/auth.js";
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -40,7 +40,7 @@ export function initSocket(server: HttpServer): Server {
       next();
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Unknown error");
-      console.error("Socket auth error:", error.message);
+      console.error("Socket auth error", error.message);
       next(new Error("Authentication error: Invalid token"));
     }
   });

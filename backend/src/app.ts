@@ -92,7 +92,7 @@ app.use((_req: Request, res: Response) => {
 
 // Error Handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error(err.stack);
+  console.error("Internal Server Error", err);
   res.status(500).json({
     success: false,
     message: "Internal Server Error",

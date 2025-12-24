@@ -90,7 +90,7 @@ export function RejectedPosts() {
               </TableRow>
             ) : (
               posts.map((post) => (
-                <TableRow key={post._id}>
+                <TableRow key={post.id}>
                   <TableCell>
                     <p className="font-medium">
                       {truncateText(post.title, 40)}

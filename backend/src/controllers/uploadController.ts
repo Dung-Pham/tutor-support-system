@@ -108,10 +108,10 @@ export const uploadImages = async (
           >[0],
           (error, result) => {
             if (error) {
-              console.error("❌ Upload failed:", error);
+              console.error("❌ Upload failed", error);
               reject(error);
             } else if (result) {
-              console.log("✅ Uploaded:", result.secure_url);
+              console.log(`✅ Uploaded: ${result.secure_url}`);
               resolve({
                 url: result.secure_url,
                 publicId: result.public_id,
@@ -137,7 +137,7 @@ export const uploadImages = async (
       data: uploadedImages,
     });
   } catch (error) {
-    console.error("Upload error:", error);
+    console.error("Upload error", error);
     return res.status(500).json({
       success: false,
       message: "Failed to upload images",
@@ -182,7 +182,7 @@ export const generateSignature = async (
       },
     });
   } catch (error) {
-    console.error("Signature generation error:", error);
+    console.error("Signature generation error", error);
     return res.status(500).json({
       success: false,
       message: "Failed to generate signature",
@@ -224,7 +224,7 @@ export const deleteImage = async (
       });
     }
   } catch (error) {
-    console.error("Delete error:", error);
+    console.error("Delete error", error);
     return res.status(500).json({
       success: false,
       message: "Failed to delete image",

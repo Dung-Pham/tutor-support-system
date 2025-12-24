@@ -1,4 +1,5 @@
-import { useAuthStore } from "@/store/authStore";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { logoutAsync } from "@/store/slices/authSlice";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,11 +14,12 @@ import { LogOut, User, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function Header() {
-  const { user, logout } = useAuthStore();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
+    await dispatch(logoutAsync());
     navigate("/login");
   };
 

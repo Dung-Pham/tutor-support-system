@@ -6,6 +6,7 @@ import {
   FileText,
   Clock,
   XCircle,
+  Trash2,
   Settings,
   ChevronLeft,
   GraduationCap,
@@ -42,6 +43,7 @@ const menuItems = [
     children: [
       { title: "Chờ duyệt", href: "/posts/pending", icon: Clock },
       { title: "Đã từ chối", href: "/posts/rejected", icon: XCircle },
+      { title: "Đã xóa", href: "/posts/deleted", icon: Trash2 },
     ],
   },
   {

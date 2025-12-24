@@ -6,7 +6,12 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";
 
-export type PostStatus = "draft" | "pending" | "approved" | "rejected";
+export type PostStatus =
+  | "draft"
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "deleted";
 
 export interface PostHeaderAttributes {
   id: string;
@@ -19,6 +24,9 @@ export interface PostHeaderAttributes {
   approvedAt?: Date | null;
   rejectedBy?: string | null;
   rejectedAt?: Date | null;
+  deletedBy?: string | null;
+  deletedAt?: Date | null;
+  deleteReason?: string | null;
   viewCount: number;
   likeCount: number;
   commentCount: number;
@@ -36,6 +44,9 @@ export interface PostHeaderCreationAttributes
     | "approvedAt"
     | "rejectedBy"
     | "rejectedAt"
+    | "deletedBy"
+    | "deletedAt"
+    | "deleteReason"
     | "viewCount"
     | "likeCount"
     | "commentCount"
@@ -57,6 +68,9 @@ class PostHeader
   declare approvedAt: Date | null;
   declare rejectedBy: string | null;
   declare rejectedAt: Date | null;
+  declare deletedBy: string | null;
+  declare deletedAt: Date | null;
+  declare deleteReason: string | null;
   declare viewCount: number;
   declare likeCount: number;
   declare commentCount: number;
@@ -94,7 +108,7 @@ PostHeader.init(
       allowNull: false,
       defaultValue: "draft",
       validate: {
-        isIn: [["draft", "pending", "approved", "rejected"]],
+        isIn: [["draft", "pending", "approved", "rejected", "deleted"]],
       },
     },
     rejectionReason: {
@@ -129,6 +143,25 @@ PostHeader.init(
       type: DataTypes.DATE,
       allowNull: true,
       field: "rejected_at",
+    },
+    deletedBy: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      field: "deleted_by",
+      references: {
+        model: "Users",
+        key: "id",
+      },
+    },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: "deleted_at",
+    },
+    deleteReason: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      field: "delete_reason",
     },
     viewCount: {
       type: DataTypes.INTEGER,

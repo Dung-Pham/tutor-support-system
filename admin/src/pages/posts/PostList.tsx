@@ -4,6 +4,7 @@ import type { Post } from "@/types/post";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -12,7 +13,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Loader2, Eye, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { formatDate, truncateText } from "@/lib/utils";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -24,6 +33,12 @@ export function PostList() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+
+  // Delete dialog states
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState(
     searchParams.get("status") || "approved"
   );
@@ -72,8 +87,27 @@ export function PostList() {
         return <Badge variant="destructive">Từ chối</Badge>;
       case "draft":
         return <Badge variant="secondary">Nháp</Badge>;
+      case "deleted":
+        return <Badge variant="secondary">Đã xóa</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedPost) return;
+
+    setIsDeleting(true);
+    try {
+      await postService.deletePost(selectedPost.id, deleteReason || undefined);
+      setDeleteDialogOpen(false);
+      setSelectedPost(null);
+      setDeleteReason("");
+      await fetchPosts();
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -125,7 +159,7 @@ export function PostList() {
                   </TableRow>
                 ) : (
                   posts.map((post) => (
-                    <TableRow key={post._id}>
+                    <TableRow key={post.id}>
                       <TableCell>
                         <p className="font-medium">
                           {truncateText(post.title, 50)}
@@ -140,19 +174,35 @@ export function PostList() {
                       <TableCell>{post.viewCount}</TableCell>
                       <TableCell>{formatDate(post.createdAt)}</TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            if (activeTab === "pending") {
-                              navigate("/posts/pending");
-                            } else if (activeTab === "rejected") {
-                              navigate("/posts/rejected");
-                            }
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (activeTab === "pending") {
+                                navigate("/posts/pending");
+                              } else if (activeTab === "rejected") {
+                                navigate("/posts/rejected");
+                              }
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {activeTab === "approved" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => {
+                                setSelectedPost(post);
+                                setDeleteDialogOpen(true);
+                              }}
+                              title="Xóa bài viết"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -190,6 +240,52 @@ export function PostList() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xóa bài viết</DialogTitle>
+            <DialogDescription>
+              Bài viết "{selectedPost?.title}" sẽ bị xóa và chuyển vào thùng
+              rác. Bạn có thể khôi phục sau trong mục "Bài viết đã xóa".
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Lý do xóa (không bắt buộc)
+            </label>
+            <Textarea
+              placeholder="Nhập lý do xóa bài viết..."
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setDeleteReason("");
+              }}
+              disabled={isDeleting}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Xóa bài viết
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

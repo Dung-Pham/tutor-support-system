@@ -65,7 +65,7 @@ export function PendingPosts() {
   const handleApprove = async (post: Post) => {
     setIsProcessing(true);
     try {
-      await postService.approvePost(post._id);
+      await postService.approvePost(post.id);
       await fetchPosts();
     } catch (error) {
       console.error("Error approving post:", error);
@@ -79,7 +79,7 @@ export function PendingPosts() {
 
     setIsProcessing(true);
     try {
-      await postService.rejectPost(selectedPost._id, rejectReason);
+      await postService.rejectPost(selectedPost.id, rejectReason);
       await fetchPosts();
       setRejectOpen(false);
       setRejectReason("");
@@ -128,7 +128,7 @@ export function PendingPosts() {
               </TableRow>
             ) : (
               posts.map((post) => (
-                <TableRow key={post._id}>
+                <TableRow key={post.id}>
                   <TableCell>
                     <div>
                       <p className="font-medium">
