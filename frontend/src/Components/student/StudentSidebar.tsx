@@ -7,6 +7,7 @@ import {
   BarChart2,
   Settings,
   MessageCircle,
+  Users,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,7 @@ const navItems = [
   { label: 'Bài tập', icon: ClipboardList, to: '/student/assignments' },
   { label: 'Bài viết chung', icon: BookOpen, to: '/student/posts' },
   { label: 'Tài liệu', icon: BookOpen, to: '/student/documents' },
+  { label: 'Danh sách gia sư', icon: Users, to: '/student/tutors' },
   { label: 'Nhắn tin', icon: MessageCircle, to: '/student/messages' },
   { label: 'Thống kê', icon: BarChart2, to: '/student/statistics' },
   { label: 'Cài đặt', icon: Settings, to: '/student/settings' },

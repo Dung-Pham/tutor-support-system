@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Heart, MoreHorizontal, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { AppDispatch, RootState } from '@/store';
 import { Comment, Reply } from '@/types/comment';
+import { UserRole } from '@/types/user';
 import { formatMessageTime } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -20,6 +21,26 @@ import {
   getRepliesAsync,
 } from '@/store/slices/commentSlice';
 
+// Helper function to render role badge
+function RoleBadge({ role }: { role?: UserRole }) {
+  if (!role) return null;
+
+  const roleConfig = {
+    tutor: { label: 'Gia sư', className: 'bg-blue-100 text-blue-700' },
+    student: { label: 'Học sinh', className: 'bg-green-100 text-green-700' },
+    admin: { label: 'Admin', className: 'bg-purple-100 text-purple-700' },
+  };
+
+  const config = roleConfig[role];
+  if (!config) return null;
+
+  return (
+    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${config.className}`}>
+      {config.label}
+    </span>
+  );
+}
+
 interface CommentItemProps {
   comment: Comment;
   postId: string;
@@ -33,11 +54,14 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [localLiked, setLocalLiked] = useState(false);
-  const [localLikeCount, setLocalLikeCount] = useState(comment.like_count || 0);
+  const [localLikeCount, setLocalLikeCount] = useState(comment.likeCount || 0);
+  const [replyingTo, setReplyingTo] = useState<{ userId: string; displayName: string } | null>(
+    null
+  );
 
-  const isAuthor = user?.id === comment.accountId._id;
-  const replies = repliesByComment[comment._id] || [];
-  const hasReplies = comment.reply_count > 0;
+  const isAuthor = user?.id === comment.userId;
+  const replies = repliesByComment[comment.id] || [];
+  const hasReplies = comment.replyCount > 0;
 
   const handleLike = async () => {
     // Optimistic update
@@ -46,7 +70,7 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
 
     try {
       const result = await dispatch(
-        toggleCommentLikeAsync({ commentId: comment._id, postId })
+        toggleCommentLikeAsync({ commentId: comment.id, postId })
       ).unwrap();
       // Sync with server response
       setLocalLikeCount(result.likeCount);
@@ -54,25 +78,44 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
     } catch {
       // Revert on error
       setLocalLiked(localLiked);
-      setLocalLikeCount(comment.like_count || 0);
+      setLocalLikeCount(comment.likeCount || 0);
     }
   };
 
   const handleDelete = async () => {
     if (window.confirm('Bạn chắc chắn muốn xóa bình luận này?')) {
-      await dispatch(deleteCommentAsync({ commentId: comment._id, postId }));
+      await dispatch(deleteCommentAsync({ commentId: comment.id, postId }));
     }
   };
 
   const handleReplySubmit = async (content: string) => {
-    await dispatch(createReplyAsync({ commentId: comment._id, postId, content })).unwrap();
+    await dispatch(
+      createReplyAsync({
+        commentId: comment.id,
+        postId,
+        content,
+        mentionedUserId: replyingTo?.userId,
+      })
+    ).unwrap();
     setShowReplyForm(false);
+    setReplyingTo(null);
     setShowReplies(true);
+  };
+
+  const handleReplyToReply = (userId: string, displayName: string) => {
+    setReplyingTo({ userId, displayName });
+    setShowReplyForm(true);
+    setShowReplies(true);
+  };
+
+  const handleCancelReply = () => {
+    setShowReplyForm(false);
+    setReplyingTo(null);
   };
 
   const handleToggleReplies = async () => {
     if (!showReplies && replies.length === 0 && hasReplies) {
-      await dispatch(getRepliesAsync({ commentId: comment._id, page: 1, limit: 10 }));
+      await dispatch(getRepliesAsync({ commentId: comment.id, page: 1, limit: 10 }));
     }
     setShowReplies(!showReplies);
   };
@@ -84,26 +127,27 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
         {/* Avatar */}
         <img
           src={
-            comment.accountId.avatarUrl ||
-            `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.accountId._id}`
+            comment.user?.avatarUrl ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.userId}`
           }
-          alt={comment.accountId.displayName}
+          alt={comment.user?.displayName || 'User'}
           className="w-9 h-9 rounded-full flex-shrink-0"
         />
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="bg-gray-100 rounded-xl px-4 py-2.5">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="font-semibold text-sm text-gray-900">
-                {comment.accountId.displayName}
+                {comment.user?.displayName || 'Unknown User'}
               </span>
+              <RoleBadge role={comment.user?.role} />
               <span className="text-xs text-gray-500">
                 {formatMessageTime(new Date(comment.createdAt))}
               </span>
             </div>
             <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">
-              {comment.comment_content}
+              {comment.content}
             </p>
           </div>
 
@@ -134,7 +178,7 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
                 className="text-xs font-medium text-blue-600 hover:text-blue-700 transition inline-flex items-center gap-1"
               >
                 {showReplies ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                {comment.reply_count} trả lời
+                {comment.replyCount} trả lời
               </button>
             )}
 
@@ -162,13 +206,29 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
           {/* Reply Form */}
           {showReplyForm && (
             <div className="mt-3 pl-2">
+              {replyingTo && (
+                <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                  Đang trả lời{' '}
+                  <span className="font-semibold text-gray-700">@{replyingTo.displayName}</span>
+                  <button
+                    onClick={() => setReplyingTo(null)}
+                    className="text-gray-400 hover:text-gray-600 ml-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
               <CommentForm
                 onSubmit={handleReplySubmit}
-                placeholder={`Trả lời ${comment.accountId.displayName}...`}
+                placeholder={
+                  replyingTo
+                    ? `Trả lời @${replyingTo.displayName}...`
+                    : `Trả lời ${comment.user?.displayName || 'User'}...`
+                }
                 buttonText="Trả lời"
                 autoFocus
                 showCancel
-                onCancel={() => setShowReplyForm(false)}
+                onCancel={handleCancelReply}
               />
             </div>
           )}
@@ -176,15 +236,16 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
           {/* Replies */}
           {showReplies && (
             <div className="mt-3 space-y-3 pl-2 border-l-2 border-gray-200">
-              {loadingReplies[comment._id] ? (
+              {loadingReplies[comment.id] ? (
                 <div className="text-sm text-gray-500 py-2">Đang tải...</div>
               ) : (
                 replies.map((reply) => (
                   <ReplyItem
-                    key={reply._id}
+                    key={reply.id}
                     reply={reply}
-                    commentId={comment._id}
+                    commentId={comment.id}
                     currentUserId={user?.id}
+                    onReply={handleReplyToReply}
                   />
                 ))
               )}
@@ -201,14 +262,15 @@ interface ReplyItemProps {
   reply: Reply;
   commentId: string;
   currentUserId?: string;
+  onReply: (userId: string, displayName: string) => void;
 }
 
-function ReplyItem({ reply, commentId, currentUserId }: ReplyItemProps) {
+function ReplyItem({ reply, commentId, currentUserId, onReply }: ReplyItemProps) {
   const dispatch = useDispatch<AppDispatch>();
   const [localLiked, setLocalLiked] = useState(false);
-  const [localLikeCount, setLocalLikeCount] = useState(reply.like_count || 0);
+  const [localLikeCount, setLocalLikeCount] = useState(reply.likeCount || 0);
 
-  const isAuthor = currentUserId === reply.accountId._id;
+  const isAuthor = currentUserId === reply.userId;
 
   const handleLike = async () => {
     setLocalLiked(!localLiked);
@@ -216,47 +278,52 @@ function ReplyItem({ reply, commentId, currentUserId }: ReplyItemProps) {
 
     try {
       const result = await dispatch(
-        toggleReplyLikeAsync({ replyId: reply._id, commentId })
+        toggleReplyLikeAsync({ replyId: reply.id, commentId })
       ).unwrap();
       // Sync with server response
       setLocalLikeCount(result.likeCount);
       setLocalLiked(result.liked);
     } catch {
       setLocalLiked(localLiked);
-      setLocalLikeCount(reply.like_count || 0);
+      setLocalLikeCount(reply.likeCount || 0);
     }
   };
 
   const handleDelete = async () => {
     if (window.confirm('Bạn chắc chắn muốn xóa trả lời này?')) {
-      await dispatch(deleteReplyAsync({ replyId: reply._id, commentId }));
+      await dispatch(deleteReplyAsync({ replyId: reply.id, commentId }));
     }
+  };
+
+  const handleReply = () => {
+    onReply(reply.userId, reply.user?.displayName || 'User');
   };
 
   return (
     <div className="flex gap-2.5 group/reply">
       <img
         src={
-          reply.accountId.avatarUrl ||
-          `https://api.dicebear.com/7.x/avataaars/svg?seed=${reply.accountId._id}`
+          reply.user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${reply.userId}`
         }
-        alt={reply.accountId.displayName}
+        alt={reply.user?.displayName || 'User'}
         className="w-7 h-7 rounded-full flex-shrink-0"
       />
 
       <div className="flex-1 min-w-0">
         <div className="bg-gray-100 rounded-xl px-3 py-2">
-          <div className="flex items-center gap-2 mb-0.5">
+          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
             <span className="font-semibold text-xs text-gray-900">
-              {reply.accountId.displayName}
+              {reply.user?.displayName || 'Unknown User'}
             </span>
+            <RoleBadge role={reply.user?.role} />
+            {reply.mentionedUser && (
+              <span className="text-xs text-blue-600">@{reply.mentionedUser.displayName}</span>
+            )}
             <span className="text-xs text-gray-500">
               {formatMessageTime(new Date(reply.createdAt))}
             </span>
           </div>
-          <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">
-            {reply.reply_comment_content}
-          </p>
+          <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">{reply.content}</p>
         </div>
 
         {/* Actions */}
@@ -271,6 +338,13 @@ function ReplyItem({ reply, commentId, currentUserId }: ReplyItemProps) {
               <Heart size={12} fill={localLiked ? 'currentColor' : 'none'} />
               {localLikeCount > 0 && <span>{localLikeCount}</span>}
             </span>
+          </button>
+
+          <button
+            onClick={handleReply}
+            className="text-xs font-medium text-gray-500 hover:text-gray-700 transition"
+          >
+            Trả lời
           </button>
 
           {isAuthor && (

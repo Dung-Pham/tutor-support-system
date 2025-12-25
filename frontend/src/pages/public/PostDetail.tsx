@@ -110,7 +110,7 @@ export default function PostDetailPage() {
               <img
                 src={
                   post.author.avatarUrl ||
-                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author._id}`
+                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.id}`
                 }
                 alt={post.author.displayName}
                 className="w-10 h-10 rounded-full ring-2 ring-gray-100"
@@ -131,7 +131,7 @@ export default function PostDetailPage() {
               </span>
 
               {/* Like Button */}
-              <LikeButton postId={post._id} initialLikeCount={post.likeCount || 0} size="md" />
+              <LikeButton postId={post.id} initialLikeCount={post.likeCount || 0} size="md" />
 
               {/* Comment count */}
               <a
@@ -166,7 +166,7 @@ export default function PostDetailPage() {
 
       {/* Comments Section */}
       <div id="comments">
-        <CommentSection postId={post._id} commentCount={post.commentCount || 0} />
+        <CommentSection postId={post.id} commentCount={post.commentCount || 0} />
       </div>
     </div>
   );

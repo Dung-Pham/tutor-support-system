@@ -24,7 +24,7 @@ export function ConversationList({ conversations }: ConversationListProps) {
       {/* Conversations List */}
       <div>
         {conversations.map((conversation) => (
-          <ConversationItem key={conversation._id} conversation={conversation} />
+          <ConversationItem key={conversation.id} conversation={conversation} />
         ))}
       </div>
     </div>

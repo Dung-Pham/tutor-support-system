@@ -1,6 +1,6 @@
-/**
+﻿/**
  * File: postController.ts
- * Mục đích: Controller cho Post/Blog feature (SQL Server + MongoDB)
+ * Má»¥c Ä‘Ã­ch: Controller cho Post/Blog feature (SQL Server + MongoDB)
  * PostHeader: SQL Server
  * PostDetail: MongoDB (contentJson)
  */
@@ -63,25 +63,27 @@ const extractPlainText = (contentJson: Record<string, unknown>): string => {
   return extractText(contentJson).trim();
 };
 
-// Tạo bài viết mới
+// Táº¡o bÃ i viáº¿t má»›i
 export const createPost = async (
   req: AuthRequest & { body: CreatePostBody },
   res: Response
 ): Promise<Response> => {
+  let postHeader: PostHeader | null = null;
+
   try {
     const { title, contentJson, status = "draft" } = req.body;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     if (!userId) return res.status(401).json(formatError("Unauthorized"));
     if (!title || !contentJson) {
       return res.status(400).json({
         success: false,
-        message: "Tiêu đề và nội dung là bắt buộc",
+        message: "TiÃªu Ä‘á» vÃ  ná»™i dung lÃ  báº¯t buá»™c",
       });
     }
 
     // Create PostHeader in SQL Server
-    const postHeader = await PostHeader.create({
+    postHeader = await PostHeader.create({
       title,
       slug: createSlug(title),
       authorId: userId,
@@ -102,7 +104,7 @@ export const createPost = async (
 
     return res.status(201).json({
       success: true,
-      message: "Bài viết đã được tạo",
+      message: "BÃ i viáº¿t Ä‘Ã£ Ä‘Æ°á»£c táº¡o",
       data: {
         ...postHeader.toJSON(),
         author,
@@ -111,14 +113,25 @@ export const createPost = async (
     });
   } catch (error) {
     console.error("Create post error", error);
+
+    // Rollback: XÃ³a PostHeader náº¿u Ä‘Ã£ táº¡o mÃ  PostDetail fail
+    if (postHeader) {
+      try {
+        await postHeader.destroy();
+        console.log("Rolled back PostHeader:", postHeader.id);
+      } catch (rollbackError) {
+        console.error("Rollback failed:", rollbackError);
+      }
+    }
+
     return res.status(500).json({
       success: false,
-      message: "Lỗi tạo bài viết",
+      message: "Lá»—i táº¡o bÃ i viáº¿t",
     });
   }
 };
 
-// Lấy danh sách bài viết đã approve (công khai)
+// Láº¥y danh sÃ¡ch bÃ i viáº¿t Ä‘Ã£ approve (cÃ´ng khai)
 export const getApprovedPosts = async (
   req: AuthRequest & { query: PaginationQuery },
   res: Response
@@ -146,7 +159,7 @@ export const getApprovedPosts = async (
 
     return res.json({
       success: true,
-      message: "Lấy danh sách bài viết thành công",
+      message: "Láº¥y danh sÃ¡ch bÃ i viáº¿t thÃ nh cÃ´ng",
       data: posts,
       page,
       limit,
@@ -157,12 +170,12 @@ export const getApprovedPosts = async (
     console.error("Get approved posts error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy danh sách bài viết",
+      message: "Lá»—i khi láº¥y danh sÃ¡ch bÃ i viáº¿t",
     });
   }
 };
 
-// Lấy danh sách bài viết chờ duyệt (admin only)
+// Láº¥y danh sÃ¡ch bÃ i viáº¿t chá» duyá»‡t (admin only)
 export const getPendingPosts = async (
   req: AuthRequest & { query: PaginationQuery },
   res: Response
@@ -171,7 +184,7 @@ export const getPendingPosts = async (
     if (req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Chỉ admin có thể xem bài viết chờ duyệt",
+        message: "Chá»‰ admin cÃ³ thá»ƒ xem bÃ i viáº¿t chá» duyá»‡t",
       });
     }
 
@@ -197,7 +210,7 @@ export const getPendingPosts = async (
 
     return res.json({
       success: true,
-      message: "Lấy danh sách bài viết chờ duyệt",
+      message: "Láº¥y danh sÃ¡ch bÃ i viáº¿t chá» duyá»‡t",
       data: posts,
       page,
       limit,
@@ -208,12 +221,12 @@ export const getPendingPosts = async (
     console.error("Get pending posts error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy danh sách bài viết chờ duyệt",
+      message: "Lá»—i khi láº¥y danh sÃ¡ch bÃ i viáº¿t chá» duyá»‡t",
     });
   }
 };
 
-// Lấy danh sách bài viết bị reject (admin only)
+// Láº¥y danh sÃ¡ch bÃ i viáº¿t bá»‹ reject (admin only)
 export const getRejectedPosts = async (
   req: AuthRequest & { query: PaginationQuery },
   res: Response
@@ -222,7 +235,7 @@ export const getRejectedPosts = async (
     if (req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Chỉ admin có thể xem bài viết bị reject",
+        message: "Chá»‰ admin cÃ³ thá»ƒ xem bÃ i viáº¿t bá»‹ reject",
       });
     }
 
@@ -248,7 +261,7 @@ export const getRejectedPosts = async (
 
     return res.json({
       success: true,
-      message: "Lấy danh sách bài viết bị reject",
+      message: "Láº¥y danh sÃ¡ch bÃ i viáº¿t bá»‹ reject",
       data: posts,
       page,
       limit,
@@ -259,12 +272,12 @@ export const getRejectedPosts = async (
     console.error("Get rejected posts error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy danh sách bài viết bị reject",
+      message: "Lá»—i khi láº¥y danh sÃ¡ch bÃ i viáº¿t bá»‹ reject",
     });
   }
 };
 
-// Lấy chi tiết một bài viết
+// Láº¥y chi tiáº¿t má»™t bÃ i viáº¿t
 export const getPostDetail = async (
   req: AuthRequest & { params: PostParams },
   res: Response
@@ -289,7 +302,7 @@ export const getPostDetail = async (
     });
 
     if (!post) {
-      return res.status(404).json(formatError("Bài viết không tồn tại"));
+      return res.status(404).json(formatError("BÃ i viáº¿t khÃ´ng tá»“n táº¡i"));
     }
 
     // Increment view count
@@ -300,7 +313,7 @@ export const getPostDetail = async (
 
     return res.json({
       success: true,
-      message: "Lấy chi tiết bài viết",
+      message: "Láº¥y chi tiáº¿t bÃ i viáº¿t",
       data: {
         ...post.toJSON(),
         contentJson: postDetail?.contentJson || null,
@@ -311,18 +324,18 @@ export const getPostDetail = async (
     console.error("Get post detail error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy chi tiết bài viết",
+      message: "Lá»—i khi láº¥y chi tiáº¿t bÃ i viáº¿t",
     });
   }
 };
 
-// Lấy bài viết của user hiện tại
+// Láº¥y bÃ i viáº¿t cá»§a user hiá»‡n táº¡i
 export const getMyPosts = async (
   req: AuthRequest & { query: PaginationQuery },
   res: Response
 ): Promise<Response> => {
   try {
-    const userId = req.user?._id;
+    const userId = req.user?.id;
     if (!userId) return res.status(401).json(formatError("Unauthorized"));
 
     const { status } = req.query;
@@ -350,7 +363,7 @@ export const getMyPosts = async (
 
     return res.json({
       success: true,
-      message: "Lấy danh sách bài viết của bạn",
+      message: "Láº¥y danh sÃ¡ch bÃ i viáº¿t cá»§a báº¡n",
       data: posts,
       page,
       limit,
@@ -361,12 +374,12 @@ export const getMyPosts = async (
     console.error("Get my posts error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy danh sách bài viết",
+      message: "Lá»—i khi láº¥y danh sÃ¡ch bÃ i viáº¿t",
     });
   }
 };
 
-// Cập nhật bài viết
+// Cáº­p nháº­t bÃ i viáº¿t
 export const updatePost = async (
   req: AuthRequest & { params: PostParams; body: UpdatePostBody },
   res: Response
@@ -374,7 +387,7 @@ export const updatePost = async (
   try {
     const { id } = req.params;
     const { title, contentJson, status } = req.body;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     if (!userId) return res.status(401).json(formatError("Unauthorized"));
 
@@ -382,14 +395,14 @@ export const updatePost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài viết không tồn tại",
+        message: "BÃ i viáº¿t khÃ´ng tá»“n táº¡i",
       });
     }
 
     if (post.authorId !== userId) {
       return res.status(403).json({
         success: false,
-        message: "Bạn không có quyền chỉnh sửa bài viết này",
+        message: "Báº¡n khÃ´ng cÃ³ quyá»n chá»‰nh sá»­a bÃ i viáº¿t nÃ y",
       });
     }
 
@@ -398,8 +411,8 @@ export const updatePost = async (
         success: false,
         message:
           post.status === "approved"
-            ? "Không thể chỉnh sửa bài viết đã được duyệt"
-            : "Không thể chỉnh sửa bài viết từ chối",
+            ? "KhÃ´ng thá»ƒ chá»‰nh sá»­a bÃ i viáº¿t Ä‘Ã£ Ä‘Æ°á»£c duyá»‡t"
+            : "KhÃ´ng thá»ƒ chá»‰nh sá»­a bÃ i viáº¿t tá»« chá»‘i",
       });
     }
 
@@ -437,7 +450,7 @@ export const updatePost = async (
 
     return res.json({
       success: true,
-      message: "Bài viết đã được cập nhật",
+      message: "BÃ i viáº¿t Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t",
       data: {
         ...post.toJSON(),
         author,
@@ -448,12 +461,12 @@ export const updatePost = async (
     console.error("Update post error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi cập nhật bài viết",
+      message: "Lá»—i cáº­p nháº­t bÃ i viáº¿t",
     });
   }
 };
 
-// Xóa bài viết (soft delete)
+// XÃ³a bÃ i viáº¿t (soft delete)
 export const deletePost = async (
   req: AuthRequest & { params: PostParams; body: DeletePostBody },
   res: Response
@@ -461,7 +474,7 @@ export const deletePost = async (
   try {
     const { id } = req.params;
     const { reason } = req.body;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     if (!userId) return res.status(401).json(formatError("Unauthorized"));
 
@@ -469,18 +482,18 @@ export const deletePost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài viết không tồn tại",
+        message: "BÃ i viáº¿t khÃ´ng tá»“n táº¡i",
       });
     }
 
     if (post.authorId !== userId && req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Bạn không có quyền xóa bài viết này",
+        message: "Báº¡n khÃ´ng cÃ³ quyá»n xÃ³a bÃ i viáº¿t nÃ y",
       });
     }
 
-    // Soft delete - chỉ đổi status thành deleted
+    // Soft delete - chá»‰ Ä‘á»•i status thÃ nh deleted
     await post.update({
       status: "deleted",
       deletedBy: userId,
@@ -490,18 +503,18 @@ export const deletePost = async (
 
     return res.json({
       success: true,
-      message: "Bài viết đã được xóa",
+      message: "BÃ i viáº¿t Ä‘Ã£ Ä‘Æ°á»£c xÃ³a",
     });
   } catch (error) {
     console.error("Delete post error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi xóa bài viết",
+      message: "Lá»—i xÃ³a bÃ i viáº¿t",
     });
   }
 };
 
-// Lấy danh sách bài viết đã xóa (admin only)
+// Láº¥y danh sÃ¡ch bÃ i viáº¿t Ä‘Ã£ xÃ³a (admin only)
 export const getDeletedPosts = async (
   req: AuthRequest & { query: PaginationQuery },
   res: Response
@@ -510,7 +523,7 @@ export const getDeletedPosts = async (
     if (req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Chỉ admin có thể xem bài viết đã xóa",
+        message: "Chá»‰ admin cÃ³ thá»ƒ xem bÃ i viáº¿t Ä‘Ã£ xÃ³a",
       });
     }
 
@@ -541,7 +554,7 @@ export const getDeletedPosts = async (
 
     return res.json({
       success: true,
-      message: "Lấy danh sách bài viết đã xóa",
+      message: "Láº¥y danh sÃ¡ch bÃ i viáº¿t Ä‘Ã£ xÃ³a",
       data: posts,
       page,
       limit,
@@ -552,24 +565,24 @@ export const getDeletedPosts = async (
     console.error("Get deleted posts error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy danh sách bài viết đã xóa",
+      message: "Lá»—i khi láº¥y danh sÃ¡ch bÃ i viáº¿t Ä‘Ã£ xÃ³a",
     });
   }
 };
 
-// Khôi phục bài viết đã xóa (admin only)
+// KhÃ´i phá»¥c bÃ i viáº¿t Ä‘Ã£ xÃ³a (admin only)
 export const restorePost = async (
   req: AuthRequest & { params: PostParams },
   res: Response
 ): Promise<Response> => {
   try {
     const { id } = req.params;
-    const adminId = req.user?._id;
+    const adminId = req.user?.id;
 
     if (!adminId || req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Chỉ admin có thể khôi phục bài viết",
+        message: "Chá»‰ admin cÃ³ thá»ƒ khÃ´i phá»¥c bÃ i viáº¿t",
       });
     }
 
@@ -577,18 +590,18 @@ export const restorePost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài viết không tồn tại",
+        message: "BÃ i viáº¿t khÃ´ng tá»“n táº¡i",
       });
     }
 
     if (post.status !== "deleted") {
       return res.status(400).json({
         success: false,
-        message: "Bài viết này chưa bị xóa",
+        message: "BÃ i viáº¿t nÃ y chÆ°a bá»‹ xÃ³a",
       });
     }
 
-    // Khôi phục về trạng thái approved
+    // KhÃ´i phá»¥c vá» tráº¡ng thÃ¡i approved
     await post.update({
       status: "approved",
       deletedBy: null,
@@ -598,30 +611,30 @@ export const restorePost = async (
 
     return res.json({
       success: true,
-      message: "Bài viết đã được khôi phục",
+      message: "BÃ i viáº¿t Ä‘Ã£ Ä‘Æ°á»£c khÃ´i phá»¥c",
     });
   } catch (error) {
     console.error("Restore post error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi khôi phục bài viết",
+      message: "Lá»—i khÃ´i phá»¥c bÃ i viáº¿t",
     });
   }
 };
 
-// Xóa vĩnh viễn bài viết (admin only)
+// XÃ³a vÄ©nh viá»…n bÃ i viáº¿t (admin only)
 export const hardDeletePost = async (
   req: AuthRequest & { params: PostParams },
   res: Response
 ): Promise<Response> => {
   try {
     const { id } = req.params;
-    const adminId = req.user?._id;
+    const adminId = req.user?.id;
 
     if (!adminId || req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Chỉ admin có thể xóa vĩnh viễn bài viết",
+        message: "Chá»‰ admin cÃ³ thá»ƒ xÃ³a vÄ©nh viá»…n bÃ i viáº¿t",
       });
     }
 
@@ -629,42 +642,42 @@ export const hardDeletePost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài viết không tồn tại",
+        message: "BÃ i viáº¿t khÃ´ng tá»“n táº¡i",
       });
     }
 
-    // Xóa vĩnh viễn từ cả hai databases
-    await Promise.all([
-      post.destroy(),
-      PostDetail.deleteOne({ postHeaderId: id }),
-    ]);
+    // XÃ³a PostDetail trÆ°á»›c (MongoDB) - náº¿u fail thÃ¬ PostHeader váº«n cÃ²n
+    await PostDetail.deleteOne({ postHeaderId: id });
+
+    // Sau Ä‘Ã³ xÃ³a PostHeader (SQL Server)
+    await post.destroy();
 
     return res.json({
       success: true,
-      message: "Bài viết đã được xóa vĩnh viễn",
+      message: "BÃ i viáº¿t Ä‘Ã£ Ä‘Æ°á»£c xÃ³a vÄ©nh viá»…n",
     });
   } catch (error) {
     console.error("Hard delete post error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi xóa vĩnh viễn bài viết",
+      message: "Lá»—i xÃ³a vÄ©nh viá»…n bÃ i viáº¿t",
     });
   }
 };
 
-// Duyệt bài viết (admin only)
+// Duyá»‡t bÃ i viáº¿t (admin only)
 export const approvePost = async (
   req: AuthRequest & { params: PostParams },
   res: Response
 ): Promise<Response> => {
   try {
     const { id } = req.params;
-    const adminId = req.user?._id;
+    const adminId = req.user?.id;
 
     if (!adminId || req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Chỉ admin có thể duyệt bài viết",
+        message: "Chá»‰ admin cÃ³ thá»ƒ duyá»‡t bÃ i viáº¿t",
       });
     }
 
@@ -672,14 +685,14 @@ export const approvePost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài viết không tồn tại",
+        message: "BÃ i viáº¿t khÃ´ng tá»“n táº¡i",
       });
     }
 
     if (post.status !== "pending") {
       return res.status(400).json({
         success: false,
-        message: "Chỉ có thể duyệt bài viết chờ duyệt",
+        message: "Chá»‰ cÃ³ thá»ƒ duyá»‡t bÃ i viáº¿t chá» duyá»‡t",
       });
     }
 
@@ -700,7 +713,7 @@ export const approvePost = async (
 
     return res.json({
       success: true,
-      message: "Bài viết đã được duyệt",
+      message: "BÃ i viáº¿t Ä‘Ã£ Ä‘Æ°á»£c duyá»‡t",
       data: {
         ...post.toJSON(),
         author,
@@ -711,12 +724,12 @@ export const approvePost = async (
     console.error("Approve post error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi duyệt bài viết",
+      message: "Lá»—i duyá»‡t bÃ i viáº¿t",
     });
   }
 };
 
-// Từ chối bài viết (admin only)
+// Tá»« chá»‘i bÃ i viáº¿t (admin only)
 export const rejectPost = async (
   req: AuthRequest & { params: PostParams; body: RejectPostBody },
   res: Response
@@ -724,19 +737,19 @@ export const rejectPost = async (
   try {
     const { id } = req.params;
     const { reason } = req.body;
-    const adminId = req.user?._id;
+    const adminId = req.user?.id;
 
     if (!adminId || req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Chỉ admin có thể từ chối bài viết",
+        message: "Chá»‰ admin cÃ³ thá»ƒ tá»« chá»‘i bÃ i viáº¿t",
       });
     }
 
     if (!reason) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng nhập lý do từ chối",
+        message: "Vui lÃ²ng nháº­p lÃ½ do tá»« chá»‘i",
       });
     }
 
@@ -744,14 +757,14 @@ export const rejectPost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài viết không tồn tại",
+        message: "BÃ i viáº¿t khÃ´ng tá»“n táº¡i",
       });
     }
 
     if (!["pending", "approved"].includes(post.status)) {
       return res.status(400).json({
         success: false,
-        message: "Chỉ có thể từ chối bài viết chờ duyệt hoặc đã duyệt",
+        message: "Chá»‰ cÃ³ thá»ƒ tá»« chá»‘i bÃ i viáº¿t chá» duyá»‡t hoáº·c Ä‘Ã£ duyá»‡t",
       });
     }
 
@@ -773,7 +786,7 @@ export const rejectPost = async (
 
     return res.json({
       success: true,
-      message: "Bài viết đã được từ chối",
+      message: "BÃ i viáº¿t Ä‘Ã£ Ä‘Æ°á»£c tá»« chá»‘i",
       data: {
         ...post.toJSON(),
         author,
@@ -784,7 +797,7 @@ export const rejectPost = async (
     console.error("Reject post error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi từ chối bài viết",
+      message: "Lá»—i tá»« chá»‘i bÃ i viáº¿t",
     });
   }
 };

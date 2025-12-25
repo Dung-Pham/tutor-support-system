@@ -45,7 +45,7 @@ const messagesSlice = createSlice({
       state.activeConversation = action.payload;
       if (action.payload) {
         // Reset unread count khi mở conversation
-        state.unreadCounts[action.payload._id] = 0;
+        state.unreadCounts[action.payload.id] = 0;
       }
     },
 
@@ -66,10 +66,14 @@ const messagesSlice = createSlice({
         state.messages[conversationId] = [];
       }
 
-      state.messages[conversationId].push(message);
+      // Check duplicate - tránh thêm message trùng từ API + Socket
+      const exists = state.messages[conversationId].some((m) => m._id === message._id);
+      if (!exists) {
+        state.messages[conversationId].push(message);
+      }
 
       // Update last message trong conversation list
-      const conv = state.conversations.find((c) => c._id === conversationId);
+      const conv = state.conversations.find((c) => c.id === conversationId);
       if (conv) {
         conv.lastMessage = {
           _id: message._id,

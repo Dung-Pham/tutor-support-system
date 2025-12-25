@@ -1,6 +1,6 @@
-/**
+﻿/**
  * File: conversationController.ts
- * Mục đích: Controller cho Conversation feature (SQL Server + MongoDB)
+ * Má»¥c Ä‘Ã­ch: Controller cho Conversation feature (SQL Server + MongoDB)
  * Conversation, Participant: SQL Server
  * Message: MongoDB
  */
@@ -26,14 +26,14 @@ interface GetMessagesQuery {
   cursor?: string;
 }
 
-// Tạo conversation mới
+// Táº¡o conversation má»›i
 export const createConversation = async (
   req: AuthRequest & { body: CreateConversationBody },
   res: Response
 ): Promise<Response> => {
   try {
     const { type, name, memberIds } = req.body;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -148,13 +148,13 @@ export const createConversation = async (
   }
 };
 
-// Lấy danh sách conversations
+// Láº¥y danh sÃ¡ch conversations
 export const getConversations = async (
   req: AuthRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -222,14 +222,14 @@ export const getConversations = async (
   }
 };
 
-// Lấy messages của conversation (từ MongoDB)
+// Láº¥y messages cá»§a conversation (tá»« MongoDB)
 export const getMessages = async (
   req: AuthRequest & { params: ConversationParams; query: GetMessagesQuery },
   res: Response
 ): Promise<Response> => {
   try {
     const { conversationId } = req.params;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
     const limit = parseInt(req.query.limit || "20", 10);
     const { cursor } = req.query;
 
@@ -314,7 +314,7 @@ export const markConversationAsSeen = async (
 ): Promise<Response> => {
   try {
     const { conversationId } = req.params;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });

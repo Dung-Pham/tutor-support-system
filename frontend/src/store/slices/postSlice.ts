@@ -133,8 +133,8 @@ const postSlice = createSlice({
       state.posts.unshift(action.payload);
     },
     deletePost: (state, action: PayloadAction<string>) => {
-      state.posts = state.posts.filter((p) => p._id !== action.payload);
-      state.myPosts = state.myPosts.filter((p) => p._id !== action.payload);
+      state.posts = state.posts.filter((p) => p.id !== action.payload);
+      state.myPosts = state.myPosts.filter((p) => p.id !== action.payload);
     },
     setPage: (state, action: PayloadAction<number>) => {
       state.page = action.payload;
@@ -234,23 +234,23 @@ const postSlice = createSlice({
       .addCase(updatePostAsync.fulfilled, (state, action) => {
         state.loading = false;
         // Update trong tất cả lists
-        const postsIndex = state.posts.findIndex((p) => p._id === action.payload._id);
+        const postsIndex = state.posts.findIndex((p) => p.id === action.payload.id);
         if (postsIndex !== -1) {
           state.posts[postsIndex] = action.payload;
         }
-        const myPostsIndex = state.myPosts.findIndex((p) => p._id === action.payload._id);
+        const myPostsIndex = state.myPosts.findIndex((p) => p.id === action.payload.id);
         if (myPostsIndex !== -1) {
           state.myPosts[myPostsIndex] = action.payload;
         }
-        const pendingIndex = state.pendingPosts.findIndex((p) => p._id === action.payload._id);
+        const pendingIndex = state.pendingPosts.findIndex((p) => p.id === action.payload.id);
         if (pendingIndex !== -1) {
           state.pendingPosts[pendingIndex] = action.payload;
         }
         // Update currentPost và selectedPost nếu chúng là post này
-        if (state.currentPost?._id === action.payload._id) {
+        if (state.currentPost?.id === action.payload.id) {
           state.currentPost = action.payload;
         }
-        if (state.selectedPost?._id === action.payload._id) {
+        if (state.selectedPost?.id === action.payload.id) {
           state.selectedPost = action.payload;
         }
       })
@@ -268,9 +268,9 @@ const postSlice = createSlice({
       .addCase(deletePostAsync.fulfilled, (state, action) => {
         state.loading = false;
         // Xoá từ tất cả lists
-        state.posts = state.posts.filter((p) => p._id !== action.payload);
-        state.myPosts = state.myPosts.filter((p) => p._id !== action.payload);
-        state.pendingPosts = state.pendingPosts.filter((p) => p._id !== action.payload);
+        state.posts = state.posts.filter((p) => p.id !== action.payload);
+        state.myPosts = state.myPosts.filter((p) => p.id !== action.payload);
+        state.pendingPosts = state.pendingPosts.filter((p) => p.id !== action.payload);
       })
       .addCase(deletePostAsync.rejected, (state, action) => {
         state.loading = false;
@@ -285,7 +285,7 @@ const postSlice = createSlice({
       })
       .addCase(approvePostAsync.fulfilled, (state, action) => {
         state.loading = false;
-        const postIndex = state.pendingPosts.findIndex((p) => p._id === action.payload._id);
+        const postIndex = state.pendingPosts.findIndex((p) => p.id === action.payload.id);
         if (postIndex !== -1) {
           state.pendingPosts.splice(postIndex, 1);
           state.posts.unshift(action.payload);
@@ -304,7 +304,7 @@ const postSlice = createSlice({
       })
       .addCase(rejectPostAsync.fulfilled, (state, action) => {
         state.loading = false;
-        const postIndex = state.pendingPosts.findIndex((p) => p._id === action.payload._id);
+        const postIndex = state.pendingPosts.findIndex((p) => p.id === action.payload.id);
         if (postIndex !== -1) {
           state.pendingPosts[postIndex] = action.payload;
         }
@@ -321,7 +321,7 @@ const postSlice = createSlice({
 
       // Update likeCount on post from server response
       const updateLikeCount = (posts: Post[]) => {
-        const post = posts.find((p) => p._id === postId);
+        const post = posts.find((p) => p.id === postId);
         if (post) {
           post.likeCount = likeCount;
         }
@@ -331,10 +331,10 @@ const postSlice = createSlice({
       updateLikeCount(state.myPosts);
       updateLikeCount(state.pendingPosts);
 
-      if (state.currentPost?._id === postId) {
+      if (state.currentPost?.id === postId) {
         state.currentPost.likeCount = likeCount;
       }
-      if (state.selectedPost?._id === postId) {
+      if (state.selectedPost?.id === postId) {
         state.selectedPost.likeCount = likeCount;
       }
     });

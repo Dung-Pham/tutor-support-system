@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '@/store';
 import type { Conversation } from '@/types';
@@ -15,38 +15,45 @@ interface ChatBoxProps {
 
 export function ChatBox({ conversation }: ChatBoxProps) {
   const dispatch = useDispatch();
-  const messages = useSelector((state: RootState) => {
-    const msgs = state.messages.messages[conversation._id] || [];
-    // Sort messages by createdAt
-    return msgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-  });
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
+  const rawMessages = useSelector((state: RootState) => state.messages.messages[conversation.id]);
+
+  // Memoize sorted messages để tránh re-render không cần thiết
+  const messages = useMemo(() => {
+    const msgs = rawMessages || [];
+    return [...msgs].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }, [rawMessages]);
+
   const [loading, setLoading] = useState(false);
 
   // Join conversation room on mount, leave on unmount
   useEffect(() => {
-    socketService.joinConversation(conversation._id);
+    socketService.joinConversation(conversation.id);
     return () => {
-      socketService.leaveConversation(conversation._id);
+      socketService.leaveConversation(conversation.id);
     };
-  }, [conversation._id]);
+  }, [conversation.id]);
 
   // Setup socket listeners for real-time messages
   useEffect(() => {
     const handleNewMessage = (data: any) => {
-      if (data.conversationId === conversation._id) {
+      // Chỉ add message từ NGƯỜI KHÁC (message của mình đã add từ API response)
+      if (data.conversationId === conversation.id && data.message.senderId !== currentUserId) {
         dispatch(addMessage(data.message));
       }
     };
 
     const handleMessageSeen = (data: any) => {
-      if (data.conversationId === conversation._id) {
+      if (data.conversationId === conversation.id) {
         // Update message seen status if needed
         console.log('Message seen:', data);
       }
     };
 
     const handleUserTyping = (data: any) => {
-      if (data.conversationId === conversation._id) {
+      if (data.conversationId === conversation.id) {
         // Handle typing indicator if needed
         console.log('User typing:', data);
       }
@@ -63,20 +70,18 @@ export function ChatBox({ conversation }: ChatBoxProps) {
       unsubMessageSeen();
       unsubUserTyping();
     };
-  }, [conversation._id, dispatch]);
+  }, [conversation.id, currentUserId, dispatch]);
 
   // Fetch messages when conversation changes
   useEffect(() => {
     fetchMessages();
-  }, [conversation._id]);
+  }, [conversation.id]);
 
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const response = await messageService.getMessages(conversation._id);
-      dispatch(
-        setMessages({ conversationId: conversation._id, messages: response.data.messages || [] })
-      );
+      const { messages } = await messageService.getMessages(conversation.id);
+      dispatch(setMessages({ conversationId: conversation.id, messages }));
     } catch (error) {
       console.error('Failed to fetch messages:', error);
     } finally {
@@ -92,7 +97,7 @@ export function ChatBox({ conversation }: ChatBoxProps) {
       </div>
 
       {/* Typing Indicator */}
-      <TypingIndicator conversationId={conversation._id} />
+      <TypingIndicator conversationId={conversation.id} />
 
       {/* Input - Fixed at bottom */}
       <div className="flex-shrink-0 border-t w-full">

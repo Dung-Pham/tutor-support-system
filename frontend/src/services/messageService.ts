@@ -1,16 +1,34 @@
 import { apiClient } from './api';
-import type { SendMessageRequest } from '@/types';
+import type { SendMessageRequest, Message } from '@/types';
 
-export async function getMessages(conversationId: string, cursor?: string, limit = 50) {
-  const response = await apiClient.get(`/conversations/${conversationId}/messages`, {
-    params: { cursor, limit },
-  });
-  return response;
+interface MessagesResponse {
+  success: boolean;
+  data: Message[];
+  nextCursor: string | null;
 }
 
-export async function sendMessage(payload: SendMessageRequest) {
-  const response = await apiClient.post(`/messages/direct`, payload);
-  return response;
+interface MessageResponse {
+  success: boolean;
+  data: Message;
+}
+
+export async function getMessages(
+  conversationId: string,
+  cursor?: string,
+  limit = 50
+): Promise<{ messages: Message[]; nextCursor: string | null }> {
+  const response = await apiClient.get<MessagesResponse>(
+    `/conversations/${conversationId}/messages`,
+    {
+      params: { cursor, limit },
+    }
+  );
+  return { messages: response.data.data, nextCursor: response.data.nextCursor };
+}
+
+export async function sendMessage(payload: SendMessageRequest): Promise<Message> {
+  const response = await apiClient.post<MessageResponse>(`/messages/direct`, payload);
+  return response.data.data;
 }
 
 export async function markMessageAsSeen(messageId: string) {

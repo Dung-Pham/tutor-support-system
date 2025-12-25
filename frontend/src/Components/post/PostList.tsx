@@ -56,11 +56,11 @@ export const PostList: React.FC<PostListProps> = ({
       <div className="space-y-3">
         {posts.map((post) => (
           <PostCard
-            key={post._id}
+            key={post.id}
             post={post}
             isAuthor={true}
             onView={(postId) => {
-              const selectedPost = posts.find((p) => p._id === postId);
+              const selectedPost = posts.find((p) => p.id === postId);
               if (selectedPost) onPostClick?.(selectedPost);
             }}
             onDelete={onPostDelete}

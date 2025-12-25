@@ -32,10 +32,10 @@ export function MessageInput({ conversation }: MessageInputProps) {
     (isTyping: boolean) => {
       if (isTypingRef.current !== isTyping) {
         isTypingRef.current = isTyping;
-        socketService.sendTyping(conversation._id, isTyping);
+        socketService.sendTyping(conversation.id, isTyping);
       }
     },
-    [conversation._id]
+    [conversation.id]
   );
 
   // Handle input change with typing indicator
@@ -64,10 +64,10 @@ export function MessageInput({ conversation }: MessageInputProps) {
       }
       // Make sure to send typing = false when leaving
       if (isTypingRef.current) {
-        socketService.sendTyping(conversation._id, false);
+        socketService.sendTyping(conversation.id, false);
       }
     };
-  }, [conversation._id]);
+  }, [conversation.id]);
 
   // Resize image before upload
   const resizeImage = (file: File, maxWidth = 1920, maxHeight = 1080): Promise<File> => {
@@ -148,20 +148,17 @@ export function MessageInput({ conversation }: MessageInputProps) {
     if (!message.trim() && selectedImages.length === 0) return;
 
     // Lấy recipientId từ conversation participants (người còn lại không phải current user)
-    const currentUserId = currentUser?.id || (currentUser as any)?._id;
+    const currentUserId = currentUser?.id;
 
     // Tìm participant khác với current user
-    const otherParticipant = conversation.participants.find((p) => {
-      const participantId = (p as any).id || p.userId;
-      return participantId !== currentUserId;
-    });
+    const otherParticipant = conversation.participants.find((p) => p.id !== currentUserId);
 
     if (!otherParticipant) {
       console.error('Cannot find other participant', { conversation, currentUserId });
       return;
     }
 
-    const recipientId = (otherParticipant as any).id || otherParticipant.userId;
+    const recipientId = otherParticipant.id;
 
     try {
       setSending(true);
@@ -177,15 +174,13 @@ export function MessageInput({ conversation }: MessageInputProps) {
 
       // 1. Gửi text trước (nếu có)
       if (hasText) {
-        const textResponse = await messageService.sendMessage({
-          conversationId: conversation._id,
+        const newMessage = await messageService.sendMessage({
+          conversationId: conversation.id,
           recipientId,
           content: message,
         });
 
-        if (textResponse.data.message) {
-          dispatch(addMessage(textResponse.data.message));
-        }
+        dispatch(addMessage(newMessage));
 
         // Clear text ngay sau khi gửi
         setMessage('');
@@ -239,16 +234,14 @@ export function MessageInput({ conversation }: MessageInputProps) {
           const imgUrls = await Promise.all(uploadPromises);
 
           // Step 3: Send message chỉ có ảnh, không có text
-          const imageResponse = await messageService.sendMessage({
-            conversationId: conversation._id,
+          const newImageMessage = await messageService.sendMessage({
+            conversationId: conversation.id,
             recipientId,
             content: '', // Empty content for image-only message
             imgUrls,
           });
 
-          if (imageResponse.data.message) {
-            dispatch(addMessage(imageResponse.data.message));
-          }
+          dispatch(addMessage(newImageMessage));
         } catch (uploadError) {
           console.error('Failed to upload images:', uploadError);
         } finally {

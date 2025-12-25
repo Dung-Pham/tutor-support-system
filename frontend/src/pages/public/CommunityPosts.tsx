@@ -179,7 +179,7 @@ export function CommunityPosts() {
           <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
             {filteredPosts.map((post) => (
               <PostCard
-                key={post._id}
+                key={post.id}
                 post={post}
                 isCommunity={true}
                 linkState={{ backTo: location.pathname }}

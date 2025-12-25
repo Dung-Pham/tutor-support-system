@@ -1,6 +1,6 @@
-/**
+﻿/**
  * File: adminController.ts
- * Mục đích: Controller xử lý các API cho Admin Panel (SQL Server)
+ * Má»¥c Ä‘Ã­ch: Controller xá»­ lÃ½ cÃ¡c API cho Admin Panel (SQL Server)
  */
 
 import { Response } from "express";
@@ -42,7 +42,7 @@ interface UpdateUserBody {
   bio?: string;
 }
 
-// Lấy thống kê tổng quan cho Dashboard
+// Láº¥y thá»‘ng kÃª tá»•ng quan cho Dashboard
 export const getStats = async (
   req: StatsRequest,
   res: Response
@@ -169,7 +169,7 @@ export const getStats = async (
   }
 };
 
-// Lấy danh sách users với pagination và filter
+// Láº¥y danh sÃ¡ch users vá»›i pagination vÃ  filter
 export const getUsers = async (
   req: AuthRequest & { query: UsersQuery },
   res: Response
@@ -242,7 +242,7 @@ export const getUsers = async (
   }
 };
 
-// Lấy chi tiết user
+// Láº¥y chi tiáº¿t user
 export const getUserById = async (
   req: AuthRequest & { params: IdParams },
   res: Response
@@ -284,7 +284,7 @@ export const getUserById = async (
   }
 };
 
-// Cập nhật thông tin user
+// Cáº­p nháº­t thÃ´ng tin user
 export const updateUser = async (
   req: AuthRequest & { params: IdParams; body: UpdateUserBody },
   res: Response
@@ -329,7 +329,7 @@ export const updateUser = async (
   }
 };
 
-// Xóa user (soft delete)
+// XÃ³a user (soft delete)
 export const deleteUser = async (
   req: AuthRequest & { params: IdParams },
   res: Response
@@ -337,7 +337,7 @@ export const deleteUser = async (
   try {
     const { id } = req.params;
 
-    if (id === req.user?._id) {
+    if (id === req.user?.id) {
       return res.status(400).json({
         success: false,
         message: "Cannot delete your own account",
@@ -370,7 +370,7 @@ export const deleteUser = async (
   }
 };
 
-// Lấy danh sách posts với pagination và filter
+// Láº¥y danh sÃ¡ch posts vá»›i pagination vÃ  filter
 export const getPosts = async (
   req: AuthRequest & { query: PostsQuery },
   res: Response
@@ -448,7 +448,7 @@ export const getPosts = async (
   }
 };
 
-// Lấy chi tiết post
+// Láº¥y chi tiáº¿t post
 export const getPostById = async (
   req: AuthRequest & { params: IdParams },
   res: Response
@@ -492,7 +492,7 @@ export const getPostById = async (
   }
 };
 
-// Xóa bài viết (hard delete)
+// XÃ³a bÃ i viáº¿t (hard delete)
 export const deletePost = async (
   req: AuthRequest & { params: IdParams },
   res: Response

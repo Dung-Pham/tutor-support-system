@@ -1,7 +1,7 @@
 export type UserRole = 'student' | 'tutor' | 'admin';
 
 export interface User {
-  _id: string;
+  id: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -28,7 +28,7 @@ export interface UserProfile extends User {
 }
 
 export interface UserInfo {
-  _id: string;
+  id: string;
   displayName: string;
   avatarUrl?: string;
   role: UserRole;

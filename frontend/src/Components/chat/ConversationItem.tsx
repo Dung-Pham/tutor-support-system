@@ -14,22 +14,18 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
   const dispatch = useDispatch();
   const activeConversation = useSelector((state: RootState) => state.messages.activeConversation);
   const unreadCount = useSelector(
-    (state: RootState) => state.messages.unreadCounts[conversation._id] || 0
+    (state: RootState) => state.messages.unreadCounts[conversation.id] || 0
   );
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
-  const isActive = activeConversation?._id === conversation._id;
+  const isActive = activeConversation?.id === conversation.id;
 
   // Lấy thông tin người chat (participant còn lại, không phải current user)
-  const currentUserId = currentUser?.id || (currentUser as any)?._id;
-  const otherParticipant = conversation.participants.find((p) => {
-    const participantId = (p as any).id || p.userId;
-    return participantId !== currentUserId;
-  });
-  const otherParticipantId = (otherParticipant as any)?.id || otherParticipant?.userId || '';
-  const conversationName =
-    (otherParticipant as any)?.displayName || otherParticipant?.userId || 'Unknown User';
-  const avatarUrl = (otherParticipant as any)?.avatarUrl;
+  const currentUserId = currentUser?.id;
+  const otherParticipant = conversation.participants.find((p) => p.id !== currentUserId);
+  const otherParticipantId = otherParticipant?.id || '';
+  const conversationName = otherParticipant?.displayName || 'Unknown User';
+  const avatarUrl = otherParticipant?.avatarUrl;
 
   const lastMessage = conversation.lastMessage?.content || 'Không có tin nhắn';
   const lastMessageTime = conversation.lastMessageAt

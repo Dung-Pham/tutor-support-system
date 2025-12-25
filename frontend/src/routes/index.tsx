@@ -18,6 +18,7 @@ const StudentLayout = lazy(() =>
   import('@/pages/student/StudentLayout').then((m) => ({ default: m.StudentLayout }))
 );
 const StudentMessages = lazy(() => import('@/pages/student/StudentMessages'));
+const TutorsList = lazy(() => import('@/pages/student/TutorsList'));
 
 // Tutor pages (chỉ load khi user là tutor)
 const TutorLayout = lazy(() =>
@@ -75,6 +76,14 @@ export const AppRoutes = () => {
             <Route path="posts/:id" element={<PostDetailPage />} />
             <Route path="posts/:id/:slug" element={<PostDetailPage />} />
             <Route path="documents" element={<div>Tài liệu</div>} />
+            <Route
+              path="tutors"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <TutorsList />
+                </Suspense>
+              }
+            />
             <Route
               path="messages"
               element={

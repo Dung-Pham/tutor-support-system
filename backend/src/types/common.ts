@@ -33,7 +33,7 @@ export interface PaginationQuery {
 
 export interface AuthRequest extends Request {
   user?: {
-    _id: string;
+    id: string;
     email: string;
     firstName: string;
     lastName: string;

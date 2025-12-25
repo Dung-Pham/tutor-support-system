@@ -3,14 +3,15 @@ import { UserInfo } from './user';
 // ==================== COMMENT ====================
 
 export interface Comment {
-  _id: string;
+  id: string;
   postId: string;
-  accountId: UserInfo;
-  comment_content: string;
-  create_at: string;
+  userId: string;
+  user?: UserInfo;
+  content: string;
   status: 'active' | 'deleted';
-  reply_count: number;
-  like_count: number;
+  replyCount: number;
+  likeCount: number;
+  isEdited: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,19 +43,23 @@ export interface CommentResponse {
 // ==================== REPLY ====================
 
 export interface Reply {
-  _id: string;
-  comment_id: string;
-  accountId: UserInfo;
-  reply_comment_content: string;
-  create_at: string;
+  id: string;
+  commentId: string;
+  userId: string;
+  user?: UserInfo;
+  mentionedUserId?: string | null;
+  mentionedUser?: UserInfo | null;
+  content: string;
   status: 'active' | 'deleted';
-  like_count: number;
+  likeCount: number;
+  isEdited: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateReplyRequest {
   content: string;
+  mentionedUserId?: string;
 }
 
 export interface RepliesResponse {

@@ -42,7 +42,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
 
   const handleDelete = () => {
     if (onDelete && window.confirm('Bạn chắc chắn muốn xóa bài viết này?')) {
-      onDelete(post._id);
+      onDelete(post.id);
       onClose();
     }
   };
@@ -62,7 +62,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
             <img
               src={
                 post.author?.avatarUrl ||
-                `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author?._id}`
+                `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author?.id}`
               }
               alt={post.author?.displayName}
               className="w-10 h-10 rounded-full"
@@ -89,13 +89,16 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
         <div className="space-y-6 py-4">
           {/* Images Gallery */}
           {imageUrls.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div
+              className={`grid gap-3 ${imageUrls.length === 1 ? 'grid-cols-1' : imageUrls.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}
+            >
               {imageUrls.map((image: string, index: number) => (
                 <img
                   key={index}
                   src={image}
                   alt={`${post.title} - ${index + 1}`}
-                  className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                  className={`w-full object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition ${imageUrls.length === 1 ? 'max-h-80' : 'h-48'}`}
+                  onClick={() => window.open(image, '_blank')}
                 />
               ))}
             </div>
@@ -147,7 +150,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
           {onEdit && post.status === 'draft' && (
             <Button
               onClick={() => {
-                onEdit(post._id);
+                onEdit(post.id);
                 onClose();
               }}
               disabled={isLoading}

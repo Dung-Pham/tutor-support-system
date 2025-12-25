@@ -9,6 +9,7 @@ import {
   authMe,
   getAllUsers,
   updateUserStatus,
+  getTutors,
 } from "../controllers/userController.js";
 import { adminOnly } from "../middlewares/userMiddleware.js";
 
@@ -19,6 +20,9 @@ const wrap = (fn: any) => fn;
 
 // Lấy thông tin user hiện tại
 router.get("/me", authMe);
+
+// Lấy danh sách tutors (cho students tìm gia sư)
+router.get("/tutors", wrap(getTutors));
 
 // Admin only routes
 router.get("/", adminOnly, wrap(getAllUsers));

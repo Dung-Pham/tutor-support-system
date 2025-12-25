@@ -1,11 +1,17 @@
 import type { UserInfo } from './user';
 import type { MessageResponse } from './message';
 
-export type ConversationType = 'direct';
+export type ConversationType = 'direct' | 'group';
 
+/**
+ * Participant trong conversation (format từ API response)
+ * Backend trả về participant với thông tin user đã được flatten
+ */
 export interface Participant {
-  userId: string;
-  joinedAt: string;
+  id: string; // User ID
+  displayName: string;
+  avatarUrl?: string | null;
+  joinAt?: string; // ISO date string
 }
 
 export interface ParticipantWithUser extends Participant {
@@ -20,12 +26,16 @@ export interface LastMessage {
 }
 
 export interface Conversation {
-  _id: string;
+  id: string;
   type: ConversationType;
-  participants: Participant[];
+  name?: string;
+  avatarUrl?: string;
+  createdBy?: string;
   lastMessageAt?: string;
+  lastMessagePreview?: string;
+  lastMessageSenderId?: string;
   lastMessage?: LastMessage;
-  unreadCounts: Record<string, number>;
+  participants: Participant[];
   createdAt: string;
   updatedAt: string;
 }
@@ -39,7 +49,7 @@ export interface ConversationDetail extends Conversation {
 }
 
 export interface ConversationPreview {
-  _id: string;
+  id: string;
   type: ConversationType;
   name: string; // Group name hoặc display name của participant
   avatarUrl?: string;
@@ -53,7 +63,8 @@ export interface ConversationPreview {
 
 export interface CreateConversationRequest {
   type: ConversationType;
-  participantIds: string[];
+  name?: string;
+  memberIds: string[];
 }
 
 /**

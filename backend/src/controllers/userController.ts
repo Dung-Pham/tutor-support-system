@@ -114,3 +114,44 @@ export const updateUserStatus = async (
     });
   }
 };
+
+// Get all tutors (for students to find tutors)
+export const getTutors = async (
+  req: Request<object, object, object, PaginationQuery>,
+  res: Response
+): Promise<Response> => {
+  try {
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = parseInt(req.query.limit || "20", 10);
+    const offset = (page - 1) * limit;
+
+    const { count: total, rows: tutors } = await User.findAndCountAll({
+      where: {
+        role: "tutor",
+        isActive: true,
+      },
+      attributes: ["id", "displayName", "avatarUrl", "bio", "createdAt"],
+      limit,
+      offset,
+      order: [["displayName", "ASC"]],
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Tutors retrieved successfully",
+      data: tutors,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Error getting tutors", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};

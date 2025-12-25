@@ -1,6 +1,6 @@
-/**
+﻿/**
  * File: messageController.ts
- * Mục đích: Controller cho Message feature (MongoDB + SQL Server)
+ * Má»¥c Ä‘Ã­ch: Controller cho Message feature (MongoDB + SQL Server)
  * Message: MongoDB
  * Conversation, Participant: SQL Server
  */
@@ -32,7 +32,7 @@ export const sendDirectMessage = async (
 ): Promise<Response> => {
   try {
     const { recipientId, content, conversationId, imgUrls } = req.body;
-    const senderId = req.user?._id;
+    const senderId = req.user?.id;
 
     if (!senderId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -152,7 +152,7 @@ export const sendGroupMessage = async (
 ): Promise<Response> => {
   try {
     const { conversationId, content, imgUrls } = req.body;
-    const senderId = req.user?._id;
+    const senderId = req.user?.id;
 
     if (!senderId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -239,7 +239,7 @@ export const markMessageAsSeen = async (
 ): Promise<Response> => {
   try {
     const { messageId } = req.params;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -288,7 +288,7 @@ export const deleteMessage = async (
 ): Promise<Response> => {
   try {
     const { messageId } = req.params;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -343,7 +343,7 @@ export const editMessage = async (
   try {
     const { messageId } = req.params;
     const { content } = req.body;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });

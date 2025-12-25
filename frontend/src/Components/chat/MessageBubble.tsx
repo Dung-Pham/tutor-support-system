@@ -11,8 +11,8 @@ interface MessageBubbleProps {
 export function MessageBubble({ message, showTime = false }: MessageBubbleProps) {
   const currentUser = useSelector((state: RootState) => state.auth.user) as User | null;
 
-  // So sánh senderId với currentUser id (hỗ trợ cả id và _id)
-  const currentUserId = (currentUser as any)?._id || (currentUser as any)?.id;
+  // So sánh senderId với currentUser id
+  const currentUserId = currentUser?.id;
   const isOwn = currentUserId && message.senderId === currentUserId;
 
   const messageTime = new Date(message.createdAt).toLocaleTimeString('vi-VN', {

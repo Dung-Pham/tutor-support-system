@@ -12,6 +12,7 @@ export interface ReplyCommentAttributes {
   id: string;
   commentId: string;
   userId: string;
+  mentionedUserId: string | null;
   content: string;
   likeCount: number;
   isEdited: boolean;
@@ -23,7 +24,13 @@ export interface ReplyCommentAttributes {
 export interface ReplyCommentCreationAttributes
   extends Optional<
     ReplyCommentAttributes,
-    "id" | "likeCount" | "isEdited" | "status" | "createdAt" | "updatedAt"
+    | "id"
+    | "mentionedUserId"
+    | "likeCount"
+    | "isEdited"
+    | "status"
+    | "createdAt"
+    | "updatedAt"
   > {}
 
 class ReplyComment
@@ -33,6 +40,7 @@ class ReplyComment
   declare id: string;
   declare commentId: string;
   declare userId: string;
+  declare mentionedUserId: string | null;
   declare content: string;
   declare likeCount: number;
   declare isEdited: boolean;
@@ -62,6 +70,15 @@ ReplyComment.init(
       type: DataTypes.UUID,
       allowNull: false,
       field: "user_id",
+      references: {
+        model: "Users",
+        key: "id",
+      },
+    },
+    mentionedUserId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      field: "mentioned_user_id",
       references: {
         model: "Users",
         key: "id",

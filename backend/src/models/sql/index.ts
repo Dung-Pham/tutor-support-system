@@ -56,6 +56,10 @@ PostComment.hasMany(Notification, {
 // ReplyComment associations
 ReplyComment.belongsTo(PostComment, { foreignKey: "commentId", as: "comment" });
 ReplyComment.belongsTo(User, { foreignKey: "userId", as: "user" });
+ReplyComment.belongsTo(User, {
+  foreignKey: "mentionedUserId",
+  as: "mentionedUser",
+});
 ReplyComment.hasMany(ReplyCommentLike, { foreignKey: "replyId", as: "likes" });
 
 // PostLike associations

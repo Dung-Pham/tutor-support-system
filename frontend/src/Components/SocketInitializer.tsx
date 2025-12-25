@@ -15,10 +15,7 @@ export function SocketInitializer() {
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.auth.token);
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
-  const currentUserId = useSelector((state: RootState) => {
-    const user = state.auth.user;
-    return (user as any)?._id || (user as any)?.id;
-  });
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
 
   useEffect(() => {
     if (token && isAuthenticated) {

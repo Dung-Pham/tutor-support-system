@@ -104,12 +104,14 @@ export const createReplyAsync = createAsyncThunk(
     commentId,
     postId,
     content,
+    mentionedUserId,
   }: {
     commentId: string;
     postId: string;
     content: string;
+    mentionedUserId?: string;
   }) => {
-    const response = await commentService.createReply(commentId, { content });
+    const response = await commentService.createReply(commentId, { content, mentionedUserId });
     return { commentId, postId, reply: response.data };
   }
 );
@@ -204,7 +206,7 @@ const commentSlice = createSlice({
       const { postId, comment } = action.payload;
       const comments = state.commentsByPost[postId];
       if (comments) {
-        const index = comments.findIndex((c) => c._id === comment._id);
+        const index = comments.findIndex((c) => c.id === comment.id);
         if (index !== -1) {
           comments[index] = comment;
         }
@@ -216,7 +218,7 @@ const commentSlice = createSlice({
       const { commentId, postId } = action.payload;
       const comments = state.commentsByPost[postId];
       if (comments) {
-        state.commentsByPost[postId] = comments.filter((c) => c._id !== commentId);
+        state.commentsByPost[postId] = comments.filter((c) => c.id !== commentId);
         state.commentsTotal -= 1;
       }
       // Also clear replies
@@ -245,12 +247,12 @@ const commentSlice = createSlice({
       }
       state.repliesByComment[commentId].push(reply);
 
-      // Update reply_count on parent comment
+      // Update replyCount on parent comment
       const comments = state.commentsByPost[postId];
       if (comments) {
-        const comment = comments.find((c) => c._id === commentId);
+        const comment = comments.find((c) => c.id === commentId);
         if (comment) {
-          comment.reply_count += 1;
+          comment.replyCount += 1;
         }
       }
     });
@@ -260,7 +262,7 @@ const commentSlice = createSlice({
       const { replyId, commentId } = action.payload;
       const replies = state.repliesByComment[commentId];
       if (replies) {
-        state.repliesByComment[commentId] = replies.filter((r) => r._id !== replyId);
+        state.repliesByComment[commentId] = replies.filter((r) => r.id !== replyId);
       }
     });
 
@@ -269,12 +271,12 @@ const commentSlice = createSlice({
       const { commentId, postId, liked, likeCount } = action.payload;
       state.likedComments[commentId] = liked;
 
-      // Update like_count on comment from server response
+      // Update likeCount on comment from server response
       const comments = state.commentsByPost[postId];
       if (comments) {
-        const comment = comments.find((c) => c._id === commentId);
+        const comment = comments.find((c) => c.id === commentId);
         if (comment) {
-          comment.like_count = likeCount;
+          comment.likeCount = likeCount;
         }
       }
     });
@@ -284,12 +286,12 @@ const commentSlice = createSlice({
       const { replyId, commentId, liked, likeCount } = action.payload;
       state.likedReplies[replyId] = liked;
 
-      // Update like_count on reply from server response
+      // Update likeCount on reply from server response
       const replies = state.repliesByComment[commentId];
       if (replies) {
-        const reply = replies.find((r) => r._id === replyId);
+        const reply = replies.find((r) => r.id === replyId);
         if (reply) {
-          reply.like_count = likeCount;
+          reply.likeCount = likeCount;
         }
       }
     });

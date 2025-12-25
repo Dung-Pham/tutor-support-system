@@ -70,7 +70,7 @@ export function CommentSection({ postId, commentCount = 0 }: CommentSectionProps
           <>
             {/* Comments */}
             {comments.map((comment) => (
-              <CommentItem key={comment._id} comment={comment} postId={postId} />
+              <CommentItem key={comment.id} comment={comment} postId={postId} />
             ))}
 
             {/* Load more */}

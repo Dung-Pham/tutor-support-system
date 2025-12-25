@@ -20,8 +20,8 @@ export function TutorMessages() {
   const fetchConversations = async () => {
     try {
       dispatch(setLoading(true));
-      const response = await conversationService.getConversations();
-      dispatch(setConversations(response.data.conversations || []));
+      const conversations = await conversationService.getConversations();
+      dispatch(setConversations(conversations));
     } catch (error) {
       console.error('Failed to fetch conversations:', error);
     } finally {

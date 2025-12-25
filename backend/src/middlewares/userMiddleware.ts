@@ -66,7 +66,7 @@ export const protectedRoute = async (
           }
 
           req.user = {
-            _id: user.id,
+            id: user.id,
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,

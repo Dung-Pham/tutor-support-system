@@ -20,6 +20,7 @@ const statusConfig: Record<PostStatus, { label: string; bgColor: string; textCol
   pending: { label: 'Chờ duyệt', bgColor: 'bg-yellow-100', textColor: 'text-yellow-700' },
   approved: { label: 'Đã duyệt', bgColor: 'bg-green-100', textColor: 'text-green-700' },
   rejected: { label: 'Từ chối', bgColor: 'bg-red-100', textColor: 'text-red-700' },
+  deleted: { label: 'Đã xóa', bgColor: 'bg-gray-200', textColor: 'text-gray-500' },
 };
 
 export function PostCard({
@@ -45,14 +46,14 @@ export function PostCard({
   // Build URL với slug - giữ nguyên prefix layout hiện tại
   const getPostUrl = () => {
     const slug = post.slug ? `/${post.slug}` : '';
-    const basePath = `/posts/${post._id}${slug}`;
+    const basePath = `/posts/${post.id}${slug}`;
 
     // Nếu đang trong layout tutor/student, giữ prefix đó
     if (location.pathname.startsWith('/tutor')) {
-      return `/tutor/posts/${post._id}${slug}`;
+      return `/tutor/posts/${post.id}${slug}`;
     }
     if (location.pathname.startsWith('/student')) {
-      return `/student/posts/${post._id}${slug}`;
+      return `/student/posts/${post.id}${slug}`;
     }
     // Mặc định cho guest
     return basePath;
@@ -70,7 +71,7 @@ export function PostCard({
             <img
               src={
                 post.author.avatarUrl ||
-                `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author._id}`
+                `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.id}`
               }
               alt={post.author.displayName}
               className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0"
@@ -130,7 +131,7 @@ export function PostCard({
           <img
             src={
               post.author.avatarUrl ||
-              `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author._id}`
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.id}`
             }
             alt={post.author.displayName}
             className="w-10 h-10 rounded-full"
@@ -154,12 +155,7 @@ export function PostCard({
 
           {/* View Button */}
           {onView && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onView(post._id)}
-              className="gap-1 h-8"
-            >
+            <Button size="sm" variant="ghost" onClick={() => onView(post.id)} className="gap-1 h-8">
               <Eye size={16} />
               <span className="hidden sm:inline text-xs">Xem</span>
             </Button>
@@ -210,7 +206,7 @@ export function PostCard({
       {/* Action Buttons - Edit và Delete */}
       <div className="flex gap-2 mt-3">
         {canEdit && onEdit && (
-          <Button size="sm" variant="outline" onClick={() => onEdit(post._id)} className="gap-2">
+          <Button size="sm" variant="outline" onClick={() => onEdit(post.id)} className="gap-2">
             <Edit2 size={16} />
             <span className="hidden sm:inline">Chỉnh sửa</span>
           </Button>
@@ -222,7 +218,7 @@ export function PostCard({
             className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
             onClick={() => {
               if (window.confirm('Bạn chắc chắn muốn xóa bài viết này?')) {
-                onDelete(post._id);
+                onDelete(post.id);
               }
             }}
           >
