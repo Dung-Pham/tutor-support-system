@@ -9,6 +9,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "tsx src/scripts/seedUsers.ts",
+    "seed:comments": "tsx --env-file=.env src/utils/seedComments.ts",
+    "seed:conversations": "tsx --env-file=.env src/utils/seedConversations.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

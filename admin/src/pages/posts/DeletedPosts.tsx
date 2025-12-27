@@ -38,6 +38,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatDate, truncateText } from "@/lib/utils";
+import { TiptapRenderer } from "@/components/tiptap";
 
 export function DeletedPosts() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -266,8 +267,8 @@ export function DeletedPosts() {
             </p>
           </div>
 
-          <div className="prose prose-sm max-w-none">
-            <p className="whitespace-pre-wrap">{selectedPost?.contentPlain}</p>
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <TiptapRenderer content={selectedPost?.contentJson} />
           </div>
 
           <DialogFooter>

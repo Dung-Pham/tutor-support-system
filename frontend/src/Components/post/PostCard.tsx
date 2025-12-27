@@ -4,6 +4,17 @@ import { formatMessageTime } from '@/lib/utils';
 import { extractImageUrlsFromTiptapJson } from '@/lib/tiptap-utils';
 import { Edit2, Eye, Share2, Heart, MessageCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface PostCardProps {
   post: Post;
@@ -130,16 +141,18 @@ export function PostCard({
           {/* Author Avatar */}
           <img
             src={
-              post.author.avatarUrl ||
-              `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.id}`
+              post.author?.avatarUrl ||
+              `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author?.id || post.authorId}`
             }
-            alt={post.author.displayName}
+            alt={post.author?.displayName || 'Tác giả'}
             className="w-10 h-10 rounded-full"
           />
 
           {/* Author Info */}
           <div>
-            <h4 className="font-semibold text-gray-900">{post.author.displayName}</h4>
+            <h4 className="font-semibold text-gray-900">
+              {post.author?.displayName || 'Không rõ'}
+            </h4>
             <p className="text-xs text-gray-500">{formatMessageTime(new Date(post.createdAt))}</p>
           </div>
         </div>
@@ -212,19 +225,36 @@ export function PostCard({
           </Button>
         )}
         {canDelete && onDelete && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => {
-              if (window.confirm('Bạn chắc chắn muốn xóa bài viết này?')) {
-                onDelete(post.id);
-              }
-            }}
-          >
-            <Trash2 size={16} />
-            <span className="hidden sm:inline">Xóa</span>
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 size={16} />
+                <span className="hidden sm:inline">Xóa</span>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Xóa bài viết?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Bạn chắc chắn muốn xóa bài viết này? Hành động này có thể hoàn tác nếu hệ thống hỗ
+                  trợ khôi phục.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={() => onDelete(post.id)}
+                >
+                  Xóa
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
     </div>

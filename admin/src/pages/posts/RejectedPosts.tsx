@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDate, truncateText } from "@/lib/utils";
+import { TiptapRenderer } from "@/components/tiptap";
 
 export function RejectedPosts() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -185,8 +186,8 @@ export function RejectedPosts() {
             </p>
           </div>
 
-          <div className="prose prose-sm max-w-none">
-            <p className="whitespace-pre-wrap">{selectedPost?.contentPlain}</p>
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <TiptapRenderer content={selectedPost?.contentJson} />
           </div>
 
           <DialogFooter>

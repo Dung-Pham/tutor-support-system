@@ -10,9 +10,10 @@ import { Button } from '@/components/ui/button';
 interface CommentSectionProps {
   postId: string;
   commentCount?: number;
+  postAuthorId?: string;
 }
 
-export function CommentSection({ postId, commentCount = 0 }: CommentSectionProps) {
+export function CommentSection({ postId, commentCount = 0, postAuthorId }: CommentSectionProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { commentsByPost, loadingComments, commentsPage, commentsTotalPages, commentsTotal } =
     useSelector((state: RootState) => state.comments);
@@ -70,7 +71,12 @@ export function CommentSection({ postId, commentCount = 0 }: CommentSectionProps
           <>
             {/* Comments */}
             {comments.map((comment) => (
-              <CommentItem key={comment.id} comment={comment} postId={postId} />
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                postId={postId}
+                postAuthorId={postAuthorId}
+              />
             ))}
 
             {/* Load more */}

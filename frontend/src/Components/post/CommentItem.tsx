@@ -11,6 +11,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { CommentForm } from './CommentForm';
 import {
   toggleCommentLikeAsync,
@@ -44,9 +54,10 @@ function RoleBadge({ role }: { role?: UserRole }) {
 interface CommentItemProps {
   comment: Comment;
   postId: string;
+  postAuthorId?: string;
 }
 
-export function CommentItem({ comment, postId }: CommentItemProps) {
+export function CommentItem({ comment, postId, postAuthorId }: CommentItemProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { repliesByComment, loadingReplies } = useSelector((state: RootState) => state.comments);
@@ -60,8 +71,10 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
   );
 
   const isAuthor = user?.id === comment.userId;
+  const isPostAuthor = postAuthorId && comment.userId === postAuthorId;
   const replies = repliesByComment[comment.id] || [];
   const hasReplies = comment.replyCount > 0;
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleLike = async () => {
     // Optimistic update
@@ -83,9 +96,8 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Bạn chắc chắn muốn xóa bình luận này?')) {
-      await dispatch(deleteCommentAsync({ commentId: comment.id, postId }));
-    }
+    await dispatch(deleteCommentAsync({ commentId: comment.id, postId }));
+    setDeleteOpen(false);
   };
 
   const handleReplySubmit = async (content: string) => {
@@ -141,6 +153,11 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
               <span className="font-semibold text-sm text-gray-900">
                 {comment.user?.displayName || 'Unknown User'}
               </span>
+              {isPostAuthor && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-orange-100 text-orange-700">
+                  Tác giả
+                </span>
+              )}
               <RoleBadge role={comment.user?.role} />
               <span className="text-xs text-gray-500">
                 {formatMessageTime(new Date(comment.createdAt))}
@@ -192,7 +209,7 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
                   <DropdownMenuItem
-                    onClick={handleDelete}
+                    onClick={() => setDeleteOpen(true)}
                     className="text-red-600 focus:text-red-600"
                   >
                     <Trash2 size={14} className="mr-2" />
@@ -202,6 +219,26 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
               </DropdownMenu>
             )}
           </div>
+
+          <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Xóa bình luận?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Bạn chắc chắn muốn xóa bình luận này?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={handleDelete}
+                >
+                  Xóa
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           {/* Reply Form */}
           {showReplyForm && (
@@ -245,6 +282,7 @@ export function CommentItem({ comment, postId }: CommentItemProps) {
                     reply={reply}
                     commentId={comment.id}
                     currentUserId={user?.id}
+                    postAuthorId={postAuthorId}
                     onReply={handleReplyToReply}
                   />
                 ))
@@ -262,15 +300,18 @@ interface ReplyItemProps {
   reply: Reply;
   commentId: string;
   currentUserId?: string;
+  postAuthorId?: string;
   onReply: (userId: string, displayName: string) => void;
 }
 
-function ReplyItem({ reply, commentId, currentUserId, onReply }: ReplyItemProps) {
+function ReplyItem({ reply, commentId, currentUserId, postAuthorId, onReply }: ReplyItemProps) {
   const dispatch = useDispatch<AppDispatch>();
   const [localLiked, setLocalLiked] = useState(false);
   const [localLikeCount, setLocalLikeCount] = useState(reply.likeCount || 0);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isAuthor = currentUserId === reply.userId;
+  const isPostAuthor = postAuthorId && reply.userId === postAuthorId;
 
   const handleLike = async () => {
     setLocalLiked(!localLiked);
@@ -290,9 +331,8 @@ function ReplyItem({ reply, commentId, currentUserId, onReply }: ReplyItemProps)
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Bạn chắc chắn muốn xóa trả lời này?')) {
-      await dispatch(deleteReplyAsync({ replyId: reply.id, commentId }));
-    }
+    await dispatch(deleteReplyAsync({ replyId: reply.id, commentId }));
+    setDeleteOpen(false);
   };
 
   const handleReply = () => {
@@ -315,6 +355,11 @@ function ReplyItem({ reply, commentId, currentUserId, onReply }: ReplyItemProps)
             <span className="font-semibold text-xs text-gray-900">
               {reply.user?.displayName || 'Unknown User'}
             </span>
+            {isPostAuthor && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-orange-100 text-orange-700">
+                Tác giả
+              </span>
+            )}
             <RoleBadge role={reply.user?.role} />
             {reply.mentionedUser && (
               <span className="text-xs text-blue-600">@{reply.mentionedUser.displayName}</span>
@@ -349,13 +394,31 @@ function ReplyItem({ reply, commentId, currentUserId, onReply }: ReplyItemProps)
 
           {isAuthor && (
             <button
-              onClick={handleDelete}
+              onClick={() => setDeleteOpen(true)}
               className="text-xs text-gray-400 hover:text-red-500 opacity-0 group-hover/reply:opacity-100 transition"
             >
               <Trash2 size={12} />
             </button>
           )}
         </div>
+
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Xóa trả lời?</AlertDialogTitle>
+              <AlertDialogDescription>Bạn chắc chắn muốn xóa trả lời này?</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Hủy</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={handleDelete}
+              >
+                Xóa
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   Settings,
   ChevronLeft,
   GraduationCap,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -41,6 +42,7 @@ const menuItems = [
     icon: FileText,
     href: "/posts",
     children: [
+      { title: "Xem cộng đồng", href: "/posts/community", icon: Globe },
       { title: "Chờ duyệt", href: "/posts/pending", icon: Clock },
       { title: "Đã từ chối", href: "/posts/rejected", icon: XCircle },
       { title: "Đã xóa", href: "/posts/deleted", icon: Trash2 },

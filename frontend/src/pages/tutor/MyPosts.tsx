@@ -5,8 +5,9 @@ import { AppDispatch, RootState } from '@/store';
 import {
   getMyPostsAsync,
   deletePostAsync,
-  setSelectedPost,
+  getPostDetailAsync,
   setShowDetailModal,
+  setSelectedPost,
   setCurrentStatus,
   setCurrentPage,
 } from '@/store/slices/postSlice';
@@ -57,10 +58,15 @@ export function MyPosts() {
     dispatch(setCurrentStatus(value as PostStatus | 'all'));
   };
 
-  // Handle post click (mở modal)
+  // Handle post click
   const handlePostClick = (post: Post) => {
-    dispatch(setSelectedPost(post));
-    dispatch(setShowDetailModal(true));
+    if (post.status === 'approved') {
+      // Bài viết đã duyệt → chuyển đến trang xem cộng đồng của gia sư
+      navigate(`/tutor/posts/${post.id}`);
+    } else {
+      // Các trạng thái khác → mở modal với chi tiết đầy đủ
+      dispatch(getPostDetailAsync(post.id));
+    }
   };
 
   // Handle post delete

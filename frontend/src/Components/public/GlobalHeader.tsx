@@ -192,24 +192,13 @@ export default function Header({ variant = 'default' }: HeaderProps) {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2">
               <Button
-                variant="ghost"
                 size="sm"
-                className="gap-1.5 text-gray-600 hover:text-blue-600"
+                className="gap-1.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md hover:shadow-lg transition-all px-4 py-2 font-medium"
                 asChild
               >
                 <Link to="/login">
                   <LogIn size={16} />
                   <span>Đăng nhập</span>
-                </Link>
-              </Button>
-              <Button
-                size="sm"
-                className="gap-1.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md hover:shadow-lg transition-all"
-                asChild
-              >
-                <Link to="/register">
-                  <UserPlus size={16} />
-                  <span>Đăng ký</span>
                 </Link>
               </Button>
             </div>
@@ -264,19 +253,13 @@ export default function Header({ variant = 'default' }: HeaderProps) {
                     </div>
                   ))}
                   <div className="pt-4 border-t mt-4 space-y-2">
-                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                    <Button
+                      className="w-full justify-start gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md"
+                      asChild
+                    >
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                         <LogIn size={16} />
                         Đăng nhập
-                      </Link>
-                    </Button>
-                    <Button
-                      className="w-full justify-start gap-2 bg-gradient-to-r from-blue-600 to-purple-600"
-                      asChild
-                    >
-                      <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
-                        <UserPlus size={16} />
-                        Đăng ký
                       </Link>
                     </Button>
                   </div>

@@ -4,12 +4,23 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { formatMessageTime } from '@/lib/utils';
-import { extractImageUrlsFromTiptapJson } from '@/lib/tiptap-utils';
 import { TiptapRenderer } from '@/components/post/TiptapRenderer';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface PostDetailModalProps {
   open: boolean;
@@ -38,13 +49,11 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
   if (!post) return null;
 
   const statusInfo = statusConfig[post.status] || statusConfig.draft;
-  const imageUrls = extractImageUrlsFromTiptapJson(post.contentJson);
 
   const handleDelete = () => {
-    if (onDelete && window.confirm('Bạn chắc chắn muốn xóa bài viết này?')) {
-      onDelete(post.id);
-      onClose();
-    }
+    if (!onDelete) return;
+    onDelete(post.id);
+    onClose();
   };
 
   return (
@@ -53,6 +62,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
         {/* Title at top */}
         <DialogHeader>
           <DialogTitle className="text-3xl font-bold text-left">{post.title}</DialogTitle>
+          <DialogDescription className="sr-only">Chi tiết bài viết</DialogDescription>
         </DialogHeader>
 
         {/* Meta info below title */}
@@ -87,23 +97,6 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
 
         {/* Content */}
         <div className="space-y-6 py-4">
-          {/* Images Gallery */}
-          {imageUrls.length > 0 && (
-            <div
-              className={`grid gap-3 ${imageUrls.length === 1 ? 'grid-cols-1' : imageUrls.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}
-            >
-              {imageUrls.map((image: string, index: number) => (
-                <img
-                  key={index}
-                  src={image}
-                  alt={`${post.title} - ${index + 1}`}
-                  className={`w-full object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition ${imageUrls.length === 1 ? 'max-h-80' : 'h-48'}`}
-                  onClick={() => window.open(image, '_blank')}
-                />
-              ))}
-            </div>
-          )}
-
           {/* Tiptap Content - render đúng format */}
           <div className="prose prose-gray dark:prose-invert max-w-none">
             <TiptapRenderer content={post.contentJson} />
@@ -159,9 +152,31 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
             </Button>
           )}
           {onDelete && (post.status === 'draft' || post.status === 'pending') && (
-            <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
-              Xóa bài viết
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={isLoading}>
+                  Xóa bài viết
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Xóa bài viết?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Bạn chắc chắn muốn xóa bài viết này?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Hủy</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={handleDelete}
+                    disabled={isLoading}
+                  >
+                    Xóa
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </DialogFooter>
       </DialogContent>

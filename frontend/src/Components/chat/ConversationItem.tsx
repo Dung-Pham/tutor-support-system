@@ -27,7 +27,7 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
   const conversationName = otherParticipant?.displayName || 'Unknown User';
   const avatarUrl = otherParticipant?.avatarUrl;
 
-  const lastMessage = conversation.lastMessage?.content || 'Không có tin nhắn';
+  const lastMessage = conversation.lastMessage?.content || conversation.lastMessagePreview || 'Không có tin nhắn';
   const lastMessageTime = conversation.lastMessageAt
     ? new Date(conversation.lastMessageAt).toLocaleTimeString('vi-VN', {
         hour: '2-digit',

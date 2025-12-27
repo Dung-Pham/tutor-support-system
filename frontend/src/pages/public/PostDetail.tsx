@@ -166,7 +166,11 @@ export default function PostDetailPage() {
 
       {/* Comments Section */}
       <div id="comments">
-        <CommentSection postId={post.id} commentCount={post.commentCount || 0} />
+        <CommentSection
+          postId={post.id}
+          commentCount={post.commentCount || 0}
+          postAuthorId={post.author?.id}
+        />
       </div>
     </div>
   );

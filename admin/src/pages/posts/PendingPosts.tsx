@@ -21,6 +21,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Loader2,
   Check,
   X,
@@ -28,6 +38,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { TiptapRenderer } from "@/components/tiptap";
 import { formatDate, truncateText } from "@/lib/utils";
 
 export function PendingPosts() {
@@ -40,6 +51,7 @@ export function PendingPosts() {
   // Dialog states
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -62,11 +74,14 @@ export function PendingPosts() {
     fetchPosts();
   }, [page]);
 
-  const handleApprove = async (post: Post) => {
+  const handleApprove = async () => {
+    if (!selectedPost) return;
     setIsProcessing(true);
     try {
-      await postService.approvePost(post.id);
+      await postService.approvePost(selectedPost.id);
       await fetchPosts();
+      setApproveOpen(false);
+      setSelectedPost(null);
     } catch (error) {
       console.error("Error approving post:", error);
     } finally {
@@ -161,7 +176,10 @@ export function PendingPosts() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleApprove(post)}
+                        onClick={() => {
+                          setSelectedPost(post);
+                          setApproveOpen(true);
+                        }}
                         disabled={isProcessing}
                         className="text-green-600 hover:text-green-700"
                       >
@@ -225,8 +243,8 @@ export function PendingPosts() {
               {selectedPost && formatDate(selectedPost.createdAt)}
             </DialogDescription>
           </DialogHeader>
-          <div className="prose prose-sm max-w-none">
-            <p className="whitespace-pre-wrap">{selectedPost?.contentPlain}</p>
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <TiptapRenderer content={selectedPost?.contentJson} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPreviewOpen(false)}>
@@ -235,7 +253,7 @@ export function PendingPosts() {
             <Button
               onClick={() => {
                 setPreviewOpen(false);
-                if (selectedPost) handleApprove(selectedPost);
+                setApproveOpen(true);
               }}
               disabled={isProcessing}
               className="bg-green-600 hover:bg-green-700"
@@ -257,27 +275,53 @@ export function PendingPosts() {
         </DialogContent>
       </Dialog>
 
+      {/* Approve Confirmation Dialog */}
+      <AlertDialog open={approveOpen} onOpenChange={setApproveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Duyệt bài viết?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc muốn duyệt bài viết "{selectedPost?.title}"? Bài viết
+              sẽ được xuất bản và hiển thị công khai trên trang cộng đồng.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-green-600 hover:bg-green-700"
+              onClick={handleApprove}
+              disabled={isProcessing}
+            >
+              {isProcessing && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Duyệt
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Reject Dialog */}
-      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Từ chối bài viết</DialogTitle>
-            <DialogDescription>
+      <AlertDialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Từ chối bài viết?</AlertDialogTitle>
+            <AlertDialogDescription>
               Vui lòng nhập lý do từ chối bài viết "{selectedPost?.title}"
-            </DialogDescription>
-          </DialogHeader>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           <Textarea
             placeholder="Lý do từ chối..."
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             rows={4}
           />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectOpen(false)}>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setRejectReason("")}>
               Hủy
-            </Button>
-            <Button
-              variant="destructive"
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleReject}
               disabled={isProcessing || !rejectReason.trim()}
             >
@@ -285,10 +329,10 @@ export function PendingPosts() {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Từ chối
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

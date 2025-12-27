@@ -94,6 +94,11 @@ export const rejectPostAsync = createAsyncThunk(
   }
 );
 
+// Get post detail (với contentJson từ MongoDB)
+export const getPostDetailAsync = createAsyncThunk('posts/getPostDetail', async (id: string) => {
+  return await postService.getPostDetail(id);
+});
+
 // Like/Unlike post
 export const togglePostLikeAsync = createAsyncThunk(
   'posts/togglePostLike',
@@ -312,6 +317,22 @@ const postSlice = createSlice({
       .addCase(rejectPostAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Lỗi khi từ chối bài viết';
+      });
+
+    // Get Post Detail (với contentJson)
+    builder
+      .addCase(getPostDetailAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getPostDetailAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedPost = action.payload;
+        state.showDetailModal = true;
+      })
+      .addCase(getPostDetailAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Lỗi khi lấy chi tiết bài viết';
       });
 
     // Toggle Post Like
