@@ -90,12 +90,59 @@ app.use((_req: Request, res: Response) => {
   });
 });
 
-// Error Handler
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error("Internal Server Error", err);
+// Error Handler - Xử lý các loại lỗi khác nhau
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error("Error:", err.message || err);
+
+  // 1. Multer errors (file upload)
+  if (err.name === "MulterError") {
+    const multerMessages: Record<string, string> = {
+      LIMIT_FILE_SIZE: "File vượt quá kích thước cho phép (tối đa 4MB)",
+      LIMIT_FILE_COUNT: "Số lượng file vượt quá giới hạn (tối đa 10 files)",
+      LIMIT_UNEXPECTED_FILE: "Trường file không hợp lệ",
+    };
+    return res.status(400).json({
+      success: false,
+      message: multerMessages[err.code] || "Lỗi upload file",
+    });
+  }
+
+  // 2. Custom file type error từ multer fileFilter
+  if (err.message === "Only image files are allowed") {
+    return res.status(400).json({
+      success: false,
+      message: "Chỉ chấp nhận file ảnh (jpg, png, gif, webp)",
+    });
+  }
+
+  // 3. Sequelize UniqueConstraint error
+  if (err.name === "SequelizeUniqueConstraintError") {
+    const fields = Object.keys(err.fields || {});
+    const fieldName = fields[0] || "field";
+    const fieldMap: Record<string, string> = {
+      email: "Email",
+      slug: "Đường dẫn bài viết",
+      phone: "Số điện thoại",
+    };
+    return res.status(409).json({
+      success: false,
+      message: `${fieldMap[fieldName] || fieldName} đã tồn tại trong hệ thống`,
+    });
+  }
+
+  // 4. MongoDB duplicate key error (code 11000)
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue || {})[0] || "field";
+    return res.status(409).json({
+      success: false,
+      message: `${field} đã tồn tại`,
+    });
+  }
+
+  // 5. Default: Internal Server Error
   res.status(500).json({
     success: false,
-    message: "Internal Server Error",
+    message: "Lỗi hệ thống, vui lòng thử lại sau",
   });
 });
 

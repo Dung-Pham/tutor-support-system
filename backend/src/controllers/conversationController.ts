@@ -133,13 +133,11 @@ export const createConversation = async (
       ],
     });
 
-    return res
-      .status(201)
-      .json({
-        success: true,
-        message: "Conversation created",
-        data: fullConversation,
-      });
+    return res.status(201).json({
+      success: true,
+      message: "Conversation created",
+      data: fullConversation,
+    });
   } catch (error) {
     console.error("Error in createConversation", error);
     return res
@@ -207,13 +205,11 @@ export const getConversations = async (
       };
     });
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Conversations retrieved",
-        data: formatted,
-      });
+    return res.status(200).json({
+      success: true,
+      message: "Conversations retrieved",
+      data: formatted,
+    });
   } catch (error) {
     console.error("Error in getConversations", error);
     return res
@@ -250,12 +246,10 @@ export const getMessages = async (
       where: { conversationId, userId },
     });
     if (!isParticipant) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "You are not a member of this conversation",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "You are not a member of this conversation",
+      });
     }
 
     // Build query for MongoDB messages

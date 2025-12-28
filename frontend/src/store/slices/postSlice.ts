@@ -83,6 +83,12 @@ export const deletePostAsync = createAsyncThunk('posts/deletePost', async (id: s
   return id;
 });
 
+// Hard delete - dành cho tutor xóa bài draft/pending của mình
+export const hardDeletePostAsync = createAsyncThunk('posts/hardDeletePost', async (id: string) => {
+  await postService.hardDeletePost(id);
+  return id;
+});
+
 export const approvePostAsync = createAsyncThunk('posts/approvePost', async (id: string) => {
   return await postService.approvePost(id);
 });
@@ -278,6 +284,23 @@ const postSlice = createSlice({
         state.pendingPosts = state.pendingPosts.filter((p) => p.id !== action.payload);
       })
       .addCase(deletePostAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Lỗi khi xóa bài viết';
+      });
+
+    // Hard Delete Post (tutor xóa bài draft/pending)
+    builder
+      .addCase(hardDeletePostAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(hardDeletePostAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        state.posts = state.posts.filter((p) => p.id !== action.payload);
+        state.myPosts = state.myPosts.filter((p) => p.id !== action.payload);
+        state.pendingPosts = state.pendingPosts.filter((p) => p.id !== action.payload);
+      })
+      .addCase(hardDeletePostAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Lỗi khi xóa bài viết';
       });

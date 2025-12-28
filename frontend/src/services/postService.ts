@@ -35,6 +35,12 @@ export async function deletePost(id: string) {
   return response.data;
 }
 
+// Hard delete - dành cho tutor xóa bài draft/pending của mình
+export async function hardDeletePost(id: string) {
+  const response = await apiClient.delete(`/posts/${id}/permanent`);
+  return response.data;
+}
+
 export async function approvePost(id: string) {
   const response = await apiClient.patch(`/posts/${id}/approve`);
   return response.data;

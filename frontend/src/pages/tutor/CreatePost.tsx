@@ -119,6 +119,7 @@ export function CreatePost() {
               : status === 'draft'
                 ? 'Bài viết đã được lưu nháp'
                 : 'Bài viết đã được gửi duyệt',
+            tab: status, // Chuyển đến đúng tab tương ứng với trạng thái bài viết
           },
         });
       }

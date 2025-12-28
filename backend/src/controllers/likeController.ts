@@ -50,12 +50,21 @@ export const togglePostLike = async (
     }
 
     const post = await PostHeader.findByPk(postId, {
-      attributes: ["id", "status", "likeCount"],
+      attributes: ["id", "status", "likeCount", "authorId"],
     });
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "BÃ i viáº¿t khÃ´ng tá»“n táº¡i",
+        message: "Bài viết không tồn tại",
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Kiểm tra không thể like bài viết của chính mình
+    if (post.authorId === userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Bạn không thể thích bài viết của chính mình",
         timestamp: new Date().toISOString(),
       });
     }

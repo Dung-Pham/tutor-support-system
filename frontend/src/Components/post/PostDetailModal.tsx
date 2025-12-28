@@ -160,9 +160,10 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Xóa bài viết?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Bạn chắc chắn muốn xóa bài viết này?
+                  <AlertDialogTitle>Xóa vĩnh viễn bài viết?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-red-600 font-medium">
+                    Bạn chắc chắn muốn xóa bài viết này? Hành động này sẽ xóa vĩnh viễn và không thể
+                    khôi phục.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -172,7 +173,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
                     onClick={handleDelete}
                     disabled={isLoading}
                   >
-                    Xóa
+                    Xóa vĩnh viễn
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

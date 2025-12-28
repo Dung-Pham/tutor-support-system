@@ -238,10 +238,10 @@ export function PostCard({
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Xóa bài viết?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Bạn chắc chắn muốn xóa bài viết này? Hành động này có thể hoàn tác nếu hệ thống hỗ
-                  trợ khôi phục.
+                <AlertDialogTitle>Xóa vĩnh viễn bài viết?</AlertDialogTitle>
+                <AlertDialogDescription className="text-red-600 font-medium">
+                  Bạn chắc chắn muốn xóa bài viết này? Hành động này sẽ xóa vĩnh viễn và không thể
+                  khôi phục.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -250,7 +250,7 @@ export function PostCard({
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   onClick={() => onDelete(post.id)}
                 >
-                  Xóa
+                  Xóa vĩnh viễn
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

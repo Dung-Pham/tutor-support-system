@@ -640,20 +640,20 @@ export const restorePost = async (
   }
 };
 
-// Permanently delete post (admin only)
+// Permanently delete post
+// - Tutor: chỉ xóa được bài của mình có status "draft" hoặc "pending"
+// - Admin: xóa được tất cả, bao gồm cả bài có status "deleted"
 export const hardDeletePost = async (
   req: AuthRequest & { params: PostParams },
   res: Response
 ): Promise<Response> => {
   try {
     const { id } = req.params;
-    const adminId = req.user?.id;
+    const userId = req.user?.id;
+    const isAdmin = req.user?.role === "admin";
 
-    if (!adminId || req.user?.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Chỉ admin có thể xóa vĩnh viễn bài viết",
-      });
+    if (!userId) {
+      return res.status(401).json(formatError("Unauthorized"));
     }
 
     const post = await PostHeader.findByPk(id);
@@ -662,6 +662,35 @@ export const hardDeletePost = async (
         success: false,
         message: "Bài viết không tồn tại",
       });
+    }
+
+    const isAuthor = post.authorId === userId;
+
+    // Kiểm tra quyền xóa
+    if (post.status === "deleted") {
+      // Bài đã bị soft delete → chỉ admin mới được hard delete
+      if (!isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Chỉ admin có thể xóa vĩnh viễn bài viết đã xóa",
+        });
+      }
+    } else if (["draft", "pending"].includes(post.status)) {
+      // Bài draft/pending → author hoặc admin có thể xóa
+      if (!isAuthor && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Bạn không có quyền xóa bài viết này",
+        });
+      }
+    } else {
+      // Bài approved/rejected → chỉ admin
+      if (!isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Chỉ admin có thể xóa vĩnh viễn bài viết này",
+        });
+      }
     }
 
     // Delete PostDetail first (MongoDB) - if fail, PostHeader still exists

@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AppDispatch, RootState } from '@/store';
 import {
   getMyPostsAsync,
-  deletePostAsync,
+  hardDeletePostAsync,
   getPostDetailAsync,
   setShowDetailModal,
   setSelectedPost,
@@ -28,6 +28,7 @@ const TABS = [
 export function MyPosts() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     myPosts,
@@ -40,6 +41,17 @@ export function MyPosts() {
     total,
     limit,
   } = useSelector((state: RootState) => state.posts);
+
+  // Xử lý chuyển tab từ location state (sau khi tạo/sửa bài viết)
+  useEffect(() => {
+    const state = location.state as { tab?: string; message?: string } | null;
+    if (state?.tab && ['draft', 'pending', 'approved', 'rejected'].includes(state.tab)) {
+      dispatch(setCurrentStatus(state.tab as PostStatus));
+      // Clear state để không bị lặp lại khi refresh
+      window.history.replaceState({}, document.title);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   // Load posts khi mount hoặc khi đổi tab/page
   useEffect(() => {
@@ -69,9 +81,9 @@ export function MyPosts() {
     }
   };
 
-  // Handle post delete
+  // Handle post delete (hard delete cho bài draft/pending)
   const handlePostDelete = (postId: string) => {
-    dispatch(deletePostAsync(postId))
+    dispatch(hardDeletePostAsync(postId))
       .then(() => {
         // Reload posts sau khi xóa
         dispatch(
