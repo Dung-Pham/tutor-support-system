@@ -68,7 +68,7 @@ export function Dashboard() {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [topPosts, setTopPosts] = useState<TopPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState<TimeRange>("30");
+  const [timeRange, setTimeRange] = useState<TimeRange>("7");
 
   useEffect(() => {
     const fetchStats = async () => {
