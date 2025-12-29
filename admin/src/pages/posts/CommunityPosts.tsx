@@ -1,9 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { postService } from "@/services/postService";
 import type { Post } from "@/types/post";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -11,14 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,9 +35,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatDate, truncateText } from "@/lib/utils";
-import { TiptapRenderer } from "@/components/tiptap";
 
 export function CommunityPosts() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -55,7 +48,6 @@ export function CommunityPosts() {
 
   // Dialog states
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteReason, setDeleteReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -215,19 +207,21 @@ export function CommunityPosts() {
                     className="w-8 h-8 rounded-full"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
-                      {post.author?.displayName || "Unknown"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-sm truncate">
+                        {post.author?.displayName || "Unknown"}
+                      </p>
+                      {post.approvedAt && (
+                        <span className="text-xs text-muted-foreground">
+                          • Duyệt: {formatDate(post.approvedAt)}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {formatTimeAgo(post.createdAt)}
                     </p>
                   </div>
                 </div>
-                {post.approvedAt && (
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Duyệt: {formatDate(post.approvedAt)}
-                  </p>
-                )}
                 <CardTitle className="text-base line-clamp-2">
                   {post.title}
                 </CardTitle>
@@ -259,13 +253,10 @@ export function CommunityPosts() {
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => {
-                      setSelectedPost(post);
-                      setPreviewOpen(true);
-                    }}
+                    onClick={() => navigate(`/posts/${post.id}`)}
                   >
                     <Eye className="h-4 w-4 mr-1" />
-                    Xem
+                    Chi tiết
                   </Button>
                   <Button
                     variant="outline"
@@ -333,39 +324,6 @@ export function CommunityPosts() {
           </div>
         </div>
       )}
-
-      {/* Preview Dialog */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedPost?.title}</DialogTitle>
-            <DialogDescription>
-              Đăng bởi {selectedPost?.author?.displayName} •{" "}
-              {selectedPost && formatDate(selectedPost.createdAt)}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-4 text-sm text-muted-foreground py-2">
-            <span className="flex items-center gap-1">
-              <Eye size={14} /> {selectedPost?.viewCount || 0} lượt xem
-            </span>
-            <span className="flex items-center gap-1">
-              <Heart size={14} /> {selectedPost?.likeCount || 0} thích
-            </span>
-            <span className="flex items-center gap-1">
-              <MessageCircle size={14} /> {selectedPost?.commentCount || 0} bình
-              luận
-            </span>
-          </div>
-          <div className="prose prose-sm max-w-none dark:prose-invert">
-            <TiptapRenderer content={selectedPost?.contentJson} />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
-              Đóng
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Dialog */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

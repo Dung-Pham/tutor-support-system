@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { postService } from "@/services/postService";
 import type { Post } from "@/types/post";
 import { Badge } from "@/components/ui/badge";
@@ -11,28 +12,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 import { Loader2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDate, truncateText } from "@/lib/utils";
-import { TiptapRenderer } from "@/components/tiptap";
 
 export function RejectedPosts() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-
-  // Dialog states
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
 
   const fetchPosts = async () => {
     setIsLoading(true);
@@ -62,15 +52,25 @@ export function RejectedPosts() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[250px]">Tiêu đề</TableHead>
-              <TableHead>Tác giả</TableHead>
-              <TableHead>Lý do từ chối</TableHead>
-              <TableHead>Ngày từ chối</TableHead>
-              <TableHead className="text-right">Hành động</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[35%] min-w-[300px] text-base font-semibold py-4">
+                Tiêu đề
+              </TableHead>
+              <TableHead className="text-base font-semibold py-4">
+                Tác giả
+              </TableHead>
+              <TableHead className="text-base font-semibold py-4">
+                Lý do từ chối
+              </TableHead>
+              <TableHead className="text-base font-semibold py-4">
+                Ngày từ chối
+              </TableHead>
+              <TableHead className="text-right text-base font-semibold py-4">
+                Hành động
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -91,40 +91,41 @@ export function RejectedPosts() {
               </TableRow>
             ) : (
               posts.map((post) => (
-                <TableRow key={post.id}>
-                  <TableCell>
-                    <p className="font-medium">
-                      {truncateText(post.title, 40)}
+                <TableRow key={post.id} className="hover:bg-muted/30">
+                  <TableCell className="py-4">
+                    <p className="font-medium text-base leading-snug">
+                      {truncateText(post.title, 50)}
                     </p>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     <div className="flex items-center gap-2">
-                      <span>{post.author?.displayName || "Unknown"}</span>
+                      <span className="text-base">
+                        {post.author?.displayName || "Unknown"}
+                      </span>
                       <Badge variant="outline">{post.author?.role}</Badge>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <p className="text-sm text-destructive">
+                  <TableCell className="py-4">
+                    <p className="text-base text-destructive">
                       {truncateText(
                         post.rejectionReason || "Không có lý do",
-                        50
+                        60
                       )}
                     </p>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4 text-base">
                     {post.rejectedAt ? formatDate(post.rejectedAt) : "-"}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                  <TableCell className="text-right py-4">
+                    <div className="flex justify-end">
                       <Button
                         variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedPost(post);
-                          setPreviewOpen(true);
-                        }}
+                        size="icon"
+                        onClick={() => navigate(`/posts/${post.id}`)}
+                        title="Xem chi tiết"
+                        className="h-9 w-9"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-5 w-5" />
                       </Button>
                     </div>
                   </TableCell>
@@ -136,67 +137,36 @@ export function RejectedPosts() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Hiển thị {posts.length} / {total} bài viết
+      <div className="flex items-center justify-between pt-2">
+        <p className="text-base text-muted-foreground">
+          Hiển thị{" "}
+          <span className="font-medium text-foreground">{posts.length}</span> /{" "}
+          <span className="font-medium text-foreground">{total}</span> bài viết
         </p>
         <div className="flex gap-2">
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
+            className="h-9 w-9"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-5 w-5" />
           </Button>
-          <span className="flex items-center px-3 text-sm">
+          <span className="flex items-center px-4 text-base font-medium">
             {page} / {totalPages || 1}
           </span>
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages || totalPages === 0}
+            className="h-9 w-9"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
       </div>
-
-      {/* Preview Dialog */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedPost?.title}</DialogTitle>
-            <DialogDescription>
-              Bởi {selectedPost?.author?.displayName} •{" "}
-              {selectedPost && formatDate(selectedPost.createdAt)}
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Rejection Info */}
-          <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
-            <p className="text-sm font-medium text-destructive">
-              Lý do từ chối:
-            </p>
-            <p className="text-sm mt-1">{selectedPost?.rejectionReason}</p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Từ chối bởi {selectedPost?.rejectedBy?.displayName} vào{" "}
-              {selectedPost?.rejectedAt && formatDate(selectedPost.rejectedAt)}
-            </p>
-          </div>
-
-          <div className="prose prose-sm max-w-none dark:prose-invert">
-            <TiptapRenderer content={selectedPost?.contentJson} />
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
-              Đóng
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

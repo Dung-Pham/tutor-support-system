@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { postService } from "@/services/postService";
 import type { Post } from "@/types/post";
 import { Badge } from "@/components/ui/badge";
@@ -11,14 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,9 +32,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatDate, truncateText } from "@/lib/utils";
-import { TiptapRenderer } from "@/components/tiptap";
 
 export function DeletedPosts() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -49,7 +43,6 @@ export function DeletedPosts() {
 
   // Dialog states
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -115,16 +108,28 @@ export function DeletedPosts() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[250px]">Tiêu đề</TableHead>
-              <TableHead>Tác giả</TableHead>
-              <TableHead>Lý do xóa</TableHead>
-              <TableHead>Người xóa</TableHead>
-              <TableHead>Ngày xóa</TableHead>
-              <TableHead className="text-right">Hành động</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[30%] min-w-[280px] text-base font-semibold py-4">
+                Tiêu đề
+              </TableHead>
+              <TableHead className="text-base font-semibold py-4">
+                Tác giả
+              </TableHead>
+              <TableHead className="text-base font-semibold py-4">
+                Lý do xóa
+              </TableHead>
+              <TableHead className="text-base font-semibold py-4">
+                Người xóa
+              </TableHead>
+              <TableHead className="text-base font-semibold py-4">
+                Ngày xóa
+              </TableHead>
+              <TableHead className="text-right text-base font-semibold py-4">
+                Hành động
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -145,67 +150,67 @@ export function DeletedPosts() {
               </TableRow>
             ) : (
               posts.map((post) => (
-                <TableRow key={post.id}>
-                  <TableCell>
-                    <p className="font-medium">
-                      {truncateText(post.title, 40)}
+                <TableRow key={post.id} className="hover:bg-muted/30">
+                  <TableCell className="py-4">
+                    <p className="font-medium text-base leading-snug">
+                      {truncateText(post.title, 45)}
                     </p>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     <div className="flex items-center gap-2">
-                      <span>{post.author?.displayName || "Unknown"}</span>
+                      <span className="text-base">
+                        {post.author?.displayName || "Unknown"}
+                      </span>
                       <Badge variant="outline">{post.author?.role}</Badge>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <p className="text-sm text-muted-foreground">
-                      {truncateText(post.deleteReason || "Không có lý do", 50)}
+                  <TableCell className="py-4">
+                    <p className="text-base text-muted-foreground">
+                      {truncateText(post.deleteReason || "Không có lý do", 40)}
                     </p>
                   </TableCell>
-                  <TableCell>
-                    <span className="text-sm">
+                  <TableCell className="py-4">
+                    <span className="text-base">
                       {post.deletedByUser?.displayName || "-"}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4 text-base">
                     {post.deletedAt ? formatDate(post.deletedAt) : "-"}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                  <TableCell className="text-right py-4">
+                    <div className="flex justify-end gap-1">
                       <Button
                         variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedPost(post);
-                          setPreviewOpen(true);
-                        }}
+                        size="icon"
+                        onClick={() => navigate(`/posts/${post.id}`)}
                         title="Xem chi tiết"
+                        className="h-9 w-9"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-5 w-5" />
                       </Button>
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="text-green-600 hover:text-green-700"
+                        size="icon"
+                        className="h-9 w-9 text-green-600 hover:text-green-700 hover:bg-green-50"
                         onClick={() => {
                           setSelectedPost(post);
                           setRestoreDialogOpen(true);
                         }}
                         title="Khôi phục"
                       >
-                        <RotateCcw className="h-4 w-4" />
+                        <RotateCcw className="h-5 w-5" />
                       </Button>
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
+                        size="icon"
+                        className="h-9 w-9 text-destructive hover:text-destructive hover:bg-red-50"
                         onClick={() => {
                           setSelectedPost(post);
                           setHardDeleteDialogOpen(true);
                         }}
                         title="Xóa vĩnh viễn"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-5 w-5" />
                       </Button>
                     </div>
                   </TableCell>
@@ -217,67 +222,36 @@ export function DeletedPosts() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Hiển thị {posts.length} / {total} bài viết
+      <div className="flex items-center justify-between pt-2">
+        <p className="text-base text-muted-foreground">
+          Hiển thị{" "}
+          <span className="font-medium text-foreground">{posts.length}</span> /{" "}
+          <span className="font-medium text-foreground">{total}</span> bài viết
         </p>
         <div className="flex gap-2">
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
+            className="h-9 w-9"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-5 w-5" />
           </Button>
-          <span className="flex items-center px-3 text-sm">
+          <span className="flex items-center px-4 text-base font-medium">
             {page} / {totalPages || 1}
           </span>
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages || totalPages === 0}
+            className="h-9 w-9"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
       </div>
-
-      {/* Preview Dialog */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedPost?.title}</DialogTitle>
-            <DialogDescription>
-              Bởi {selectedPost?.author?.displayName} •{" "}
-              {selectedPost && formatDate(selectedPost.createdAt)}
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Delete Info */}
-          <div className="bg-muted border rounded-md p-4">
-            <p className="text-sm font-medium">Lý do xóa:</p>
-            <p className="text-sm mt-1">
-              {selectedPost?.deleteReason || "Không có lý do"}
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Xóa bởi {selectedPost?.deletedByUser?.displayName} vào{" "}
-              {selectedPost?.deletedAt && formatDate(selectedPost.deletedAt)}
-            </p>
-          </div>
-
-          <div className="prose prose-sm max-w-none dark:prose-invert">
-            <TiptapRenderer content={selectedPost?.contentJson} />
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
-              Đóng
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Restore Dialog */}
       <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>

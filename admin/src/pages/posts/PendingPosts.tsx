@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { postService } from "@/services/postService";
 import type { Post } from "@/types/post";
 import { Button } from "@/components/ui/button";
@@ -12,14 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,10 +32,10 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { TiptapRenderer } from "@/components/tiptap";
 import { formatDate, truncateText } from "@/lib/utils";
 
 export function PendingPosts() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -50,7 +44,6 @@ export function PendingPosts() {
 
   // Dialog states
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -115,14 +108,22 @@ export function PendingPosts() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[300px]">Tiêu đề</TableHead>
-              <TableHead>Tác giả</TableHead>
-              <TableHead>Ngày gửi</TableHead>
-              <TableHead className="text-right">Hành động</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[40%] text-base font-semibold py-4">
+                Tiêu đề
+              </TableHead>
+              <TableHead className="text-base font-semibold py-4">
+                Tác giả
+              </TableHead>
+              <TableHead className="text-base font-semibold py-4">
+                Ngày gửi
+              </TableHead>
+              <TableHead className="text-right text-base font-semibold py-4">
+                Hành động
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -143,55 +144,58 @@ export function PendingPosts() {
               </TableRow>
             ) : (
               posts.map((post) => (
-                <TableRow key={post.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">
-                        {truncateText(post.title, 50)}
+                <TableRow key={post.id} className="hover:bg-muted/30">
+                  <TableCell className="py-4">
+                    <div className="space-y-1">
+                      <p className="font-medium text-base leading-snug">
+                        {truncateText(post.title, 60)}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {truncateText(post.contentPlain || "", 80)}
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {truncateText(post.contentPlain || "", 100)}
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <span>{post.author?.displayName || "Unknown"}</span>
+                  <TableCell className="py-4">
+                    <span className="text-base">
+                      {post.author?.displayName || "Unknown"}
+                    </span>
                   </TableCell>
-                  <TableCell>{formatDate(post.createdAt)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                  <TableCell className="py-4 text-base">
+                    {formatDate(post.createdAt)}
+                  </TableCell>
+                  <TableCell className="text-right py-4">
+                    <div className="flex justify-end gap-1">
                       <Button
                         variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedPost(post);
-                          setPreviewOpen(true);
-                        }}
+                        size="icon"
+                        onClick={() => navigate(`/posts/${post.id}`)}
+                        title="Xem chi tiết"
+                        className="h-9 w-9"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-5 w-5" />
                       </Button>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => {
                           setSelectedPost(post);
                           setApproveOpen(true);
                         }}
                         disabled={isProcessing}
-                        className="text-green-600 hover:text-green-700"
+                        className="h-9 w-9 text-green-600 hover:text-green-700 hover:bg-green-50"
                       >
-                        <Check className="h-4 w-4" />
+                        <Check className="h-5 w-5" />
                       </Button>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => {
                           setSelectedPost(post);
                           setRejectOpen(true);
                         }}
-                        className="text-destructive hover:text-destructive"
+                        className="h-9 w-9 text-destructive hover:text-destructive hover:bg-red-50"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-5 w-5" />
                       </Button>
                     </div>
                   </TableCell>
@@ -203,9 +207,11 @@ export function PendingPosts() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Hiển thị {posts.length} / {total} bài viết
+      <div className="flex items-center justify-between pt-2">
+        <p className="text-base text-muted-foreground">
+          Hiển thị{" "}
+          <span className="font-medium text-foreground">{posts.length}</span> /{" "}
+          <span className="font-medium text-foreground">{total}</span> bài viết
         </p>
         <div className="flex gap-2">
           <Button
@@ -229,48 +235,6 @@ export function PendingPosts() {
           </Button>
         </div>
       </div>
-
-      {/* Preview Dialog */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedPost?.title}</DialogTitle>
-            <DialogDescription>
-              Bởi {selectedPost?.author?.displayName} •{" "}
-              {selectedPost && formatDate(selectedPost.createdAt)}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="prose prose-sm max-w-none dark:prose-invert">
-            <TiptapRenderer content={selectedPost?.contentJson} />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
-              Đóng
-            </Button>
-            <Button
-              onClick={() => {
-                setPreviewOpen(false);
-                setApproveOpen(true);
-              }}
-              disabled={isProcessing}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Check className="mr-2 h-4 w-4" />
-              Duyệt
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setPreviewOpen(false);
-                setRejectOpen(true);
-              }}
-            >
-              <X className="mr-2 h-4 w-4" />
-              Từ chối
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Approve Confirmation Dialog */}
       <AlertDialog open={approveOpen} onOpenChange={setApproveOpen}>

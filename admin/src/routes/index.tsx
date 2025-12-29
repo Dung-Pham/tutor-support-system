@@ -30,6 +30,11 @@ const CommunityPosts = lazy(() =>
     default: m.CommunityPosts,
   }))
 );
+const PostDetail = lazy(() =>
+  import("@/pages/posts/PostDetail").then((m) => ({
+    default: m.PostDetail,
+  }))
+);
 
 // Loading fallback
 const PageLoader = () => (
@@ -91,6 +96,14 @@ export default function AppRoutes() {
           element={
             <Suspense fallback={<PageLoader />}>
               <DeletedPosts />
+            </Suspense>
+          }
+        />
+        <Route
+          path="posts/:id"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <PostDetail />
             </Suspense>
           }
         />
