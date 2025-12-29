@@ -1,13 +1,7 @@
-/**
- * File: validators/schemas/messageSchema.ts
- * Mục đích: Zod schemas cho messages
- */
+// Message Validation Schemas
 
 import { z } from "zod";
 
-// ==========================================
-// MESSAGE SCHEMAS
-// ==========================================
 const imgUrlsSchema = z
   .array(z.string().url("URL ảnh không hợp lệ"))
   .max(10, "Tối đa 10 ảnh mỗi tin nhắn")

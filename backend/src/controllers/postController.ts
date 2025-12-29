@@ -1,9 +1,4 @@
-﻿/**
- * File: postController.ts
- * Purpose: Controller for Post/Blog feature (SQL Server + MongoDB)
- * PostHeader: SQL Server
- * PostDetail: MongoDB (contentJson)
- */
+﻿// Post Controller - SQL Server (PostHeader) + MongoDB (PostDetail)
 
 import { Response } from "express";
 import { PostHeader, User } from "../models/sql/index.js";

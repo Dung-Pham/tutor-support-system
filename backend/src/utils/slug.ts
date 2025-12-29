@@ -1,7 +1,4 @@
-/**
- * File: utils/slug.ts
- * Mục đích: Utility function tạo slug từ title
- */
+// Slug Utility
 
 export function createSlug(title: string = ""): string {
   return String(title)

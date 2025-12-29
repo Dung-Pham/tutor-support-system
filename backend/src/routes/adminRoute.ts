@@ -1,12 +1,9 @@
-/**
- * File: routes/adminRoute.ts
- * Mục đích: Routes cho Admin Panel API
- * Tất cả routes đều yêu cầu admin role
- */
+// Admin Panel API Routes - Requires admin role
 
 import { Router } from "express";
 import {
   getStats,
+  getChartData,
   getUsers,
   getUserById,
   updateUser,
@@ -20,41 +17,25 @@ import { protectedRoute, adminOnly } from "../middlewares/userMiddleware.js";
 
 const router = Router();
 
-// All admin routes require authentication and admin role
+// Middleware
 router.use(protectedRoute);
 router.use(adminOnly);
 
-// ============ DASHBOARD ============
-// GET /api/admin/stats - Dashboard statistics
+// Dashboard
 router.get("/stats", getStats);
+router.get("/chart", getChartData);
 
-// ============ USER MANAGEMENT ============
-// GET /api/admin/users - List all users with pagination
+// Users
 router.get("/users", getUsers);
-
-// GET /api/admin/users/:id - Get user details
 router.get("/users/:id", getUserById);
-
-// PATCH /api/admin/users/:id - Update user (role, status, etc.)
 router.patch("/users/:id", updateUser);
-
-// DELETE /api/admin/users/:id - Deactivate user
 router.delete("/users/:id", deleteUser);
 
-// ============ POST MANAGEMENT ============
-// GET /api/admin/posts - List all posts with pagination
+// Posts
 router.get("/posts", getPosts);
-
-// GET /api/admin/posts/:id - Get post details
 router.get("/posts/:id", getPostById);
-
-// PATCH /api/admin/posts/:id/approve - Approve a post
 router.patch("/posts/:id/approve", approvePost);
-
-// PATCH /api/admin/posts/:id/reject - Reject a post
 router.patch("/posts/:id/reject", rejectPost);
-
-// DELETE /api/admin/posts/:id - Delete a post
 router.delete("/posts/:id", deletePost);
 
 export default router;

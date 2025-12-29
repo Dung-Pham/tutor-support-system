@@ -1,7 +1,4 @@
-/**
- * File: models/sql/Participant.ts
- * Mục đích: Sequelize model cho Participants table (Junction)
- */
+// Participant Model - SQL Server
 
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";

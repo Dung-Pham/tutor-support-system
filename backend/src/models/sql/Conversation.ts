@@ -1,7 +1,4 @@
-/**
- * File: models/sql/Conversation.ts
- * Mục đích: Sequelize model cho Conversations table
- */
+// Conversation Model - SQL Server
 
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";

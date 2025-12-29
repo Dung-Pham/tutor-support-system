@@ -7,10 +7,48 @@ export interface StatsData {
   activeUsers: number;
   newUsersToday: number;
   newPostsToday: number;
+  totalComments?: number;
+  newUsersThisMonth?: number;
+  postsThisMonth?: number;
+  userGrowth?: number;
+  postGrowth?: number;
+  usersByRole?: { role: string; count: number }[];
+  recentUsers?: Array<{
+    id: string;
+    displayName: string;
+    email: string;
+    avatarUrl?: string;
+    role: string;
+    createdAt: string;
+    isActive: boolean;
+  }>;
+  recentPosts?: Array<{
+    id: string;
+    title: string;
+    status: string;
+    createdAt: string;
+    viewCount: number;
+    author?: {
+      id: string;
+      displayName: string;
+      avatarUrl?: string;
+    };
+  }>;
 }
 
 export interface StatsResponse {
   success: boolean;
-  message: string;
+  message?: string;
   data: StatsData;
+}
+
+export interface ChartDataPoint {
+  date: string;
+  posts: number;
+  users: number;
+}
+
+export interface ChartDataResponse {
+  success: boolean;
+  data: ChartDataPoint[];
 }

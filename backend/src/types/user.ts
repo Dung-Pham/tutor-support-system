@@ -1,13 +1,7 @@
-/**
- * File: types/user.ts
- * Mục đích: User-related types
- */
+// User Types
 
 import { Document, Types } from "mongoose";
 
-// ==========================================
-// USER TYPES
-// ==========================================
 export type UserRole = "student" | "tutor" | "admin";
 
 export interface IUser extends Document {

@@ -1,13 +1,7 @@
-/**
- * File: validators/schemas/authSchema.ts
- * Mục đích: Zod schemas cho authentication
- */
+// Auth Validation Schemas
 
 import { z } from "zod";
 
-// ==========================================
-// REGISTER SCHEMAS
-// ==========================================
 export const registerSchema = z.object({
   email: z
     .string({ message: "Email là bắt buộc" })
@@ -29,9 +23,6 @@ export const registerSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
-// ==========================================
-// SIGN IN SCHEMAS
-// ==========================================
 export const signInSchema = z.object({
   email: z.string({ message: "Email là bắt buộc" }).email("Email không hợp lệ"),
   password: z

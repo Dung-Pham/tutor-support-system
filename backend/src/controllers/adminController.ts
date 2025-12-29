@@ -1,7 +1,4 @@
-﻿/**
- * File: adminController.ts
- * Má»¥c Ä‘Ã­ch: Controller xá»­ lÃ½ cÃ¡c API cho Admin Panel (SQL Server)
- */
+﻿// Admin Controller - SQL Server
 
 import { Response } from "express";
 import { User, PostHeader, PostComment } from "../models/sql/index.js";
@@ -524,6 +521,97 @@ export const deletePost = async (
     return res.status(500).json({
       success: false,
       message: "Failed to delete post",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Lấy dữ liệu thống kê theo thời gian cho biểu đồ
+export const getChartData = async (
+  req: AuthRequest & { query: { days?: string } },
+  res: Response
+): Promise<Response> => {
+  try {
+    const days = parseInt(req.query.days || "30", 10);
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Lấy số bài viết mới và user đăng ký theo ngày
+    const postsData = await PostHeader.findAll({
+      attributes: [
+        [fn("CAST", literal("created_at AS DATE")), "date"],
+        [fn("COUNT", col("id")), "count"],
+      ],
+      where: {
+        createdAt: { [Op.between]: [startDate, endDate] },
+        status: { [Op.ne]: "draft" },
+      },
+      group: [fn("CAST", literal("created_at AS DATE"))],
+      order: [[fn("CAST", literal("created_at AS DATE")), "ASC"]],
+      raw: true,
+    });
+
+    const usersData = await User.findAll({
+      attributes: [
+        [fn("CAST", literal("created_at AS DATE")), "date"],
+        [fn("COUNT", col("id")), "count"],
+      ],
+      where: {
+        createdAt: { [Op.between]: [startDate, endDate] },
+      },
+      group: [fn("CAST", literal("created_at AS DATE"))],
+      order: [[fn("CAST", literal("created_at AS DATE")), "ASC"]],
+      raw: true,
+    });
+
+    // Tạo mảng đầy đủ các ngày
+    const dateMap: Record<string, { posts: number; users: number }> = {};
+    for (
+      let d = new Date(startDate);
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
+      const dateStr = d.toISOString().split("T")[0];
+      dateMap[dateStr] = { posts: 0, users: 0 };
+    }
+
+    // Fill dữ liệu posts
+    (postsData as unknown as { date: string; count: string }[]).forEach(
+      (item) => {
+        const dateStr = new Date(item.date).toISOString().split("T")[0];
+        if (dateMap[dateStr]) {
+          dateMap[dateStr].posts = parseInt(item.count, 10);
+        }
+      }
+    );
+
+    // Fill dữ liệu users
+    (usersData as unknown as { date: string; count: string }[]).forEach(
+      (item) => {
+        const dateStr = new Date(item.date).toISOString().split("T")[0];
+        if (dateMap[dateStr]) {
+          dateMap[dateStr].users = parseInt(item.count, 10);
+        }
+      }
+    );
+
+    // Chuyển thành mảng
+    const chartData = Object.entries(dateMap).map(([date, data]) => ({
+      date,
+      posts: data.posts,
+      users: data.users,
+    }));
+
+    return res.json({
+      success: true,
+      data: chartData,
+    });
+  } catch (error) {
+    console.error("Error in getChartData", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch chart data",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }

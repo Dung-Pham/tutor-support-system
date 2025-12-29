@@ -1,7 +1,4 @@
-/**
- * File: models/sql/PostLike.ts
- * Mục đích: Sequelize model cho PostLikes table (Junction)
- */
+// PostLike Model - SQL Server
 
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";

@@ -1,13 +1,7 @@
-/**
- * File: validators/schemas/commentSchema.ts
- * Mục đích: Zod schemas cho comments
- */
+// Comment Validation Schemas
 
 import { z } from "zod";
 
-// ==========================================
-// COMMENT SCHEMAS
-// ==========================================
 export const createCommentSchema = z.object({
   comment_content: z
     .string({ message: "Nội dung bình luận là bắt buộc" })
@@ -26,9 +20,6 @@ export const updateCommentSchema = z.object({
 
 export type UpdateCommentInput = z.infer<typeof updateCommentSchema>;
 
-// ==========================================
-// REPLY SCHEMAS
-// ==========================================
 export const createReplySchema = z.object({
   reply_comment_content: z
     .string({ message: "Nội dung trả lời là bắt buộc" })

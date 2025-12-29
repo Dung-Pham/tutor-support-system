@@ -1,7 +1,4 @@
-/**
- * File: middlewares/userMiddleware.ts
- * Mục đích: Authentication và Authorization middlewares (SQL Server)
- */
+// Auth Middleware - SQL Server
 
 import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
@@ -9,10 +6,7 @@ import { User } from "../models/sql/index.js";
 import { AuthRequest } from "../types/common.js";
 import { JwtPayload } from "../types/auth.js";
 
-/**
- * Protected route middleware - xác thực access token
- * Sử dụng cho tất cả các route cần đăng nhập
- */
+// Protected route - verify access token
 export const protectedRoute = async (
   req: AuthRequest,
   res: Response,

@@ -1,7 +1,4 @@
-/**
- * File: app.ts
- * Mục đích: Cấu hình Express application
- */
+// Express application config
 
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";

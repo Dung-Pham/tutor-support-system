@@ -1,15 +1,9 @@
-/**
- * File: types/comment.ts
- * Mục đích: Comment-related types
- */
+// Comment Types
 
 import { Document, Types } from "mongoose";
 import { IUser } from "./user.js";
 import { IPost } from "./post.js";
 
-// ==========================================
-// COMMENT TYPES
-// ==========================================
 export interface IPostComment extends Document {
   _id: Types.ObjectId;
   postId: Types.ObjectId | IPost;
@@ -34,9 +28,6 @@ export interface IReplyComment extends Document {
   createdAt: Date;
 }
 
-// ==========================================
-// LIKE TYPES
-// ==========================================
 export interface IPostLike extends Document {
   postId: Types.ObjectId;
   userId: Types.ObjectId;

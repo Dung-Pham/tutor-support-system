@@ -1,7 +1,4 @@
-/**
- * File: models/sql/ReplyCommentLike.ts
- * Mục đích: Sequelize model cho ReplyCommentLikes table (Junction)
- */
+// ReplyCommentLike Model - SQL Server
 
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";

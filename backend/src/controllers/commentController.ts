@@ -1,7 +1,4 @@
-/**
- * File: commentController.ts
- * Purpose: Controller for Comment feature (SQL Server)
- */
+// Comment Controller - SQL Server
 
 import { Response } from "express";
 import {

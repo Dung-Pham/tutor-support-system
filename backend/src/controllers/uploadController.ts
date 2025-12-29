@@ -1,7 +1,4 @@
-/**
- * File: uploadController.ts
- * Mục đích: Handle image uploads với Cloudinary
- */
+// Upload Controller - Cloudinary
 
 import { Request, Response } from "express";
 import cloudinary from "../config/cloudinary.js";

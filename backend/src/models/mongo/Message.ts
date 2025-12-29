@@ -1,8 +1,4 @@
-/**
- * File: models/mongo/Message.ts
- * Mục đích: MongoDB model cho Chat Messages
- * Liên kết với Conversation trong SQL Server qua conversationId (UUID)
- */
+// Message Model - MongoDB (links to SQL Server via conversationId)
 
 import mongoose, { Schema, Document, Model } from "mongoose";
 

@@ -1,13 +1,7 @@
-/**
- * File: types/socket.ts
- * Mục đích: Socket.IO types
- */
+// Socket.IO Types
 
 import { IUserResponse } from "./user.js";
 
-// ==========================================
-// SOCKET TYPES
-// ==========================================
 export interface SocketUser {
   socketId: string;
   userData: IUserResponse;

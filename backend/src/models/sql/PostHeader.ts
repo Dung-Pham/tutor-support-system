@@ -1,7 +1,4 @@
-/**
- * File: models/sql/PostHeader.ts
- * Mục đích: Sequelize model cho PostHeaders table
- */
+// PostHeader Model - SQL Server
 
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";

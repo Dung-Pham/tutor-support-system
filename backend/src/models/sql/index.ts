@@ -1,7 +1,4 @@
-/**
- * File: models/sql/index.ts
- * Mục đích: Export tất cả SQL Server models và thiết lập associations
- */
+// SQL Server Models - Associations
 
 import User from "./User.js";
 import Session from "./Session.js";
@@ -14,10 +11,6 @@ import ReplyCommentLike from "./ReplyCommentLike.js";
 import Conversation from "./Conversation.js";
 import Participant from "./Participant.js";
 import Notification from "./Notification.js";
-
-// ==========================================
-// ASSOCIATIONS
-// ==========================================
 
 // User associations
 User.hasMany(Session, { foreignKey: "userId", as: "sessions" });
@@ -123,7 +116,7 @@ Conversation.belongsToMany(User, {
   as: "members",
 });
 
-// Many-to-Many through PostLike (Users who liked posts)
+// Many-to-Many through PostLike
 User.belongsToMany(PostHeader, {
   through: PostLike,
   foreignKey: "userId",
@@ -137,9 +130,6 @@ PostHeader.belongsToMany(User, {
   as: "likers",
 });
 
-// ==========================================
-// EXPORTS
-// ==========================================
 export {
   User,
   Session,

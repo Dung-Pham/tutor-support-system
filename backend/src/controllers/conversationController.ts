@@ -1,9 +1,4 @@
-﻿/**
- * File: conversationController.ts
- * Má»¥c Ä‘Ã­ch: Controller cho Conversation feature (SQL Server + MongoDB)
- * Conversation, Participant: SQL Server
- * Message: MongoDB
- */
+﻿// Conversation Controller - SQL Server + MongoDB
 
 import { Response } from "express";
 import { Conversation, Participant, User } from "../models/sql/index.js";

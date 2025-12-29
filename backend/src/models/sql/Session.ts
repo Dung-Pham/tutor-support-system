@@ -1,7 +1,4 @@
-/**
- * File: models/sql/Session.ts
- * Mục đích: Sequelize model cho Sessions table
- */
+// Session Model - SQL Server
 
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";

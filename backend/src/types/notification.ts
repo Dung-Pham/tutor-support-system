@@ -1,13 +1,7 @@
-/**
- * File: types/notification.ts
- * Mục đích: Notification types
- */
+// Notification Types
 
 import { Document } from "mongoose";
 
-// ==========================================
-// NOTIFICATION TYPES
-// ==========================================
 export type NotificationType =
   | "post_liked"
   | "post_commented"

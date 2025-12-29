@@ -1,14 +1,8 @@
-/**
- * File: types/post.ts
- * Mục đích: Post-related types
- */
+// Post Types
 
 import { Document, Types } from "mongoose";
 import { IUser } from "./user.js";
 
-// ==========================================
-// POST TYPES
-// ==========================================
 export type PostStatus = "draft" | "pending" | "approved" | "rejected";
 
 export interface ContentNode {
@@ -38,9 +32,6 @@ export interface IPost extends Document {
   updatedAt: Date;
 }
 
-// ==========================================
-// POST REQUEST TYPES
-// ==========================================
 export interface CreatePostData {
   title: string;
   contentJson: Record<string, unknown>;

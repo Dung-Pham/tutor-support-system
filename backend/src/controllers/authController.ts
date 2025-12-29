@@ -1,7 +1,4 @@
-/**
- * File: authController.ts
- * Mục đích: Controller xử lý authentication (SQL Server)
- */
+// Auth Controller - SQL Server
 
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";

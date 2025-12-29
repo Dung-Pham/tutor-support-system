@@ -1,7 +1,4 @@
-/**
- * File: routes/postRoute.ts
- * Mục đích: Post routes
- */
+// Post routes
 
 import { Router } from "express";
 import {

@@ -1,13 +1,7 @@
-/**
- * File: validators/schemas/userSchema.ts
- * Mục đích: Zod schemas cho users
- */
+// User Validation Schemas
 
 import { z } from "zod";
 
-// ==========================================
-// USER SCHEMAS
-// ==========================================
 export const updateProfileSchema = z.object({
   firstName: z
     .string()

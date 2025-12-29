@@ -1,7 +1,4 @@
-/**
- * File: models/mongo/index.ts
- * Mục đích: Export tất cả MongoDB models
- */
+// MongoDB Models
 
 export { default as PostDetail } from "./PostDetail.js";
 export { default as Message } from "./Message.js";

@@ -1,7 +1,4 @@
-/**
- * File: routes/index.ts
- * Mục đích: Export all routes
- */
+// Export all routes
 
 export { default as authRoute } from "./authRoute.js";
 export { default as userRoute } from "./userRoute.js";

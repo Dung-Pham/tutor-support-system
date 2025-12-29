@@ -1,8 +1,4 @@
-/**
- * File: routes/uploadRoute.ts
- * Mục đích: Upload routes (Cloudinary)
- * Note: Đã được bảo vệ bởi global protectedRoute trong app.ts
- */
+// Upload routes (Cloudinary) - protected by global middleware
 
 import { Router } from "express";
 import multer from "multer";

@@ -1,13 +1,7 @@
-/**
- * File: types/message.ts
- * Mục đích: Message & Conversation types
- */
+// Message & Conversation Types
 
 import { Document, Types } from "mongoose";
 
-// ==========================================
-// CONVERSATION TYPES
-// ==========================================
 export interface IParticipant {
   userId: Types.ObjectId;
 }
@@ -31,9 +25,6 @@ export interface IConversation extends Document {
   updatedAt: Date;
 }
 
-// ==========================================
-// MESSAGE TYPES
-// ==========================================
 export interface IAttachment {
   type: "image" | "video" | "file" | "audio";
   url: string;

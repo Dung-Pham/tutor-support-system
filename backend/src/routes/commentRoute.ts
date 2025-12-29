@@ -1,7 +1,4 @@
-/**
- * File: routes/commentRoute.ts
- * Mục đích: Routes cho Comment feature
- */
+// Comment routes
 
 import { Router } from "express";
 import {
@@ -23,32 +20,18 @@ import { protectedRoute } from "../middlewares/userMiddleware.js";
 
 const router = Router();
 
-// ==================== COMMENT ROUTES ====================
-
-// Lấy danh sách comment của bài viết (public)
+// Comments
 router.get("/posts/:postId/comments", getComments);
-
-// Tạo comment (cần đăng nhập)
 router.post("/posts/:postId/comments", protectedRoute, createComment);
-
-// Cập nhật comment (cần đăng nhập, chỉ chủ sở hữu)
 router.patch("/comments/:commentId", protectedRoute, updateComment);
-
-// Xóa comment (cần đăng nhập, chủ sở hữu hoặc admin)
 router.delete("/comments/:commentId", protectedRoute, deleteComment);
 
-// ==================== REPLY ROUTES ====================
-
-// Lấy danh sách reply của comment (public)
+// Replies
 router.get("/comments/:commentId/replies", getReplies);
-
-// Tạo reply (cần đăng nhập)
 router.post("/comments/:commentId/replies", protectedRoute, createReply);
-
-// Xóa reply (cần đăng nhập, chủ sở hữu hoặc admin)
 router.delete("/replies/:replyId", protectedRoute, deleteReply);
 
-// ==================== LIKE ROUTES ====================
+// Likes
 
 // Like/Unlike comment (toggle)
 router.post("/comments/:commentId/like", protectedRoute, toggleCommentLike);

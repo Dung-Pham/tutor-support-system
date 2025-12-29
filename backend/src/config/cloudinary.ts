@@ -1,7 +1,4 @@
-/**
- * File: cloudinary.ts
- * Mục đích: Cấu hình Cloudinary
- */
+// Cloudinary Config
 
 import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";

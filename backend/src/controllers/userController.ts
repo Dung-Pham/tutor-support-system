@@ -1,7 +1,4 @@
-/**
- * File: userController.ts
- * Mục đích: Controller xử lý user operations (SQL Server)
- */
+// User Controller - SQL Server
 
 import { Request, Response } from "express";
 import { User } from "../models/sql/index.js";

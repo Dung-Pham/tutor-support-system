@@ -1,7 +1,4 @@
-/**
- * File: socket.ts
- * Mục đích: Cấu hình Socket.IO
- */
+// Socket.IO Config
 
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";

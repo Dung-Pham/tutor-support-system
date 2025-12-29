@@ -1,7 +1,4 @@
-﻿/**
- * File: likeController.ts
- * Má»¥c Ä‘Ã­ch: Controller cho Like feature (SQL Server)
- */
+﻿// Like Controller - SQL Server
 
 import { Response } from "express";
 import {

@@ -1,13 +1,7 @@
-/**
- * File: types/common.ts
- * Mục đích: Common types dùng chung
- */
+// Common Types
 
 import { Request } from "express";
 
-// ==========================================
-// API RESPONSE TYPES
-// ==========================================
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
@@ -23,9 +17,6 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   totalPages: number;
 }
 
-// ==========================================
-// REQUEST TYPES
-// ==========================================
 export interface PaginationQuery {
   page?: string;
   limit?: string;

@@ -1,7 +1,4 @@
-/**
- * File: routes/authRoute.ts
- * Mục đích: Auth routes
- */
+// Auth routes
 
 import { Router } from "express";
 import {

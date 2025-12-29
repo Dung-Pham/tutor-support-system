@@ -1,7 +1,4 @@
-/**
- * File: models/sql/Notification.ts
- * Mục đích: Sequelize model cho Notifications table
- */
+// Notification Model - SQL Server
 
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";

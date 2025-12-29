@@ -1,13 +1,7 @@
-/**
- * File: validators/schemas/postSchema.ts
- * Mục đích: Zod schemas cho posts
- */
+// Post Validation Schemas
 
 import { z } from "zod";
 
-// ==========================================
-// POST SCHEMAS
-// ==========================================
 export const createPostSchema = z.object({
   title: z
     .string({ message: "Tiêu đề là bắt buộc" })

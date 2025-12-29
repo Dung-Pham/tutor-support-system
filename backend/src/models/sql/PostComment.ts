@@ -1,7 +1,4 @@
-/**
- * File: models/sql/PostComment.ts
- * Mục đích: Sequelize model cho PostComments table
- */
+// PostComment Model - SQL Server
 
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";

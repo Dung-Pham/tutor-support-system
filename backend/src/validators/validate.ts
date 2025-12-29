@@ -1,18 +1,11 @@
-/**
- * File: validators/validate.ts
- * Mục đích: Middleware validate request với Zod
- */
+// Zod Validation Middleware
 
 import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 
 type ValidationTarget = "body" | "query" | "params";
 
-/**
- * Middleware factory để validate request data
- * @param schema - Zod schema để validate
- * @param target - Phần của request cần validate (body, query, params)
- */
+// Validate request data with Zod schema
 export const validate = (
   schema: z.ZodSchema,
   target: ValidationTarget = "body"

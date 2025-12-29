@@ -1,7 +1,4 @@
-/**
- * File: models/sql/User.ts
- * Mục đích: Sequelize model cho Users table
- */
+// User Model - SQL Server
 
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";

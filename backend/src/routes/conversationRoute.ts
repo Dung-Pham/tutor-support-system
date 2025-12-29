@@ -1,7 +1,4 @@
-/**
- * File: routes/conversationRoute.ts
- * Mục đích: Conversation routes
- */
+// Conversation routes
 
 import { Router } from "express";
 import {

@@ -1,7 +1,4 @@
-/**
- * File: sqlserver.ts
- * Mục đích: Cấu hình và kết nối SQL Server
- */
+// SQL Server Connection
 
 import { Sequelize } from "sequelize";
 

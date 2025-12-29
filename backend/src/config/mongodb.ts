@@ -1,7 +1,4 @@
-/**
- * File: mongodb.ts
- * Mục đích: Kết nối MongoDB
- */
+// MongoDB Connection
 
 import mongoose from "mongoose";
 

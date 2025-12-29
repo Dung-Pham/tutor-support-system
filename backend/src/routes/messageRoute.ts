@@ -1,7 +1,4 @@
-/**
- * File: routes/messageRoute.ts
- * Mục đích: Message routes
- */
+// Message routes
 
 import { Router } from "express";
 import {

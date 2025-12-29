@@ -1,7 +1,4 @@
-/**
- * File: models/sql/ReplyComment.ts
- * Mục đích: Sequelize model cho ReplyComments table
- */
+// ReplyComment Model - SQL Server
 
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";

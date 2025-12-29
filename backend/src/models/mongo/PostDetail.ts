@@ -1,8 +1,4 @@
-/**
- * File: models/mongo/PostDetail.ts
- * Mục đích: MongoDB model cho Post content (JSON phức tạp)
- * Liên kết với PostHeader trong SQL Server qua postHeaderId (UUID)
- */
+// PostDetail Model - MongoDB (links to SQL Server via postHeaderId)
 
 import mongoose, { Schema, Document, Model } from "mongoose";
 
