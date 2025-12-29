@@ -30,7 +30,12 @@ import {
   ChevronDown,
   ChevronUp,
   Trash2,
+  Check,
+  X,
+  RotateCcw,
+  Ban,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { formatDate } from "@/lib/utils";
 import type { JSONContent } from "@tiptap/core";
 
@@ -58,6 +63,16 @@ export function PostDetail() {
   const [deleteType, setDeleteType] = useState<"comment" | "reply">("comment");
   const [deleteId, setDeleteId] = useState<string>("");
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Post action states
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [removeReason, setRemoveReason] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const fetchPost = useCallback(async () => {
     if (!id) return;
@@ -189,6 +204,78 @@ export function PostDetail() {
     }
   };
 
+  // Post action handlers
+  const handleApprove = async () => {
+    if (!post) return;
+    setIsProcessing(true);
+    try {
+      await postService.approvePost(post.id);
+      await fetchPost();
+      setApproveDialogOpen(false);
+    } catch (error) {
+      console.error("Error approving post:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!post || !rejectReason.trim()) return;
+    setIsProcessing(true);
+    try {
+      await postService.rejectPost(post.id, rejectReason);
+      await fetchPost();
+      setRejectDialogOpen(false);
+      setRejectReason("");
+    } catch (error) {
+      console.error("Error rejecting post:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRemoveFromCommunity = async () => {
+    if (!post) return;
+    setIsProcessing(true);
+    try {
+      await postService.deletePost(post.id, removeReason || undefined);
+      await fetchPost();
+      setRemoveDialogOpen(false);
+      setRemoveReason("");
+    } catch (error) {
+      console.error("Error removing post:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!post) return;
+    setIsProcessing(true);
+    try {
+      await postService.restorePost(post.id);
+      await fetchPost();
+      setRestoreDialogOpen(false);
+    } catch (error) {
+      console.error("Error restoring post:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleHardDelete = async () => {
+    if (!post) return;
+    setIsProcessing(true);
+    try {
+      await postService.hardDeletePost(post.id);
+      navigate(-1);
+    } catch (error) {
+      console.error("Error hard deleting post:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -252,15 +339,73 @@ export function PostDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Chi tiết bài viết</h1>
-          <p className="text-sm text-muted-foreground">
-            Xem nội dung và bình luận
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Chi tiết bài viết</h1>
+            <p className="text-sm text-muted-foreground">
+              Xem nội dung và bình luận
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons based on status */}
+        <div className="flex items-center gap-2">
+          {post.status === "pending" && (
+            <>
+              <Button
+                onClick={() => setApproveDialogOpen(true)}
+                className="bg-green-600 hover:bg-green-700"
+                disabled={isProcessing}
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Duyệt bài
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setRejectDialogOpen(true)}
+                disabled={isProcessing}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Từ chối
+              </Button>
+            </>
+          )}
+
+          {post.status === "approved" && (
+            <Button
+              variant="destructive"
+              onClick={() => setRemoveDialogOpen(true)}
+              disabled={isProcessing}
+            >
+              <Ban className="h-4 w-4 mr-2" />
+              Loại khỏi trang bài viết cộng đồng
+            </Button>
+          )}
+
+          {post.status === "deleted" && (
+            <>
+              <Button
+                onClick={() => setRestoreDialogOpen(true)}
+                className="bg-green-600 hover:bg-green-700"
+                disabled={isProcessing}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Khôi phục
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setHardDeleteDialogOpen(true)}
+                disabled={isProcessing}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Xóa vĩnh viễn
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -558,6 +703,162 @@ export function PostDetail() {
               ) : (
                 "Xóa"
               )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Approve Dialog */}
+      <AlertDialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Duyệt bài viết?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bài viết "{post.title}" sẽ được xuất bản và hiển thị công khai
+              trên trang cộng đồng.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isProcessing}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleApprove}
+              disabled={isProcessing}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isProcessing && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              Duyệt bài
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reject Dialog */}
+      <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Từ chối bài viết?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vui lòng nhập lý do từ chối bài viết "{post.title}"
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Textarea
+            placeholder="Lý do từ chối..."
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            rows={4}
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={isProcessing}
+              onClick={() => setRejectReason("")}
+            >
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReject}
+              disabled={isProcessing || !rejectReason.trim()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isProcessing && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              Từ chối
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Remove from Community Dialog */}
+      <AlertDialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Loại khỏi trang bài viết cộng đồng?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Bài viết "{post.title}" sẽ bị xóa khỏi trang cộng đồng và chuyển
+              vào thùng rác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Textarea
+            placeholder="Lý do xóa (không bắt buộc)..."
+            value={removeReason}
+            onChange={(e) => setRemoveReason(e.target.value)}
+            rows={3}
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={isProcessing}
+              onClick={() => setRemoveReason("")}
+            >
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRemoveFromCommunity}
+              disabled={isProcessing}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isProcessing && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              Xóa bài viết
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Restore Dialog */}
+      <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Khôi phục bài viết?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bài viết "{post.title}" sẽ được khôi phục về trạng thái đã duyệt
+              và hiển thị công khai trên trang cộng đồng.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isProcessing}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRestore}
+              disabled={isProcessing}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isProcessing && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              Khôi phục
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Hard Delete Dialog */}
+      <AlertDialog
+        open={hardDeleteDialogOpen}
+        onOpenChange={setHardDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xóa vĩnh viễn?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bài viết "{post.title}" sẽ bị xóa vĩnh viễn và không thể khôi
+              phục. Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isProcessing}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleHardDelete}
+              disabled={isProcessing}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isProcessing && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              Xóa vĩnh viễn
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
