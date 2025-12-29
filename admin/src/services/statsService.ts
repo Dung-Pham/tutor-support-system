@@ -1,5 +1,9 @@
 import api from "./api";
-import type { StatsResponse, ChartDataResponse } from "@/types/stats";
+import type {
+  StatsResponse,
+  ChartDataResponse,
+  TopPostsResponse,
+} from "@/types/stats";
 
 export const statsService = {
   async getStats(): Promise<StatsResponse> {
@@ -11,6 +15,11 @@ export const statsService = {
     const response = await api.get<ChartDataResponse>("/admin/chart", {
       params: { days },
     });
+    return response.data;
+  },
+
+  async getTopPosts(): Promise<TopPostsResponse> {
+    const response = await api.get<TopPostsResponse>("/admin/top-posts");
     return response.data;
   },
 };

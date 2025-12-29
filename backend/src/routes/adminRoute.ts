@@ -4,6 +4,7 @@ import { Router } from "express";
 import {
   getStats,
   getChartData,
+  getTopPosts,
   getUsers,
   getUserById,
   updateUser,
@@ -24,6 +25,7 @@ router.use(adminOnly);
 // Dashboard
 router.get("/stats", getStats);
 router.get("/chart", getChartData);
+router.get("/top-posts", getTopPosts);
 
 // Users
 router.get("/users", getUsers);

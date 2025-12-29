@@ -268,6 +268,23 @@ export const getPostsByStatus = async (
       offset,
     });
 
+    // Lấy contentJson từ MongoDB cho mỗi post
+    const postIds = posts.map((p) => p.id);
+    const postDetails = await PostDetail.find({
+      postHeaderId: { $in: postIds },
+    }).lean();
+
+    const detailMap = new Map(postDetails.map((d) => [d.postHeaderId, d]));
+
+    const postsWithContent = posts.map((post) => {
+      const detail = detailMap.get(post.id);
+      return {
+        ...post.toJSON(),
+        contentJson: detail?.contentJson || null,
+        contentPlain: detail?.contentPlain || "",
+      };
+    });
+
     const totalPages = Math.ceil(total / limit);
     const messages: Record<string, string> = {
       pending: "Lấy danh sách bài viết chờ duyệt",
@@ -278,7 +295,7 @@ export const getPostsByStatus = async (
     return res.json({
       success: true,
       message: messages[status],
-      data: posts,
+      data: postsWithContent,
       page,
       limit,
       total,

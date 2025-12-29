@@ -48,6 +48,25 @@ export interface ChartDataPoint {
   users: number;
 }
 
+export interface TopPost {
+  id: string;
+  title: string;
+  likeCount: number;
+  viewCount: number;
+  commentCount: number;
+  createdAt: string;
+  author?: {
+    id: string;
+    displayName: string;
+    avatarUrl?: string;
+  };
+}
+
+export interface TopPostsResponse {
+  success: boolean;
+  data: TopPost[];
+}
+
 export interface ChartDataResponse {
   success: boolean;
   data: ChartDataPoint[];

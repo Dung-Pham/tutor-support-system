@@ -35,10 +35,22 @@ import {
   TrendingUp,
   TrendingDown,
   MessageSquare,
+  Eye,
+  ArrowRight,
 } from "lucide-react";
 import { statsService } from "@/services/statsService";
-import type { StatsData, ChartDataPoint } from "@/types/stats";
+import type { StatsData, ChartDataPoint, TopPost } from "@/types/stats";
 import { cn } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type TimeRange = "7" | "30" | "90";
 
@@ -54,15 +66,22 @@ export function Dashboard() {
     newPostsToday: 0,
   });
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [topPosts, setTopPosts] = useState<TopPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>("30");
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await statsService.getStats();
-        if (response.success) {
-          setStats(response.data);
+        const [statsRes, topPostsRes] = await Promise.all([
+          statsService.getStats(),
+          statsService.getTopPosts(),
+        ]);
+        if (statsRes.success) {
+          setStats(statsRes.data);
+        }
+        if (topPostsRes.success) {
+          setTopPosts(topPostsRes.data);
         }
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -384,6 +403,124 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Top Posts Table */}
+      <Card className="border-t-4 border-t-blue-500">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-500" />
+              Top 10 bài viết được yêu thích
+            </CardTitle>
+            <CardDescription>
+              Các bài viết có lượt thích cao nhất
+            </CardDescription>
+          </div>
+          <a
+            href="/posts"
+            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium"
+          >
+            Xem tất cả
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">#</TableHead>
+                <TableHead>Tiêu đề</TableHead>
+                <TableHead>Tác giả</TableHead>
+                <TableHead className="text-center">
+                  <span className="flex items-center justify-center gap-1">
+                    ❤️ Likes
+                  </span>
+                </TableHead>
+                <TableHead className="text-center">
+                  <span className="flex items-center justify-center gap-1">
+                    <Eye className="h-4 w-4" /> Views
+                  </span>
+                </TableHead>
+                <TableHead className="text-center">
+                  <span className="flex items-center justify-center gap-1">
+                    <MessageSquare className="h-4 w-4" /> Comments
+                  </span>
+                </TableHead>
+                <TableHead className="text-right">Ngày đăng</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    Đang tải...
+                  </TableCell>
+                </TableRow>
+              ) : topPosts.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    Chưa có bài viết nào
+                  </TableCell>
+                </TableRow>
+              ) : (
+                topPosts.map((post, index) => (
+                  <TableRow key={post.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium text-muted-foreground">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell>
+                      <a
+                        href={`/posts/${post.id}`}
+                        className="font-medium hover:text-blue-600 line-clamp-1"
+                        title={post.title}
+                      >
+                        {post.title}
+                      </a>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={post.author?.avatarUrl} />
+                          <AvatarFallback className="text-xs">
+                            {post.author?.displayName?.charAt(0) || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-muted-foreground">
+                          {post.author?.displayName || "Unknown"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        variant="secondary"
+                        className="bg-rose-50 text-rose-600"
+                      >
+                        {post.likeCount}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="text-muted-foreground">
+                        {post.viewCount}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="text-muted-foreground">
+                        {post.commentCount}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right text-sm text-muted-foreground">
+                      {new Date(post.createdAt).toLocaleDateString("vi-VN")}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-2">

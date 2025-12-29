@@ -24,7 +24,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@reduxjs/toolkit": "^2.11.2",
-    "@tanstack/react-table": "^8.20.6",
+    "@tanstack/react-table": "^8.21.3",
     "@tiptap/core": "^3.14.0",
     "@tiptap/extension-highlight": "^3.14.0",
     "@tiptap/extension-horizontal-rule": "^3.14.0",

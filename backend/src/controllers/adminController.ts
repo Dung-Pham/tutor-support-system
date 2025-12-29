@@ -2,6 +2,7 @@
 
 import { Response } from "express";
 import { User, PostHeader, PostComment } from "../models/sql/index.js";
+import { PostDetail } from "../models/mongo/index.js";
 import { AuthRequest } from "../types/common.js";
 import { UserRole } from "../types/user.js";
 import { Op, fn, col, literal } from "sequelize";
@@ -419,15 +420,37 @@ export const getPosts = async (
           as: "author",
           attributes: ["id", "displayName", "avatarUrl", "email"],
         },
+        {
+          model: User,
+          as: "rejecter",
+          attributes: ["id", "displayName"],
+        },
       ],
       order,
       offset,
       limit: limitNum,
     });
 
+    // Lấy contentJson từ MongoDB cho mỗi post
+    const postIds = posts.map((p) => p.id);
+    const postDetails = await PostDetail.find({
+      postHeaderId: { $in: postIds },
+    }).lean();
+
+    const detailMap = new Map(postDetails.map((d) => [d.postHeaderId, d]));
+
+    const postsWithContent = posts.map((post) => {
+      const detail = detailMap.get(post.id);
+      return {
+        ...post.toJSON(),
+        contentJson: detail?.contentJson || null,
+        contentPlain: detail?.contentPlain || "",
+      };
+    });
+
     return res.json({
       success: true,
-      data: posts,
+      data: postsWithContent,
       pagination: {
         page: pageNum,
         limit: limitNum,
@@ -612,6 +635,50 @@ export const getChartData = async (
     return res.status(500).json({
       success: false,
       message: "Failed to fetch chart data",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Lấy top 10 bài viết có nhiều like nhất
+export const getTopPosts = async (
+  req: AuthRequest,
+  res: Response
+): Promise<Response> => {
+  try {
+    const topPosts = await PostHeader.findAll({
+      where: { status: "approved" },
+      attributes: [
+        "id",
+        "title",
+        "likeCount",
+        "viewCount",
+        "commentCount",
+        "createdAt",
+      ],
+      include: [
+        {
+          model: User,
+          as: "author",
+          attributes: ["id", "displayName", "avatarUrl"],
+        },
+      ],
+      order: [
+        ["likeCount", "DESC"],
+        ["viewCount", "DESC"],
+      ],
+      limit: 10,
+    });
+
+    return res.json({
+      success: true,
+      data: topPosts,
+    });
+  } catch (error) {
+    console.error("Error in getTopPosts", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch top posts",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
