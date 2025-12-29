@@ -9,11 +9,9 @@ import {
   getPostDetail,
   createPost,
   updatePost,
-  deletePost,
+  softDeletePost,
   getMyPosts,
-  getPendingPosts,
-  getRejectedPosts,
-  getDeletedPosts,
+  getPostsByStatus,
   approvePost,
   rejectPost,
   restorePost,
@@ -39,9 +37,13 @@ const wrap = (fn: any) => fn;
 
 router.get("/", wrap(getApprovedPosts));
 router.get("/my", protectedRoute, wrap(getMyPosts));
-router.get("/pending", protectedRoute, adminOnly, wrap(getPendingPosts));
-router.get("/rejected", protectedRoute, adminOnly, wrap(getRejectedPosts));
-router.get("/deleted", protectedRoute, adminOnly, wrap(getDeletedPosts));
+// Unified route for admin to get posts by status (pending, rejected, deleted)
+router.get(
+  "/status/:status",
+  protectedRoute,
+  adminOnly,
+  wrap(getPostsByStatus)
+);
 router.get("/:id", wrap(getPostDetail));
 
 router.post(
@@ -56,13 +58,10 @@ router.patch(
   validateBody(updatePostSchema),
   wrap(updatePost)
 );
-router.delete("/:id", protectedRoute, wrap(deletePost));
-router.delete(
-  "/:id/permanent",
-  protectedRoute,
-  adminOnly,
-  wrap(hardDeletePost)
-);
+// Soft delete (admin only) - chuyển vào thùng rác
+router.delete("/:id", protectedRoute, adminOnly, wrap(softDeletePost));
+// Hard delete - tutor xóa bài draft/pending, admin xóa tất cả
+router.delete("/:id/permanent", protectedRoute, wrap(hardDeletePost));
 
 router.patch("/:id/approve", protectedRoute, adminOnly, wrap(approvePost));
 router.patch(

@@ -193,16 +193,27 @@ export const getApprovedPosts = async (
   }
 };
 
-// Get pending posts (admin only)
-export const getPendingPosts = async (
-  req: AuthRequest & { query: PaginationQuery },
+// Get posts by status (admin only)
+export const getPostsByStatus = async (
+  req: AuthRequest & { query: PaginationQuery; params: { status: PostStatus } },
   res: Response
 ): Promise<Response> => {
   try {
+    const { status } = req.params;
+
+    // Validate status
+    if (!["pending", "rejected", "deleted"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Status không hợp lệ",
+      });
+    }
+
+    // Admin only check
     if (req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Chỉ admin có thể xem bài viết chờ duyệt",
+        message: "Chỉ admin có thể xem danh sách này",
       });
     }
 
@@ -210,25 +221,68 @@ export const getPendingPosts = async (
     const limit = Math.min(50, parseInt(req.query.limit || "10", 10));
     const offset = (page - 1) * limit;
 
+    // Config theo từng status
+    const statusConfig: Record<
+      string,
+      { order: [string, string][]; includes: object[] }
+    > = {
+      pending: {
+        order: [["createdAt", "DESC"]],
+        includes: [
+          {
+            model: User,
+            as: "author",
+            attributes: ["id", "displayName", "avatarUrl", "role"],
+          },
+        ],
+      },
+      rejected: {
+        order: [["rejectedAt", "DESC"]],
+        includes: [
+          {
+            model: User,
+            as: "author",
+            attributes: ["id", "displayName", "avatarUrl", "role"],
+          },
+        ],
+      },
+      deleted: {
+        order: [["deletedAt", "DESC"]],
+        includes: [
+          {
+            model: User,
+            as: "author",
+            attributes: ["id", "displayName", "avatarUrl", "role"],
+          },
+          {
+            model: User,
+            as: "deletedByUser",
+            attributes: ["id", "displayName"],
+          },
+        ],
+      },
+    };
+
+    const config = statusConfig[status];
+
     const { count: total, rows: posts } = await PostHeader.findAndCountAll({
-      where: { status: "pending" },
-      include: [
-        {
-          model: User,
-          as: "author",
-          attributes: ["id", "displayName", "avatarUrl", "role"],
-        },
-      ],
-      order: [["createdAt", "DESC"]],
+      where: { status },
+      include: config.includes,
+      order: config.order,
       limit,
       offset,
     });
 
     const totalPages = Math.ceil(total / limit);
+    const messages: Record<string, string> = {
+      pending: "Lấy danh sách bài viết chờ duyệt",
+      rejected: "Lấy danh sách bài viết bị từ chối",
+      deleted: "Lấy danh sách bài viết đã xóa",
+    };
 
     return res.json({
       success: true,
-      message: "Lấy danh sách bài viết chờ duyệt",
+      message: messages[status],
       data: posts,
       page,
       limit,
@@ -236,61 +290,10 @@ export const getPendingPosts = async (
       totalPages,
     });
   } catch (error) {
-    console.error("Get pending posts error", error);
+    console.error("Get posts by status error", error);
     return res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy danh sách bài viết chờ duyệt",
-    });
-  }
-};
-
-// Get rejected posts (admin only)
-export const getRejectedPosts = async (
-  req: AuthRequest & { query: PaginationQuery },
-  res: Response
-): Promise<Response> => {
-  try {
-    if (req.user?.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Chỉ admin có thể xem bài viết bị từ chối",
-      });
-    }
-
-    const page = Math.max(1, parseInt(req.query.page || "1", 10));
-    const limit = Math.min(50, parseInt(req.query.limit || "10", 10));
-    const offset = (page - 1) * limit;
-
-    const { count: total, rows: posts } = await PostHeader.findAndCountAll({
-      where: { status: "rejected" },
-      include: [
-        {
-          model: User,
-          as: "author",
-          attributes: ["id", "displayName", "avatarUrl", "role"],
-        },
-      ],
-      order: [["rejectedAt", "DESC"]],
-      limit,
-      offset,
-    });
-
-    const totalPages = Math.ceil(total / limit);
-
-    return res.json({
-      success: true,
-      message: "Lấy danh sách bài viết bị từ chối",
-      data: posts,
-      page,
-      limit,
-      total,
-      totalPages,
-    });
-  } catch (error) {
-    console.error("Get rejected posts error", error);
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi khi lấy danh sách bài viết bị từ chối",
+      message: "Lỗi khi lấy danh sách bài viết",
     });
   }
 };
@@ -484,17 +487,22 @@ export const updatePost = async (
   }
 };
 
-// Delete post (soft delete)
-export const deletePost = async (
+// Soft delete post (admin only) - chuyển bài viết vào thùng rác để có thể khôi phục
+export const softDeletePost = async (
   req: AuthRequest & { params: PostParams; body: DeletePostBody },
   res: Response
 ): Promise<Response> => {
   try {
     const { id } = req.params;
     const { reason } = req.body;
-    const userId = req.user?.id;
+    const adminId = req.user?.id;
 
-    if (!userId) return res.status(401).json(formatError("Unauthorized"));
+    if (!adminId || req.user?.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Chỉ admin có thể thực hiện soft delete",
+      });
+    }
 
     const post = await PostHeader.findByPk(id);
     if (!post) {
@@ -504,86 +512,23 @@ export const deletePost = async (
       });
     }
 
-    if (post.authorId !== userId && req.user?.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Bạn không có quyền xóa bài viết này",
-      });
-    }
-
     // Soft delete - chỉ đổi status thành deleted
     await post.update({
       status: "deleted",
-      deletedBy: userId,
+      deletedBy: adminId,
       deletedAt: new Date(),
       deleteReason: reason || null,
     });
 
     return res.json({
       success: true,
-      message: "BÃ i viáº¿t Ä‘Ã£ Ä‘Æ°á»£c xÃ³a",
+      message: "Bài viết đã được chuyển vào thùng rác",
     });
   } catch (error) {
-    console.error("Delete post error", error);
+    console.error("Soft delete post error", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi xóa bài viết",
-    });
-  }
-};
-
-// Get deleted posts (admin only)
-export const getDeletedPosts = async (
-  req: AuthRequest & { query: PaginationQuery },
-  res: Response
-): Promise<Response> => {
-  try {
-    if (req.user?.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Chỉ admin có thể xem bài viết đã xóa",
-      });
-    }
-
-    const page = Math.max(1, parseInt(req.query.page || "1", 10));
-    const limit = Math.min(50, parseInt(req.query.limit || "10", 10));
-    const offset = (page - 1) * limit;
-
-    const { count: total, rows: posts } = await PostHeader.findAndCountAll({
-      where: { status: "deleted" },
-      include: [
-        {
-          model: User,
-          as: "author",
-          attributes: ["id", "displayName", "avatarUrl", "role"],
-        },
-        {
-          model: User,
-          as: "deletedByUser",
-          attributes: ["id", "displayName"],
-        },
-      ],
-      order: [["deletedAt", "DESC"]],
-      limit,
-      offset,
-    });
-
-    const totalPages = Math.ceil(total / limit);
-
-    return res.json({
-      success: true,
-      message: "Lấy danh sách bài viết đã xóa",
-      data: posts,
-      page,
-      limit,
-      total,
-      totalPages,
-    });
-  } catch (error) {
-    console.error("Get deleted posts error", error);
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi khi lấy danh sách bài viết đã xóa",
     });
   }
 };

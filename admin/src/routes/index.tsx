@@ -10,9 +10,6 @@ const Dashboard = lazy(() =>
 const UserList = lazy(() =>
   import("@/pages/users/UserList").then((m) => ({ default: m.UserList }))
 );
-const PostList = lazy(() =>
-  import("@/pages/posts/PostList").then((m) => ({ default: m.PostList }))
-);
 const PendingPosts = lazy(() =>
   import("@/pages/posts/PendingPosts").then((m) => ({
     default: m.PendingPosts,
@@ -69,7 +66,7 @@ export default function AppRoutes() {
           path="posts"
           element={
             <Suspense fallback={<PageLoader />}>
-              <PostList />
+              <CommunityPosts />
             </Suspense>
           }
         />
@@ -94,14 +91,6 @@ export default function AppRoutes() {
           element={
             <Suspense fallback={<PageLoader />}>
               <DeletedPosts />
-            </Suspense>
-          }
-        />
-        <Route
-          path="posts/community"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <CommunityPosts />
             </Suspense>
           }
         />

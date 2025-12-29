@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -9,11 +10,17 @@ import {
   Trash2,
   Settings,
   ChevronLeft,
+  ChevronRight,
   GraduationCap,
-  Globe,
+  CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Tooltip,
   TooltipContent,
@@ -42,7 +49,7 @@ const menuItems = [
     icon: FileText,
     href: "/posts",
     children: [
-      { title: "Xem cộng đồng", href: "/posts/community", icon: Globe },
+      { title: "Đã duyệt", href: "/posts", icon: CheckCircle },
       { title: "Chờ duyệt", href: "/posts/pending", icon: Clock },
       { title: "Đã từ chối", href: "/posts/rejected", icon: XCircle },
       { title: "Đã xóa", href: "/posts/deleted", icon: Trash2 },
@@ -57,6 +64,15 @@ const menuItems = [
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const location = useLocation();
+  const [openMenus, setOpenMenus] = useState<string[]>(["/posts"]);
+
+  const toggleMenu = (href: string) => {
+    setOpenMenus((prev) =>
+      prev.includes(href)
+        ? prev.filter((item) => item !== href)
+        : [...prev, href]
+    );
+  };
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -87,14 +103,19 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         {/* Navigation */}
         <nav className="flex flex-col gap-1 p-2">
           {menuItems.map((item) => {
-            const isActive = location.pathname === item.href;
             const Icon = item.icon;
+            const hasChildren = item.children && item.children.length > 0;
+            const isOpen = openMenus.includes(item.href);
+            const isActive = hasChildren
+              ? item.children.some((child) => location.pathname === child.href)
+              : location.pathname === item.href;
 
+            // Collapsed state
             if (isCollapsed) {
               return (
                 <Tooltip key={item.href}>
                   <TooltipTrigger asChild>
-                    <Link to={item.href}>
+                    <Link to={hasChildren ? item.children[0].href : item.href}>
                       <Button
                         variant={isActive ? "secondary" : "ghost"}
                         size="icon"
@@ -109,9 +130,10 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               );
             }
 
-            return (
-              <div key={item.href}>
-                <Link to={item.href}>
+            // Expanded state - no children
+            if (!hasChildren) {
+              return (
+                <Link key={item.href} to={item.href}>
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     className={cn(
@@ -123,13 +145,42 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     {item.title}
                   </Button>
                 </Link>
+              );
+            }
 
-                {/* Sub items */}
-                {item.children && (
-                  <div className="ml-4 mt-1 flex flex-col gap-1">
+            // Expanded state - with children (Collapsible)
+            return (
+              <Collapsible
+                key={item.href}
+                open={isOpen}
+                onOpenChange={() => toggleMenu(item.href)}
+                className="group/collapsible"
+              >
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant={isActive ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start gap-2",
+                      isActive && "bg-secondary"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                    {item.title}
+                    <ChevronRight
+                      className={cn(
+                        "ml-auto h-4 w-4 transition-transform duration-200",
+                        isOpen && "rotate-90"
+                      )}
+                    />
+                  </Button>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+                  <div className="ml-4 mt-1 flex flex-col gap-1 border-l pl-2">
                     {item.children.map((child) => {
-                      const isChildActive = location.pathname === child.href;
                       const ChildIcon = child.icon;
+                      const isChildActive = location.pathname === child.href;
+
                       return (
                         <Link key={child.href} to={child.href}>
                           <Button
@@ -137,7 +188,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                             size="sm"
                             className={cn(
                               "w-full justify-start gap-2",
-                              isChildActive && "bg-secondary"
+                              isChildActive && "bg-secondary font-medium"
                             )}
                           >
                             <ChildIcon className="h-4 w-4" />
@@ -147,8 +198,8 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                       );
                     })}
                   </div>
-                )}
-              </div>
+                </CollapsibleContent>
+              </Collapsible>
             );
           })}
         </nav>

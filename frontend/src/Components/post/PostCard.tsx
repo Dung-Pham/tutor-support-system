@@ -138,22 +138,30 @@ export function PostCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3 flex-1">
-          {/* Author Avatar */}
-          <img
-            src={
-              post.author?.avatarUrl ||
-              `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author?.id || post.authorId}`
-            }
-            alt={post.author?.displayName || 'Tác giả'}
-            className="w-10 h-10 rounded-full"
-          />
-
-          {/* Author Info */}
-          <div>
-            <h4 className="font-semibold text-gray-900">
-              {post.author?.displayName || 'Không rõ'}
-            </h4>
-            <p className="text-xs text-gray-500">{formatMessageTime(new Date(post.createdAt))}</p>
+          {/* Thời gian tạo và cập nhật */}
+          <div className="text-sm text-gray-600">
+            <p>
+              <span className="font-medium text-gray-500">Tạo lúc:</span>{' '}
+              {new Date(post.createdAt).toLocaleString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+            {post.updatedAt && post.updatedAt !== post.createdAt && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                Cập nhật:{' '}
+                {new Date(post.updatedAt).toLocaleString('vi-VN', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
           </div>
         </div>
 

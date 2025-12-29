@@ -12,38 +12,37 @@ export const postService = {
     return response.data;
   },
 
-  async getPendingPosts(
+  // Unified method to get posts by status (pending, rejected, deleted)
+  async getPostsByStatus(
+    status: "pending" | "rejected" | "deleted",
     params: {
       page?: number;
       limit?: number;
     } = {}
   ): Promise<PostsResponse> {
-    const response = await api.get<PostsResponse>("/posts/pending", { params });
+    const response = await api.get<PostsResponse>(`/posts/status/${status}`, {
+      params,
+    });
     return response.data;
+  },
+
+  // Backward compatible methods
+  async getPendingPosts(
+    params: { page?: number; limit?: number } = {}
+  ): Promise<PostsResponse> {
+    return this.getPostsByStatus("pending", params);
   },
 
   async getRejectedPosts(
-    params: {
-      page?: number;
-      limit?: number;
-    } = {}
+    params: { page?: number; limit?: number } = {}
   ): Promise<PostsResponse> {
-    const response = await api.get<PostsResponse>("/posts/rejected", {
-      params,
-    });
-    return response.data;
+    return this.getPostsByStatus("rejected", params);
   },
 
   async getDeletedPosts(
-    params: {
-      page?: number;
-      limit?: number;
-    } = {}
+    params: { page?: number; limit?: number } = {}
   ): Promise<PostsResponse> {
-    const response = await api.get<PostsResponse>("/posts/deleted", {
-      params,
-    });
-    return response.data;
+    return this.getPostsByStatus("deleted", params);
   },
 
   async getPostById(id: string): Promise<{ success: boolean; data: Post }> {
@@ -73,10 +72,10 @@ export const postService = {
   },
 
   /**
-   * Xóa bài viết (soft delete)
+   * Xóa bài viết (soft delete) - chỉ admin
    * Route: DELETE /api/posts/:id
    */
-  async deletePost(
+  async softDeletePost(
     id: string,
     reason?: string
   ): Promise<{ success: boolean; message: string }> {
@@ -84,6 +83,14 @@ export const postService = {
       data: { reason },
     });
     return response.data;
+  },
+
+  // Backward compatible alias
+  async deletePost(
+    id: string,
+    reason?: string
+  ): Promise<{ success: boolean; message: string }> {
+    return this.softDeletePost(id, reason);
   },
 
   /**

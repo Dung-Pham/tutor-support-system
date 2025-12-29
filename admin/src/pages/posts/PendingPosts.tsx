@@ -155,10 +155,7 @@ export function PendingPosts() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span>{post.author?.displayName || "Unknown"}</span>
-                      <Badge variant="outline">{post.author?.role}</Badge>
-                    </div>
+                    <span>{post.author?.displayName || "Unknown"}</span>
                   </TableCell>
                   <TableCell>{formatDate(post.createdAt)}</TableCell>
                   <TableCell className="text-right">

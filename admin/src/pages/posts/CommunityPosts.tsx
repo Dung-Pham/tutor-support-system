@@ -135,7 +135,7 @@ export function CommunityPosts() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Bài viết cộng đồng</h1>
+        <h1 className="text-3xl font-bold">Bài viết đã duyệt</h1>
         <p className="text-muted-foreground">
           Xem các bài viết đã được phê duyệt như người dùng thấy
         </p>
@@ -222,8 +222,12 @@ export function CommunityPosts() {
                       {formatTimeAgo(post.createdAt)}
                     </p>
                   </div>
-                  <Badge variant="outline">{post.author?.role}</Badge>
                 </div>
+                {post.approvedAt && (
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Duyệt: {formatDate(post.approvedAt)}
+                  </p>
+                )}
                 <CardTitle className="text-base line-clamp-2">
                   {post.title}
                 </CardTitle>
