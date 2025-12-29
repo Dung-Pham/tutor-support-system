@@ -1,1 +1,0 @@
-import{h as a}from"./index-DPU6uY8z.js";const n={async getUsers(e={}){return(await a.get("/admin/users",{params:e})).data},async getUserById(e){return(await a.get(`/admin/users/${e}`)).data},async updateUser(e,s){return(await a.patch(`/admin/users/${e}`,s)).data},async deleteUser(e){return(await a.delete(`/admin/users/${e}`)).data}};export{n as u};
