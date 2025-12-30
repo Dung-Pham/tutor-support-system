@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Save, Send, Loader2, AlertCircle, FileEdit, FilePlus } from 'lucide-react';
@@ -45,9 +45,47 @@ export function CreatePost() {
   const [error, setError] = useState<string | null>(null);
   const [loadingPost, setLoadingPost] = useState(isEditMode);
 
+  // Track if form has unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const initialFormDataRef = useRef<{ title: string; contentJson: any } | null>(null);
+
+  // Check if form has changes
+  const checkForChanges = useCallback(() => {
+    if (!initialFormDataRef.current) return false;
+
+    const titleChanged = formData.title !== initialFormDataRef.current.title;
+    const contentChanged =
+      JSON.stringify(formData.contentJson) !==
+      JSON.stringify(initialFormDataRef.current.contentJson);
+
+    return titleChanged || contentChanged;
+  }, [formData]);
+
+  // Update hasUnsavedChanges when form changes
+  useEffect(() => {
+    setHasUnsavedChanges(checkForChanges());
+  }, [checkForChanges]);
+
+  // Handle browser close/refresh
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   useEffect(() => {
     if (isEditMode && postId) {
       void loadPostData();
+    } else {
+      // Set initial state for new post
+      initialFormDataRef.current = { title: '', contentJson: null };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditMode, postId]);
@@ -56,10 +94,12 @@ export function CreatePost() {
     try {
       setLoadingPost(true);
       const post = await getPostDetail(postId!);
-      setFormData({
+      const loadedData = {
         title: post.title,
         contentJson: post.contentJson || null,
-      });
+      };
+      setFormData(loadedData);
+      initialFormDataRef.current = loadedData;
       if (post?.status === 'pending' || post?.status === 'draft') {
         setPostStatus(post.status);
       }
@@ -109,6 +149,8 @@ export function CreatePost() {
       }
 
       if (result?.payload) {
+        // Reset unsaved changes before navigation
+        setHasUnsavedChanges(false);
         setFormData({ title: '', contentJson: null });
         navigate('/tutor/my-posts', {
           state: {
@@ -131,7 +173,7 @@ export function CreatePost() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

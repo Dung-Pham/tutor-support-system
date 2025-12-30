@@ -21,6 +21,7 @@ import { Toolbar, ToolbarGroup, ToolbarSeparator } from '@/components/tiptap-ui-
 // --- Tiptap Node ---
 import { ImageUploadNode } from '@/components/tiptap-node/image-upload-node/image-upload-node-extension';
 import { HorizontalRule } from '@/components/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension';
+import { Video } from '@/components/tiptap-node/video-node/video-node-extension';
 import '@/components/tiptap-node/blockquote-node/blockquote-node.scss';
 import '@/components/tiptap-node/code-block-node/code-block-node.scss';
 import '@/components/tiptap-node/horizontal-rule-node/horizontal-rule-node.scss';
@@ -28,10 +29,13 @@ import '@/components/tiptap-node/list-node/list-node.scss';
 import '@/components/tiptap-node/image-node/image-node.scss';
 import '@/components/tiptap-node/heading-node/heading-node.scss';
 import '@/components/tiptap-node/paragraph-node/paragraph-node.scss';
+import '@/components/tiptap-node/video-node/video-node.scss';
 
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from '@/components/tiptap-ui/heading-dropdown-menu';
 import { ImageUploadButton } from '@/components/tiptap-ui/image-upload-button';
+import { VideoUploadButton } from '@/components/tiptap-ui/video-upload-button';
+import { FileUploadButton } from '@/components/tiptap-ui/file-upload-button';
 import { ListDropdownMenu } from '@/components/tiptap-ui/list-dropdown-menu';
 import { BlockquoteButton } from '@/components/tiptap-ui/blockquote-button';
 import { CodeBlockButton } from '@/components/tiptap-ui/code-block-button';
@@ -130,6 +134,8 @@ const MainToolbarContent = ({
 
       <ToolbarGroup>
         <ImageUploadButton text="Add" />
+        <VideoUploadButton text="Video" />
+        <FileUploadButton text="File" />
       </ToolbarGroup>
 
       <Spacer />
@@ -199,6 +205,7 @@ export function SimpleEditor({ content, onChange, onEditorReady }: SimpleEditorP
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
       Image,
+      Video,
       Typography,
       Superscript,
       Subscript,

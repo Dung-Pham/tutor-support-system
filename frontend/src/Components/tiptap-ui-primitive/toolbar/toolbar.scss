@@ -30,7 +30,7 @@
     }
   }
 
-  &[data-variant="fixed"] {
+  &[data-variant='fixed'] {
     position: sticky;
     top: 0;
     z-index: 10;
@@ -38,41 +38,44 @@
     min-height: var(--tt-toolbar-height);
     background: var(--tt-toolbar-bg-color);
     border-bottom: 1px solid var(--tt-toolbar-border-color);
-    padding: 0 0.5rem;
+    padding: 0.5rem 0.75rem;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+
+    // Thin scrollbar style
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 
     &::-webkit-scrollbar {
-      display: none;
+      height: 4px;
     }
 
-    @media (max-width: 480px) {
-      position: absolute;
-      top: auto;
-      height: calc(var(--tt-toolbar-height) + var(--tt-safe-area-bottom));
-      border-top: 1px solid var(--tt-toolbar-border-color);
-      border-bottom: none;
-      padding: 0 0.5rem var(--tt-safe-area-bottom);
-      flex-wrap: nowrap;
-      justify-content: flex-start;
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
 
-      .tiptap-toolbar-group {
-        flex: 0 0 auto;
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.3);
       }
+    }
+
+    .tiptap-toolbar-group {
+      flex: 0 0 auto;
     }
   }
 
-  &[data-variant="floating"] {
+  &[data-variant='floating'] {
     --tt-toolbar-padding: 0.125rem;
     --tt-toolbar-border-width: 1px;
 
     padding: 0.188rem;
     border-radius: calc(
-      var(--tt-toolbar-padding) + var(--tt-radius-lg) +
-        var(--tt-toolbar-border-width)
+      var(--tt-toolbar-padding) + var(--tt-radius-lg) + var(--tt-toolbar-border-width)
     );
     border: var(--tt-toolbar-border-width) solid var(--tt-toolbar-border-color);
     background-color: var(--tt-toolbar-bg-color);
@@ -80,7 +83,7 @@
     outline: none;
     overflow: hidden;
 
-    &[data-plain="true"] {
+    &[data-plain='true'] {
       padding: 0;
       border-radius: 0;
       border: none;

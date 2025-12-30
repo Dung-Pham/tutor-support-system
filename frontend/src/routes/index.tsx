@@ -92,6 +92,14 @@ export const AppRoutes = () => {
                 </Suspense>
               }
             />
+            <Route
+              path="messages/:conversationId"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <StudentMessages />
+                </Suspense>
+              }
+            />
             <Route path="statistics" element={<div>Thống kê</div>} />
             <Route path="settings" element={<div>Cài đặt</div>} />
           </Route>
@@ -139,6 +147,14 @@ export const AppRoutes = () => {
             />
             <Route
               path="messages"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <TutorMessages />
+                </Suspense>
+              }
+            />
+            <Route
+              path="messages/:conversationId"
               element={
                 <Suspense fallback={<PageLoader />}>
                   <TutorMessages />

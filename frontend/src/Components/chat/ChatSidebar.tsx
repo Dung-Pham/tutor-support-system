@@ -13,8 +13,21 @@ interface ChatSidebarProps {
 export function ChatSidebar({ conversations, loading }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Chỉ lấy direct conversations (1-1 chat)
-  const directConversations = conversations.filter((conv) => conv.type === 'direct');
+  // Chỉ lấy direct conversations (1-1 chat) và sắp xếp theo tin nhắn gần nhất
+  const directConversations = conversations
+    .filter((conv) => conv.type === 'direct')
+    .filter((conv) => {
+      if (!searchQuery.trim()) return true;
+      // Tìm theo tên participant
+      const participantNames = conv.participants.map((p) => p.displayName?.toLowerCase() || '');
+      return participantNames.some((name) => name.includes(searchQuery.toLowerCase()));
+    })
+    .sort((a, b) => {
+      // Sắp xếp theo lastMessageAt giảm dần (mới nhất lên đầu)
+      const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+      const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+      return timeB - timeA;
+    });
 
   if (loading) {
     return (

@@ -1,11 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '@/store';
-import type { Conversation } from '@/types';
+import type { Conversation, FileAttachment } from '@/types';
 import { addMessage } from '@/store/slices/messagesSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Image as ImageIcon, X } from 'lucide-react';
+import { Send, Image as ImageIcon, X, Video, Paperclip } from 'lucide-react';
 import * as messageService from '@/services/messageService';
 import { EmojiPicker } from './EmojiPicker';
 import socketService from '@/services/socketService';
@@ -21,7 +21,12 @@ export function MessageInput({ conversation }: MessageInputProps) {
   const [uploading, setUploading] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef(false);
   const dispatch = useDispatch();
@@ -143,9 +148,71 @@ export function MessageInput({ conversation }: MessageInputProps) {
     setImagePreviews(newPreviews);
   };
 
+  // Handle video selection
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (100MB max)
+    if (file.size > 100 * 1024 * 1024) {
+      alert('Video không được vượt quá 100MB');
+      return;
+    }
+
+    // Create preview
+    const preview = URL.createObjectURL(file);
+    setVideoPreview(preview);
+    setSelectedVideo(file);
+  };
+
+  // Remove selected video
+  const removeVideo = () => {
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setSelectedVideo(null);
+    setVideoPreview(null);
+    if (videoInputRef.current) {
+      videoInputRef.current.value = '';
+    }
+  };
+
+  // Handle file/document selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileArray = Array.from(files).slice(0, 5);
+
+    // Check file sizes (25MB max each)
+    const validFiles = fileArray.filter((file) => {
+      if (file.size > 25 * 1024 * 1024) {
+        alert(`File "${file.name}" vượt quá 25MB`);
+        return false;
+      }
+      return true;
+    });
+
+    setSelectedFiles((prev) => [...prev, ...validFiles].slice(0, 5));
+  };
+
+  // Remove selected file
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    if (docInputRef.current) {
+      docInputRef.current.value = '';
+    }
+  };
+
   const handleSend = async () => {
-    // Must have content or images
-    if (!message.trim() && selectedImages.length === 0) return;
+    // Must have content or images or video or files
+    if (
+      !message.trim() &&
+      selectedImages.length === 0 &&
+      !selectedVideo &&
+      selectedFiles.length === 0
+    )
+      return;
 
     // Lấy recipientId từ conversation participants (người còn lại không phải current user)
     const currentUserId = currentUser?.id;
@@ -171,6 +238,7 @@ export function MessageInput({ conversation }: MessageInputProps) {
 
       const hasText = message.trim().length > 0;
       const hasImages = selectedImages.length > 0;
+      const hasVideo = selectedVideo !== null;
 
       // 1. Gửi text trước (nếu có)
       if (hasText) {
@@ -186,7 +254,55 @@ export function MessageInput({ conversation }: MessageInputProps) {
         setMessage('');
       }
 
-      // 2. Gửi ảnh sau (nếu có)
+      // 2. Gửi video (nếu có)
+      if (hasVideo && selectedVideo) {
+        setUploading(true);
+
+        try {
+          const token = localStorage.getItem('token');
+          const formData = new FormData();
+          formData.append('video', selectedVideo);
+
+          // Upload video qua backend
+          const uploadResponse = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/upload/video?type=chat`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+              },
+              onUploadProgress: (progressEvent) => {
+                const percent = Math.round(
+                  (progressEvent.loaded * 100) / (progressEvent.total || 100)
+                );
+                console.log(`Video upload progress: ${percent}%`);
+              },
+            }
+          );
+
+          const videoUrl = uploadResponse.data.data.url;
+
+          // Send message với video URL
+          const newVideoMessage = await messageService.sendMessage({
+            conversationId: conversation.id,
+            recipientId,
+            content: '',
+            videoUrl,
+          });
+
+          dispatch(addMessage(newVideoMessage));
+        } catch (uploadError) {
+          console.error('Failed to upload video:', uploadError);
+        } finally {
+          setUploading(false);
+        }
+
+        // Clear video
+        removeVideo();
+      }
+
+      // 3. Gửi ảnh sau (nếu có)
       if (hasImages) {
         setUploading(true);
 
@@ -256,6 +372,67 @@ export function MessageInput({ conversation }: MessageInputProps) {
           fileInputRef.current.value = '';
         }
       }
+
+      // 4. Gửi files/tài liệu (nếu có)
+      const hasFiles = selectedFiles.length > 0;
+      if (hasFiles) {
+        setUploading(true);
+
+        try {
+          const token = localStorage.getItem('token');
+          const formData = new FormData();
+          selectedFiles.forEach((file) => {
+            formData.append('files', file);
+          });
+
+          // Upload files qua backend
+          const uploadResponse = await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/upload/files?type=chat`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+              },
+              onUploadProgress: (progressEvent) => {
+                const percent = Math.round(
+                  (progressEvent.loaded * 100) / (progressEvent.total || 100)
+                );
+                console.log(`File upload progress: ${percent}%`);
+              },
+            }
+          );
+
+          const fileUrls: FileAttachment[] = uploadResponse.data.data.map(
+            (f: { url: string; fileName: string; fileSize: number; mimeType: string }) => ({
+              url: f.url,
+              fileName: f.fileName,
+              fileSize: f.fileSize,
+              mimeType: f.mimeType,
+            })
+          );
+
+          // Send message với file URLs
+          const newFileMessage = await messageService.sendMessage({
+            conversationId: conversation.id,
+            recipientId,
+            content: '',
+            fileUrls,
+          });
+
+          dispatch(addMessage(newFileMessage));
+        } catch (uploadError) {
+          console.error('Failed to upload files:', uploadError);
+        } finally {
+          setUploading(false);
+        }
+
+        // Clear files
+        setSelectedFiles([]);
+        if (docInputRef.current) {
+          docInputRef.current.value = '';
+        }
+      }
     } catch (error) {
       console.error('Failed to send message:', error);
     } finally {
@@ -295,24 +472,87 @@ export function MessageInput({ conversation }: MessageInputProps) {
         </div>
       )}
 
+      {/* Video Preview */}
+      {videoPreview && (
+        <div className="p-3 bg-background/50">
+          <div className="relative inline-block">
+            <video
+              src={videoPreview}
+              className="h-32 max-w-xs rounded-lg border object-cover"
+              style={{ borderColor: 'hsl(var(--border))' }}
+              controls
+            />
+            <button
+              onClick={removeVideo}
+              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+              type="button"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* File Previews - Simple text list */}
+      {selectedFiles.length > 0 && (
+        <div className="flex flex-wrap gap-2 p-3 bg-muted/30 border-t">
+          {selectedFiles.map((file, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1 text-sm"
+            >
+              <span className="truncate max-w-[150px]">{file.name}</span>
+              <button
+                onClick={() => removeFile(index)}
+                className="hover:text-destructive ml-1"
+                type="button"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Input Area */}
-      <div className="flex items-center gap-1 sm:gap-2 p-2 sm:p-3 md:p-4">
+      <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
         <Input
           value={message}
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           placeholder="Nhập tin nhắn..."
           disabled={sending || uploading}
-          className="flex-1 h-9 sm:h-10 md:h-11 text-sm sm:text-base bg-secondary/50 border-secondary"
+          className="flex-1 h-10 sm:h-11 text-sm sm:text-base bg-gray-50 border-gray-200 rounded-full px-4 focus:bg-white focus:border-blue-400 focus:ring-blue-100 transition-colors"
         />
 
-        {/* Hidden file input */}
+        {/* Hidden file input for images */}
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
           multiple
           onChange={handleImageSelect}
+          className="hidden"
+          disabled={sending || uploading}
+        />
+
+        {/* Hidden file input for video */}
+        <input
+          ref={videoInputRef}
+          type="file"
+          accept="video/*"
+          onChange={handleVideoSelect}
+          className="hidden"
+          disabled={sending || uploading}
+        />
+
+        {/* Hidden file input for documents */}
+        <input
+          ref={docInputRef}
+          type="file"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z"
+          multiple
+          onChange={handleFileSelect}
           className="hidden"
           disabled={sending || uploading}
         />
@@ -331,14 +571,48 @@ export function MessageInput({ conversation }: MessageInputProps) {
           variant="ghost"
           className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
           type="button"
+          title="Gửi ảnh"
         >
           <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
+        </Button>
+
+        {/* Video Upload Button */}
+        <Button
+          onClick={() => videoInputRef.current?.click()}
+          disabled={sending || uploading || selectedVideo !== null}
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
+          type="button"
+          title="Gửi video (tối đa 100MB)"
+        >
+          <Video className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
+        </Button>
+
+        {/* File Upload Button */}
+        <Button
+          onClick={() => docInputRef.current?.click()}
+          disabled={sending || uploading || selectedFiles.length >= 5}
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
+          type="button"
+          title="Gửi tài liệu (PDF, DOC, XLS... tối đa 25MB)"
+        >
+          <Paperclip className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
         </Button>
 
         {/* Send Button */}
         <Button
           onClick={handleSend}
-          disabled={(!message.trim() && selectedImages.length === 0) || sending || uploading}
+          disabled={
+            (!message.trim() &&
+              selectedImages.length === 0 &&
+              !selectedVideo &&
+              selectedFiles.length === 0) ||
+            sending ||
+            uploading
+          }
           size="icon"
           className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 bg-primary hover:bg-primary/90"
         >

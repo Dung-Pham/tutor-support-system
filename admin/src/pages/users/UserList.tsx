@@ -123,12 +123,9 @@ export function UserList() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Quản lý Users</h1>
-        <p className="text-muted-foreground">
-          Quản lý tất cả người dùng trong hệ thống
-        </p>
-      </div>
+      <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+        Quản lý Users
+      </h1>
 
       {/* Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

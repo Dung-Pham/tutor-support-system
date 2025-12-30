@@ -100,12 +100,9 @@ export function PendingPosts() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Bài viết chờ duyệt</h1>
-        <p className="text-muted-foreground">
-          Duyệt hoặc từ chối các bài viết được gửi lên
-        </p>
-      </div>
+      <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+        Bài viết chờ duyệt
+      </h1>
 
       {/* Table */}
       <div className="rounded-lg border bg-card">

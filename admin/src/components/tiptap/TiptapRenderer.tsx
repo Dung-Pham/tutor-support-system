@@ -9,6 +9,7 @@ import { Subscript } from "@tiptap/extension-subscript";
 import { Superscript } from "@tiptap/extension-superscript";
 import { Typography } from "@tiptap/extension-typography";
 import { HorizontalRule } from "./horizontal-rule-extension";
+import { ImageUploadReadonly } from "./image-upload-readonly";
 import type { JSONContent } from "@tiptap/core";
 
 // Import styles
@@ -39,6 +40,7 @@ export function TiptapRenderer({
         horizontalRule: false, // Use custom HorizontalRule extension
       }),
       HorizontalRule, // Custom extension
+      ImageUploadReadonly, // Handle imageUpload nodes from frontend
       Image.configure({
         allowBase64: true,
         HTMLAttributes: {

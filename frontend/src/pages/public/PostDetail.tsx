@@ -64,7 +64,7 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto max-w-4xl py-8 space-y-4">
+      <div className="container mx-auto px-4 lg:px-8 py-8 space-y-4">
         <Skeleton className="h-10 w-2/3" />
         <Skeleton className="h-4 w-1/3" />
         <Skeleton className="h-80 w-full" />
@@ -74,7 +74,7 @@ export default function PostDetailPage() {
 
   if (error || !post) {
     return (
-      <div className="container mx-auto max-w-3xl py-12 text-center space-y-4">
+      <div className="container mx-auto px-4 lg:px-8 py-12 text-center space-y-4">
         <p className="text-red-500 font-medium">{error || 'Bài viết không tồn tại'}</p>
         <Link to={backTo} className="text-blue-600 hover:underline">
           Quay lại danh sách
@@ -84,39 +84,39 @@ export default function PostDetailPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-10 px-4">
+    <div className="container mx-auto py-10 px-4 lg:px-8">
       {/* Back button */}
       <div className="mb-6 flex items-center gap-3">
         <Link
           to={backTo}
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 hover:underline transition"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors group"
         >
-          <ArrowLeft size={16} />
+          <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
           Quay lại danh sách
         </Link>
       </div>
 
       {/* Article Header */}
-      <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 sm:p-8">
+      <article className="bg-white rounded-2xl shadow-lg border border-gray-100/50 overflow-hidden">
+        <div className="p-6 sm:p-10">
           {/* Title */}
-          <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900 leading-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent leading-tight">
             {post.title}
           </h1>
 
           {/* Author & Stats */}
           <div className="flex flex-wrap items-center gap-4 pb-6 border-b border-gray-100">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <img
                 src={
                   post.author.avatarUrl ||
                   `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.id}`
                 }
                 alt={post.author.displayName}
-                className="w-10 h-10 rounded-full ring-2 ring-gray-100"
+                className="w-12 h-12 rounded-full ring-2 ring-blue-100 shadow-sm"
               />
               <div className="flex flex-col">
-                <span className="font-semibold text-gray-900">{post.author.displayName}</span>
+                <span className="font-bold text-gray-900 text-base">{post.author.displayName}</span>
                 <span className="text-sm text-gray-500">
                   {formatMessageTime(new Date(post.createdAt))}
                 </span>
@@ -124,9 +124,9 @@ export default function PostDetailPage() {
             </div>
 
             {/* Stats */}
-            <div className="flex items-center gap-3 ml-auto">
-              <span className="inline-flex items-center gap-1.5 text-sm text-gray-500">
-                <Eye size={16} />
+            <div className="flex items-center gap-2 sm:gap-4 ml-auto">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 text-sm font-medium">
+                <Eye size={18} />
                 <span className="tabular-nums">{post.viewCount || 0}</span>
               </span>
 
@@ -136,7 +136,7 @@ export default function PostDetailPage() {
               {/* Comment count */}
               <a
                 href="#comments"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition text-sm font-medium"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition text-sm font-medium"
               >
                 <MessageCircle size={18} />
                 <span className="tabular-nums">{commentsTotal || post.commentCount || 0}</span>
@@ -146,19 +146,19 @@ export default function PostDetailPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-1.5"
+                className="gap-1.5 rounded-full hover:bg-gray-100"
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
                   // TODO: Show toast
                 }}
               >
-                <Share2 size={16} />
+                <Share2 size={18} />
               </Button>
             </div>
           </div>
 
           {/* Content */}
-          <div className="pt-6 prose prose-gray prose-lg max-w-none">
+          <div className="pt-8 prose prose-gray prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-relaxed">
             <TiptapRenderer content={post.contentJson} />
           </div>
         </div>

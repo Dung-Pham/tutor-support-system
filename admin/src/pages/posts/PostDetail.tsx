@@ -344,12 +344,7 @@ export function PostDetail() {
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Chi tiết bài viết</h1>
-            <p className="text-sm text-muted-foreground">
-              Xem nội dung và bình luận
-            </p>
-          </div>
+          <h1 className="text-2xl font-bold">Chi tiết bài viết</h1>
         </div>
 
         {/* Action Buttons based on status */}

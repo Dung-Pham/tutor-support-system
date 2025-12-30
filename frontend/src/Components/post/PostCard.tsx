@@ -75,58 +75,55 @@ export function PostCard({
   // Dạng community (danh sách công khai)
   if (isCommunity) {
     return (
-      <Link to={postUrl} state={linkState} className="block touch-manipulation">
-        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-lg active:shadow-md transition p-3 sm:p-4">
-          {/* Header */}
-          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+      <Link to={postUrl} state={linkState} className="block touch-manipulation group">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-100 active:shadow-md transition-all duration-300 p-4 sm:p-5">
+          {/* Header: Avatar + Info + Stats */}
+          <div className="flex items-center gap-3 mb-3">
             <img
               src={
                 post.author.avatarUrl ||
                 `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.id}`
               }
               alt={post.author.displayName}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex-shrink-0 ring-2 ring-gray-100 group-hover:ring-blue-100 transition-all"
             />
+            {/* Author Info */}
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm truncate">{post.author.displayName}</p>
-              <p className="text-xs text-gray-500 truncate">
+              <p className="font-semibold text-sm sm:text-base text-gray-900 truncate">
+                {post.author.displayName}
+              </p>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">
                 {formatMessageTime(new Date(post.createdAt))}
               </p>
+            </div>
+            {/* Stats */}
+            <div className="flex items-center gap-3 sm:gap-4 text-sm text-gray-500 flex-shrink-0">
+              <div className="flex items-center gap-1 hover:text-blue-500 transition-colors">
+                <Eye size={15} className="flex-shrink-0" />
+                <span className="tabular-nums">{post.viewCount || 0}</span>
+              </div>
+              <div className="flex items-center gap-1 hover:text-red-500 transition-colors">
+                <Heart size={15} className="flex-shrink-0" />
+                <span className="tabular-nums">{post.likeCount || 0}</span>
+              </div>
+              <div className="flex items-center gap-1 hover:text-green-500 transition-colors">
+                <MessageCircle size={15} className="flex-shrink-0" />
+                <span className="tabular-nums">{post.commentCount || 0}</span>
+              </div>
             </div>
           </div>
 
           {/* Title */}
-          <h2 className="text-base sm:text-lg font-bold mb-2 line-clamp-2">{post.title}</h2>
-
-          {/* First Image if available */}
-          {imageUrls.length > 0 && (
-            <img
-              src={imageUrls[0]}
-              alt={post.title}
-              className="w-full h-40 object-cover rounded-lg mb-3"
-            />
-          )}
+          <h2 className="text-lg sm:text-xl font-bold mb-2 line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors leading-tight">
+            {post.title}
+          </h2>
 
           {/* Summary */}
-          <p className="text-sm text-gray-600 mb-2 sm:mb-3 line-clamp-2 sm:line-clamp-3">
-            {summary}
-          </p>
-
-          {/* Stats */}
-          <div className="flex items-center gap-3 sm:gap-4 text-xs text-gray-500 border-t pt-2 sm:pt-3">
-            <div className="flex items-center gap-1">
-              <Eye size={14} className="flex-shrink-0" />
-              <span className="tabular-nums">{post.viewCount || 0}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Heart size={14} className="flex-shrink-0" />
-              <span className="tabular-nums">{post.likeCount || 0}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <MessageCircle size={14} className="flex-shrink-0" />
-              <span className="tabular-nums">{post.commentCount || 0}</span>
-            </div>
-          </div>
+          {summary && (
+            <p className="text-sm sm:text-base text-gray-600 line-clamp-3 leading-relaxed">
+              {summary}
+            </p>
+          )}
         </div>
       </Link>
     );

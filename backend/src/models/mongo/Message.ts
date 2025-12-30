@@ -2,25 +2,18 @@
 
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-export interface IAttachment {
-  type: "image" | "video" | "file" | "audio";
-  url: string;
-  publicId?: string;
-  fileName?: string;
-  fileSize?: number;
-  mimeType?: string;
-  width?: number;
-  height?: number;
-  duration?: number;
-  thumbnailUrl?: string;
-}
-
 export interface IMessage extends Document {
   conversationId: string; // UUID từ SQL Server Conversations.id
   senderId: string; // UUID từ SQL Server Users.id
   content?: string;
-  attachments: IAttachment[];
-  imgUrls: string[]; // Legacy support
+  imgUrls: string[]; // Image URLs
+  videoUrl?: string; // Video URL
+  fileUrls?: Array<{
+    url: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+  }>; // File attachments
   isEdited: boolean;
   isDeleted: boolean;
   deletedAt?: Date;
@@ -31,29 +24,6 @@ export interface IMessage extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
-
-const attachmentSchema = new Schema<IAttachment>(
-  {
-    type: {
-      type: String,
-      enum: ["image", "video", "file", "audio"],
-      required: true,
-    },
-    url: {
-      type: String,
-      required: true,
-    },
-    publicId: String,
-    fileName: String,
-    fileSize: Number,
-    mimeType: String,
-    width: Number,
-    height: Number,
-    duration: Number,
-    thumbnailUrl: String,
-  },
-  { _id: false }
-);
 
 const messageSchema = new Schema<IMessage>(
   {
@@ -71,12 +41,22 @@ const messageSchema = new Schema<IMessage>(
       type: String,
       default: "",
     },
-    attachments: {
-      type: [attachmentSchema],
-      default: [],
-    },
     imgUrls: {
       type: [String],
+      default: [],
+    },
+    videoUrl: {
+      type: String,
+    },
+    fileUrls: {
+      type: [
+        {
+          url: { type: String, required: true },
+          fileName: { type: String, required: true },
+          fileSize: { type: Number, required: true },
+          mimeType: { type: String, required: true },
+        },
+      ],
       default: [],
     },
     isEdited: {

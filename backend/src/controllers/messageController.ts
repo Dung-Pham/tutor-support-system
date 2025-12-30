@@ -7,17 +7,28 @@ import { emitToConversation, emitToUser } from "../config/socket.js";
 import { AuthRequest } from "../types/common.js";
 import { Op } from "sequelize";
 
+interface FileAttachment {
+  url: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+}
+
 interface SendDirectMessageBody {
   recipientId: string;
   content?: string;
   conversationId?: string;
   imgUrls?: string[];
+  videoUrl?: string;
+  fileUrls?: FileAttachment[];
 }
 
 interface SendGroupMessageBody {
   conversationId: string;
   content?: string;
   imgUrls?: string[];
+  videoUrl?: string;
+  fileUrls?: FileAttachment[];
 }
 
 // Send a direct message
@@ -26,17 +37,29 @@ export const sendDirectMessage = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const { recipientId, content, conversationId, imgUrls } = req.body;
+    const {
+      recipientId,
+      content,
+      conversationId,
+      imgUrls,
+      videoUrl,
+      fileUrls,
+    } = req.body;
     const senderId = req.user?.id;
 
     if (!senderId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    if (!content && (!imgUrls || imgUrls.length === 0)) {
-      return res
-        .status(400)
-        .json({ message: "Message must have content or images." });
+    if (
+      !content &&
+      (!imgUrls || imgUrls.length === 0) &&
+      !videoUrl &&
+      (!fileUrls || fileUrls.length === 0)
+    ) {
+      return res.status(400).json({
+        message: "Message must have content, images, video, or files.",
+      });
     }
 
     if (imgUrls && !Array.isArray(imgUrls)) {
@@ -103,6 +126,8 @@ export const sendDirectMessage = async (
       senderId,
       content: content || "",
       imgUrls: imgUrls || [],
+      videoUrl: videoUrl || undefined,
+      fileUrls: fileUrls || [],
     });
 
     // Update conversation's last message timestamp
@@ -300,13 +325,19 @@ export const deleteMessage = async (
     if (message.senderId !== userId) {
       return res
         .status(403)
-        .json({ message: "You can only delete your own messages" });
+        .json({
+          success: false,
+          message: "You can only delete your own messages",
+        });
     }
 
     // Soft delete - mark as deleted instead of removing
     message.isDeleted = true;
+    message.deletedAt = new Date();
     message.content = "";
     message.imgUrls = [];
+    message.videoUrl = undefined;
+    message.fileUrls = [];
     await message.save();
 
     // Emit socket event for real-time update

@@ -85,6 +85,19 @@ const messagesSlice = createSlice({
       }
     },
 
+    // Remove message (for delete)
+    removeMessage: (
+      state,
+      action: PayloadAction<{ messageId: string; conversationId: string }>
+    ) => {
+      const { messageId, conversationId } = action.payload;
+      if (state.messages[conversationId]) {
+        state.messages[conversationId] = state.messages[conversationId].filter(
+          (m) => m._id !== messageId
+        );
+      }
+    },
+
     // Note: updateMessageStatus removed - backend không có status field
     // WebSocket real-time updates sẽ handle delivery status nếu cần sau này
 
@@ -143,6 +156,7 @@ export const {
   setActiveConversation,
   setMessages,
   addMessage,
+  removeMessage,
   setTyping,
   setOnlineUsers,
   addOnlineUser,

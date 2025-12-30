@@ -1,13 +1,16 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useParams, useNavigate } from 'react-router-dom';
 import type { RootState } from '@/store';
-import { setConversations, setLoading } from '@/store/slices/messagesSlice';
+import { setConversations, setLoading, setActiveConversation } from '@/store/slices/messagesSlice';
 import * as conversationService from '@/services/conversationService';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { ChatBox } from '@/components/chat/ChatBox';
 
 export function StudentMessages() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { conversationId } = useParams<{ conversationId?: string }>();
   const { conversations, activeConversation, loading } = useSelector(
     (state: RootState) => state.messages
   );
@@ -16,6 +19,19 @@ export function StudentMessages() {
   useEffect(() => {
     fetchConversations();
   }, []);
+
+  // Auto-select conversation from URL when conversations are loaded
+  useEffect(() => {
+    if (conversationId && conversations.length > 0 && !activeConversation) {
+      const conversation = conversations.find((c) => c.id === conversationId);
+      if (conversation) {
+        dispatch(setActiveConversation(conversation));
+      } else {
+        // Conversation not found, redirect to messages
+        navigate('/student/messages', { replace: true });
+      }
+    }
+  }, [conversationId, conversations, activeConversation, dispatch, navigate]);
 
   const fetchConversations = async () => {
     try {

@@ -1,5 +1,12 @@
-export type MessageType = 'text' | 'image' | 'file' | 'system';
+export type MessageType = 'text' | 'image' | 'video' | 'file' | 'system';
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'seen' | 'failed';
+
+export interface FileAttachment {
+  url: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+}
 
 export interface Message {
   _id: string;
@@ -7,6 +14,8 @@ export interface Message {
   senderId: string;
   content: string;
   imgUrls?: string[];
+  videoUrl?: string;
+  fileUrls?: FileAttachment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -24,6 +33,8 @@ export interface SendMessageRequest {
   recipientId: string;
   content: string;
   imgUrls?: string[];
+  videoUrl?: string;
+  fileUrls?: FileAttachment[];
 }
 
 export interface GetMessagesQuery {
@@ -39,6 +50,8 @@ export interface MessageResponse {
   senderId: string;
   content: string;
   imgUrls?: string[];
+  videoUrl?: string;
+  fileUrls?: FileAttachment[];
   createdAt: string;
   updatedAt: string;
 }

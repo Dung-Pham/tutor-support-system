@@ -44,12 +44,9 @@ export function RejectedPosts() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Bài viết đã từ chối</h1>
-        <p className="text-muted-foreground">
-          Danh sách các bài viết đã bị từ chối
-        </p>
-      </div>
+      <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+        Bài viết đã từ chối
+      </h1>
 
       {/* Table */}
       <div className="rounded-lg border bg-card">

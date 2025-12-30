@@ -70,7 +70,7 @@ export function CommunityPosts() {
 
   if (loading && posts.length === 0) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 max-w-4xl space-y-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-4 py-8">
         {/* Header skeleton */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
@@ -110,7 +110,7 @@ export function CommunityPosts() {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 max-w-4xl py-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header với nút tạo bài */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
         <div>
@@ -176,7 +176,7 @@ export function CommunityPosts() {
           )}
 
           {/* Posts Grid */}
-          <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+          <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
             {filteredPosts.map((post) => (
               <PostCard
                 key={post.id}

@@ -121,7 +121,13 @@ export const createConversation = async (
             {
               model: User,
               as: "user",
-              attributes: ["id", "displayName", "avatarUrl"],
+              attributes: [
+                "id",
+                "displayName",
+                "avatarUrl",
+                "role",
+                "lastSeenAt",
+              ],
             },
           ],
         },
@@ -172,7 +178,13 @@ export const getConversations = async (
             {
               model: User,
               as: "user",
-              attributes: ["id", "displayName", "avatarUrl"],
+              attributes: [
+                "id",
+                "displayName",
+                "avatarUrl",
+                "role",
+                "lastSeenAt",
+              ],
             },
           ],
         },
@@ -188,14 +200,32 @@ export const getConversations = async (
         ...convJson,
         participants: convJson.participants?.map(
           (p: {
-            user?: { id: string; displayName: string; avatarUrl?: string };
+            user?: {
+              id: string;
+              displayName: string;
+              avatarUrl?: string;
+              role?: string;
+              lastSeenAt?: Date;
+            };
             joinedAt?: Date;
-          }) => ({
-            id: p.user?.id,
-            displayName: p.user?.displayName,
-            avatarUrl: p.user?.avatarUrl ?? null,
-            joinAt: p.joinedAt,
-          })
+          }) => {
+            // Tính isOnline dựa trên lastSeenAt (online nếu hoạt động trong 5 phút gần đây)
+            const lastSeenAt = p.user?.lastSeenAt;
+            const isOnline = lastSeenAt
+              ? new Date().getTime() - new Date(lastSeenAt).getTime() <
+                5 * 60 * 1000
+              : false;
+
+            return {
+              id: p.user?.id,
+              displayName: p.user?.displayName,
+              avatarUrl: p.user?.avatarUrl ?? null,
+              role: p.user?.role,
+              lastSeenAt: p.user?.lastSeenAt,
+              isOnline,
+              joinAt: p.joinedAt,
+            };
+          }
         ),
       };
     });

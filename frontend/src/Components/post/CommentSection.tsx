@@ -39,17 +39,19 @@ export function CommentSection({ postId, commentCount = 0, postAuthorId }: Comme
   };
 
   return (
-    <section className="mt-8">
+    <section className="mt-10">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
-        <MessageCircle size={22} className="text-gray-700" />
+      <div className="flex items-center gap-3 mb-8 pb-4 border-b border-gray-100">
+        <div className="p-2 rounded-full bg-blue-50">
+          <MessageCircle size={22} className="text-blue-600" />
+        </div>
         <h2 className="text-xl font-bold text-gray-900">
-          Bình luận ({commentsTotal || commentCount})
+          Bình luận <span className="text-blue-600">({commentsTotal || commentCount})</span>
         </h2>
       </div>
 
       {/* Comment Form */}
-      <div className="mb-6">
+      <div className="mb-8">
         <CommentForm onSubmit={handleSubmitComment} placeholder="Viết bình luận của bạn..." />
       </div>
 
@@ -62,9 +64,11 @@ export function CommentSection({ postId, commentCount = 0, postAuthorId }: Comme
           </div>
         ) : comments.length === 0 ? (
           // Empty state
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <MessageCircle size={40} className="mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-500">Chưa có bình luận nào</p>
+          <div className="text-center py-12 bg-gradient-to-b from-gray-50 to-gray-100/50 rounded-xl border border-gray-100">
+            <div className="p-3 rounded-full bg-gray-100 inline-block mb-4">
+              <MessageCircle size={32} className="text-gray-400" />
+            </div>
+            <p className="text-gray-600 font-medium">Chưa có bình luận nào</p>
             <p className="text-sm text-gray-400 mt-1">Hãy là người đầu tiên bình luận!</p>
           </div>
         ) : (
