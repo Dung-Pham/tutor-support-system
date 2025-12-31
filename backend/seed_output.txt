@@ -1,0 +1,79 @@
+Changed database context to 'tutorsupportdb'.
+Clearing existing data (in safe order)...
+
+(0 rows affected)
+
+(0 rows affected)
+
+(0 rows affected)
+
+(0 rows affected)
+
+(0 rows affected)
+
+(0 rows affected)
+
+(0 rows affected)
+
+(0 rows affected)
+
+(0 rows affected)
+
+(12 rows affected)
+Inserting Users...
+
+(12 rows affected)
+Msg 137, Level 15, State 2, Server DUNGPHAM\TSSERVER, Line 6
+Must declare the scalar variable "@tutor1_id".
+Msg 137, Level 15, State 2, Server DUNGPHAM\TSSERVER, Line 12
+Must declare the scalar variable "@student1_id".
+Msg 137, Level 15, State 2, Server DUNGPHAM\TSSERVER, Line 19
+Must declare the scalar variable "@parent1_id".
+Msg 137, Level 15, State 2, Server DUNGPHAM\TSSERVER, Line 11
+Must declare the scalar variable "@tutor1_id".
+Msg 137, Level 15, State 2, Server DUNGPHAM\TSSERVER, Line 13
+Must declare the scalar variable "@class1".
+Msg 137, Level 15, State 2, Server DUNGPHAM\TSSERVER, Line 6
+Must declare the scalar variable "@s1".
+Msg 137, Level 15, State 2, Server DUNGPHAM\TSSERVER, Line 6
+Must declare the scalar variable "@class1".
+Msg 137, Level 15, State 2, Server DUNGPHAM\TSSERVER, Line 9
+Must declare the scalar variable "@class1".
+Msg 137, Level 15, State 2, Server DUNGPHAM\TSSERVER, Line 6
+Must declare the scalar variable "@hw1".
+SEED COMPLETE
+TableName RecordCount
+--------- -----------
+Users              12
+
+(1 rows affected)
+                   
+------- -----------
+Classes           0
+
+(1 rows affected)
+                     
+--------- -----------
+Schedules           0
+
+(1 rows affected)
+                             
+----------------- -----------
+AttendanceRecords           0
+
+(1 rows affected)
+                     
+--------- -----------
+Materials           0
+
+(1 rows affected)
+                    
+-------- -----------
+Homework           0
+
+(1 rows affected)
+                       
+----------- -----------
+Submissions           0
+
+(1 rows affected)

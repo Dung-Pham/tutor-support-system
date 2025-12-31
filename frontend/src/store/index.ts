@@ -4,6 +4,11 @@ import authReducer from './slices/authSlice';
 import messagesReducer from './slices/messagesSlice';
 import postReducer from './slices/postSlice';
 import commentReducer from './slices/commentSlice';
+import sessionsReducer from './slices/sessionsSlice';
+import assignmentsReducer from './slices/assignmentsSlice';
+import submissionsReducer from './slices/submissionsSlice';
+import documentsReducer from './slices/documentsSlice';
+import newHomeworkReducer from './slices/newHomeworkSlice';
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +16,11 @@ export const store = configureStore({
     messages: messagesReducer,
     posts: postReducer,
     comments: commentReducer,
+    sessions: sessionsReducer,
+    assignments: assignmentsReducer,
+    submissions: submissionsReducer,
+    documents: documentsReducer,
+    newHomework: newHomeworkReducer,
   },
 });
 
