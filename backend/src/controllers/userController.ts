@@ -1,16 +1,190 @@
-/**
- * File: userController.ts
- * Purpose: Controller for User operations (SQL Server)
- * Updated: 2025-11-16
- */
+﻿// User Controller - Merged from HEAD and dang branches
+// Supports both SQL Server queries (HEAD) and Sequelize models (dang)
 
 import { Request, Response } from 'express';
-import * as userService from '../services/userService';
+import * as userService from '../services/userService.js';
+import { User } from '../models/sql/index.js';
+import { AuthRequest } from '../types/common.js';
+import { Op } from 'sequelize';
+
+// ============================================
+// Interfaces
+// ============================================
+interface PaginationQuery {
+  page?: string;
+  limit?: string;
+  role?: string;
+  status?: string;
+  subjects?: string;
+  minRating?: string;
+}
+
+interface UpdateStatusBody {
+  isActive: boolean;
+}
+
+interface UserParams {
+  id: string;
+}
+
+// ============================================
+// dang Functions - Using Sequelize Models
+// ============================================
 
 /**
- * @desc    Get all users
- * @route   GET /api/users
- * @access  Public
+ * Get current authenticated user (dang)
+ * GET /api/users/me
+ */
+export const authMe = (req: AuthRequest, res: Response): Response => {
+  try {
+    return res.status(200).json({
+      success: true,
+      message: 'User info retrieved successfully',
+      user: req.user,
+    });
+  } catch (error) {
+    console.error('Error in authMe', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+/**
+ * Get all users with pagination - Sequelize (dang)
+ * GET /api/users
+ */
+export const getAllUsers = async (
+  req: Request<object, object, object, PaginationQuery>,
+  res: Response
+): Promise<Response> => {
+  try {
+    const page = parseInt(req.query.page || '1', 10);
+    const limit = parseInt(req.query.limit || '20', 10);
+    const offset = (page - 1) * limit;
+
+    const { count: total, rows: users } = await User.findAndCountAll({
+      attributes: { exclude: ['hashedPassword'] },
+      limit,
+      offset,
+      order: [['createdAt', 'DESC']],
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Users retrieved successfully',
+      data: users,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error('Error getting users', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+/**
+ * Update user status - Sequelize (dang)
+ * PATCH /api/users/:id/status
+ */
+export const updateUserStatus = async (
+  req: Request<UserParams, object, UpdateStatusBody>,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'isActive must be a boolean value',
+      });
+    }
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    await user.update({ isActive });
+
+    return res.status(200).json({
+      success: true,
+      message: User ${isActive ? 'activated' : 'deactivated'} successfully,
+      data: user,
+    });
+  } catch (error) {
+    console.error('Error updating user status', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+/**
+ * Get all tutors - Sequelize (dang)
+ * GET /api/users/tutors
+ */
+export const getTutors = async (
+  req: Request<object, object, object, PaginationQuery>,
+  res: Response
+): Promise<Response> => {
+  try {
+    const page = parseInt(req.query.page || '1', 10);
+    const limit = parseInt(req.query.limit || '20', 10);
+    const offset = (page - 1) * limit;
+
+    const { count: total, rows: tutors } = await User.findAndCountAll({
+      where: {
+        role: 'tutor',
+        isActive: true,
+      },
+      attributes: ['id', 'displayName', 'avatarUrl', 'bio', 'createdAt'],
+      limit,
+      offset,
+      order: [['displayName', 'ASC']],
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Tutors retrieved successfully',
+      data: tutors,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error('Error getting tutors', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+// ============================================
+// HEAD Functions - Using userService
+// ============================================
+
+/**
+ * Get all users - userService (HEAD)
+ * GET /api/users
  */
 export async function getUsers(req: Request, res: Response) {
   try {
@@ -39,9 +213,8 @@ export async function getUsers(req: Request, res: Response) {
 }
 
 /**
- * @desc    Get single user by ID
- * @route   GET /api/users/:id
- * @access  Public
+ * Get single user by ID - userService (HEAD)
+ * GET /api/users/:id
  */
 export async function getUserById(req: Request, res: Response) {
   try {
@@ -69,9 +242,8 @@ export async function getUserById(req: Request, res: Response) {
 }
 
 /**
- * @desc    Create new user
- * @route   POST /api/users
- * @access  Public
+ * Create new user - userService (HEAD)
+ * POST /api/users
  */
 export async function createUser(req: Request, res: Response) {
   try {
@@ -115,9 +287,8 @@ export async function createUser(req: Request, res: Response) {
 }
 
 /**
- * @desc    Update user
- * @route   PUT /api/users/:id
- * @access  Public
+ * Update user - userService (HEAD)
+ * PUT /api/users/:id
  */
 export async function updateUser(req: Request, res: Response) {
   try {
@@ -147,9 +318,8 @@ export async function updateUser(req: Request, res: Response) {
 }
 
 /**
- * @desc    Delete user (soft delete)
- * @route   DELETE /api/users/:id
- * @access  Public
+ * Delete user (soft delete) - userService (HEAD)
+ * DELETE /api/users/:id
  */
 export async function deleteUser(req: Request, res: Response) {
   try {
@@ -171,9 +341,8 @@ export async function deleteUser(req: Request, res: Response) {
 }
 
 /**
- * @desc    Get tutor profile
- * @route   GET /api/users/tutor/:id
- * @access  Public
+ * Get tutor profile - userService (HEAD)
+ * GET /api/users/tutor/:id
  */
 export async function getTutorProfile(req: Request, res: Response) {
   try {
@@ -201,9 +370,8 @@ export async function getTutorProfile(req: Request, res: Response) {
 }
 
 /**
- * @desc    Get student profile
- * @route   GET /api/users/student/:id
- * @access  Public
+ * Get student profile - userService (HEAD)
+ * GET /api/users/student/:id
  */
 export async function getStudentProfile(req: Request, res: Response) {
   try {
@@ -231,9 +399,8 @@ export async function getStudentProfile(req: Request, res: Response) {
 }
 
 /**
- * @desc    Get parent profile
- * @route   GET /api/users/parent/:id
- * @access  Public
+ * Get parent profile - userService (HEAD)
+ * GET /api/users/parent/:id
  */
 export async function getParentProfile(req: Request, res: Response) {
   try {
@@ -261,9 +428,8 @@ export async function getParentProfile(req: Request, res: Response) {
 }
 
 /**
- * @desc    Get all tutors
- * @route   GET /api/users/tutors
- * @access  Public
+ * Get all tutors - userService (HEAD)
+ * GET /api/users/tutors
  */
 export async function getAllTutors(req: Request, res: Response) {
   try {

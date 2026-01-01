@@ -1,56 +1,68 @@
-/**
- * File: services/userService.ts
- * Mục đích: Service layer cho User APIs
- * Vai trò:
- *   - Wrapper functions cho các API calls liên quan đến Users
- *   - Sử dụng apiClient đã config sẵn
- * Lưu ý:
- *   - Tất cả methods đều async và return Promise
- *   - Response được unwrap để trả về data trực tiếp
- *   - User interface nên match với backend User model
- */
-
 import { apiClient } from './api';
+import type { User } from '@/types/user';
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  avatar?: string;
+interface TutorsResponse {
+  success: boolean;
+  message: string;
+  data: User[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 export const userService = {
-  // Lấy danh sách tất cả users
+  /**
+   * Lấy thông tin user hiện tại
+   */
+  getMe: async () => {
+    const response = await apiClient.get<{ success: boolean; data: User }>('/users/me');
+    return response.data.data;
+  },
+
+  /**
+   * Lấy danh sách tutors (cho students)
+   */
+  getTutors: async (page = 1, limit = 20) => {
+    const response = await apiClient.get<TutorsResponse>('/users/tutors', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  /**
+   * Lấy danh sách tất cả users (Admin only)
+   */
   getAll: async () => {
     const response = await apiClient.get<{ success: boolean; data: User[] }>('/users');
     return response.data.data;
   },
 
-  // Lấy thông tin user theo ID
+  /**
+   * Lấy user theo ID (Admin only - dùng /admin/users)
+   */
   getById: async (id: string) => {
-    const response = await apiClient.get<{ success: boolean; data: User }>(`/users/${id}`);
+    const response = await apiClient.get<{ success: boolean; data: User }>(`/admin/users/${id}`);
     return response.data.data;
   },
 
-  // Tạo user mới
-  create: async (userData: Partial<User>) => {
-    const response = await apiClient.post<{ success: boolean; data: User }>('/users', userData);
+  /**
+   * Cập nhật status user (Admin only)
+   */
+  updateStatus: async (id: string, isActive: boolean) => {
+    const response = await apiClient.patch<{ success: boolean; data: User }>(`/users/${id}`, {
+      isActive,
+    });
     return response.data.data;
   },
 
-  // Cập nhật thông tin user
-  update: async (id: string, userData: Partial<User>) => {
-    const response = await apiClient.put<{ success: boolean; data: User }>(
-      `/users/${id}`,
-      userData
-    );
-    return response.data.data;
-  },
-
-  // Xóa user
+  /**
+   * Xóa/Deactivate user (Admin only - dùng /admin/users)
+   */
   delete: async (id: string) => {
-    const response = await apiClient.delete(`/users/${id}`);
+    const response = await apiClient.delete(`/admin/users/${id}`);
     return response.data;
   },
 };

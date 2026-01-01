@@ -3,6 +3,68 @@
 @tailwind utilities;
 
 @layer base {
+  /* Fix Tiptap selection - ensure native browser selection works */
+  .tiptap.ProseMirror .selection {
+    background-color: transparent !important;
+  }
+
+  .tiptap.ProseMirror::selection,
+  .tiptap.ProseMirror *::selection {
+    background-color: var(--tt-selection-color, rgba(59, 130, 246, 0.3));
+  }
+
+  /* Minimal Tiptap editor animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes zoom {
+    0% {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes slideFromBottom {
+    from {
+      transform: translateY(0.5rem);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  :root {
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  .dark {
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -16,6 +78,32 @@
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
+
+    /* Tiptap editor variables */
+    --tt-selection-color: rgba(59, 130, 246, 0.3);
+    --tt-cursor-color: hsl(var(--primary));
+    --tt-bg-color: hsl(var(--background));
+    --tt-scrollbar-color: hsl(var(--muted-foreground) / 0.3);
+
+    /* Tiptap template variables - grays */
+    --tt-gray-light-a-200: rgba(37, 39, 45, 0.1);
+    --tt-gray-light-a-300: rgba(47, 50, 55, 0.2);
+    --tt-gray-light-a-400: rgba(40, 44, 51, 0.42);
+    --tt-gray-light-a-700: rgba(35, 37, 42, 0.87);
+    --tt-gray-light-300: rgba(213, 214, 215, 1);
+
+    /* Tiptap template variables - brand */
+    --tt-brand-color-50: rgba(239, 238, 255, 1);
+    --tt-brand-color-400: rgba(122, 82, 255, 1);
+    --tt-brand-color-500: rgba(98, 41, 255, 1);
+    --tt-brand-color-900: rgba(43, 25, 102, 1);
+
+    /* Tiptap template variables - misc */
+    --tt-radius-md: 0.5rem;
+    --tt-radius-lg: 0.75rem;
+    --white: rgba(255, 255, 255, 1);
+    --black: rgba(14, 14, 17, 1);
+
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
@@ -24,6 +112,12 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --teal: 180 83.1% 37.1%;
   }
 
   .dark {
@@ -46,6 +140,12 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --teal: 180 83.1% 37.1%;
   }
 }
 

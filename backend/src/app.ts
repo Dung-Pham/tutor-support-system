@@ -1,119 +1,96 @@
-/**
- * File: app.ts
- * Mục đích: Cấu hình Express application
- * Vai trò:
- *   - Thiết lập middlewares (security, logging, parsing)
- *   - Đăng ký routes
- *   - Cấu hình Swagger documentation
- *   - Xử lý errors
- * Lưu ý:
- *   - Thứ tự middlewares quan trọng (security trước, error handler cuối)
- *   - CORS origin phải match với frontend URL
- *   - Tất cả routes đều có prefix /api
- */
-
-import express, { Request, Response } from 'express';
+﻿import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
-import path from 'path';
+import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
-import swaggerSpec from './config/swagger';
-import errorHandler from './middlewares/errorHandler';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-// Import routes
-import authRoutes from './routes/auth';
-import classRoutes from './routes/classes';
-import lessonPlanRoutes from './routes/lessonPlans';
-import homeworkRoutes from './routes/homework';
-import uploadRoutes from './routes/upload';
-import documentRoutes from './routes/documents';
-import studentRoutes from './routes/students';
-import statisticsRoutes from './routes/statistics';
+// Import Error Handler from HEAD
+import { errorHandler } from './middlewares/errorHandler.js';
+// Import Protected Route middleware from dang
+import { protectedRoute } from './middlewares/protectedRoute.js';
 
-// Module VI - Teaching & Learning Support Routes
-import scheduleRoutes from './routes/schedules';
-// import rescheduleRoutes from './routes/reschedules'; // TODO: Fix type inconsistencies
-import attendanceRoutes from './routes/attendance';
-// import evaluationRoutes from './routes/evaluations'; // TODO: Fix type issues
-// import homeworkRoutes from './routes/homework'; // TODO: Fix type issues
-// import chatRoutes from './routes/chat'; // TODO: Fix type issues
+// ============================================
+// HEAD Routes - Teaching Module
+// ============================================
+import authRoutes from './routes/auth.js';
+import classRoutes from './routes/classes.js';
+import lessonPlanRoutes from './routes/lessonPlans.js';
+import homeworkRoutes from './routes/homework.js';
+import uploadRoutes from './routes/upload.js';
+import documentRoutes from './routes/documents.js';
+import studentRoutes from './routes/students.js';
+import statisticsRoutes from './routes/statistics.js';
+import scheduleRoutes from './routes/schedules.js';
+import attendanceRoutes from './routes/attendance.js';
+
+// ============================================
+// dang Routes - Social Module
+// ============================================
+import authRoute from './routes/authRoute.js';
+import userRoute from './routes/userRoute.js';
+import messageRoute from './routes/messageRoute.js';
+import conversationRoute from './routes/conversationRoute.js';
+import postRoute from './routes/postRoute.js';
+import commentRoute from './routes/commentRoute.js';
+import adminRoute from './routes/adminRoute.js';
+
+// ESM __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// ============================================================
-// STATIC FILE SERVING - MUST BE BEFORE HELMET
-// This allows PDF/images to be embedded in iframes without X-Frame-Options blocking
-// ============================================================
-app.use('/uploads', (req, res, next): void => {
-  // Set headers to allow cross-origin file viewing and iframe embedding
-  const origin = req.headers.origin || 'http://localhost:3000';
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Range, Accept');
-  res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Content-Disposition');
-  
-  // Set Content-Disposition to inline for all viewable files
-  const ext = path.extname(req.path).toLowerCase();
-  if (['.pdf', '.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) {
-    res.setHeader('Content-Disposition', 'inline');
-  }
-  
-  // Handle OPTIONS preflight
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-  
-  next();
-}, express.static(path.join(__dirname, '..', 'uploads'), {
-  setHeaders: (res, filePath) => {
-    const ext = path.extname(filePath).toLowerCase();
-    if (ext === '.pdf') {
-      res.setHeader('Content-Type', 'application/pdf');
-    } else if (['.jpg', '.jpeg'].includes(ext)) {
-      res.setHeader('Content-Type', 'image/jpeg');
-    } else if (ext === '.png') {
-      res.setHeader('Content-Type', 'image/png');
-    } else if (ext === '.gif') {
-      res.setHeader('Content-Type', 'image/gif');
-    } else if (ext === '.webp') {
-      res.setHeader('Content-Type', 'image/webp');
-    }
-  }
-}));
+// Security Middleware (from HEAD - disabled for development)
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
+app.use(compression());
 
-// CORS configuration - allow frontend to access API and files
-// IMPORTANT: CORS must be before helmet for proper cross-origin file access
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true,
-  exposedHeaders: ['Content-Disposition', 'Content-Type'],
-}));
+// Static files for uploads (from HEAD)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Security & Performance Middlewares
-// COMPLETELY DISABLE security headers that block PDF viewing
-// This is safe for localhost development
-app.use(helmet({
-  contentSecurityPolicy: false,  // Disable CSP completely
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: false,
-  crossOriginOpenerPolicy: false,
-  frameguard: false,  // Disable X-Frame-Options completely
-}));
-app.use(compression()); // Nén response để tăng tốc
-app.use(morgan('dev')); // Log HTTP requests
-app.use(express.json()); // Parse JSON body
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded body
+// CORS Configuration (merged from both)
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://127.0.0.1:5173',
+        undefined, // for same-origin requests
+      ];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
 
-// API Documentation - Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(morgan('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// Health check endpoint - Kiểm tra server còn sống
-app.get('/health', (req: Request, res: Response) => {
+// Swagger Documentation Setup (from dang)
+const swaggerDocument = JSON.parse(
+  fs.readFileSync('./src/config/swagger.json', 'utf-8')
+);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Health check endpoint (merged)
+app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: 'Server is running',
@@ -121,8 +98,21 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// API Routes - Tất cả routes đều có prefix /api
+// ============================================
+// API Routes
+// ============================================
+
+// --- Public Routes ---
+// Auth routes (both branches - use HEAD's auth for now, can switch to dang's authRoute)
 app.use('/api/auth', authRoutes);
+// Social public routes (from dang)
+app.use('/api/posts', postRoute);
+app.use('/api', commentRoute);
+
+// --- Admin Routes (from dang - has its own auth middleware) ---
+app.use('/api/admin', adminRoute);
+
+// --- Teaching Module Routes (from HEAD) ---
 app.use('/api/classes', classRoutes);
 app.use('/api/lesson-plans', lessonPlanRoutes);
 app.use('/api/homework', homeworkRoutes);
@@ -130,24 +120,81 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/statistics', statisticsRoutes);
-
-// Module VI Routes - Teaching & Learning Support
 app.use('/api/schedules', scheduleRoutes);
-// app.use('/api/reschedules', rescheduleRoutes); // TODO: Fix type inconsistencies in rescheduleService
 app.use('/api/attendance', attendanceRoutes);
-// app.use('/api/evaluations', evaluationRoutes); // TODO: Fix type issues in evaluationService
-// app.use('/api/homework', homeworkRoutes); // TODO: Fix type issues in homeworkService
-// app.use('/api/chat', chatRoutes); // TODO: Fix type issues in chatService
 
-// 404 Handler - Route không tồn tại
-app.use((req: Request, res: Response) => {
+// --- Protected Routes (from dang - with middleware) ---
+app.use(protectedRoute);
+app.use('/api/users', userRoute);
+app.use('/api/messages', messageRoute);
+app.use('/api/conversations', conversationRoute);
+
+// ============================================
+// Error Handling
+// ============================================
+
+// 404 Handler
+app.use((_req: Request, res: Response) => {
   res.status(404).json({
     success: false,
     message: 'Route not found',
   });
 });
 
-// Error Handler - Phải đặt cuối cùng
-app.use(errorHandler);
+// Error Handler (merged from both - comprehensive version from dang)
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Error:', err.message || err);
+
+  // 1. Multer errors (file upload)
+  if (err.name === 'MulterError') {
+    const multerMessages: Record<string, string> = {
+      LIMIT_FILE_SIZE: 'File vượt quá kích thước cho phép (tối đa 4MB)',
+      LIMIT_FILE_COUNT: 'Số lượng file vượt quá giới hạn (tối đa 10 files)',
+      LIMIT_UNEXPECTED_FILE: 'Trường file không hợp lệ',
+    };
+    return res.status(400).json({
+      success: false,
+      message: multerMessages[err.code] || 'Lỗi upload file',
+    });
+  }
+
+  // 2. Custom file type error from multer fileFilter
+  if (err.message === 'Only image files are allowed') {
+    return res.status(400).json({
+      success: false,
+      message: 'Chỉ chấp nhận file ảnh (jpg, png, gif, webp)',
+    });
+  }
+
+  // 3. Sequelize UniqueConstraint error
+  if (err.name === 'SequelizeUniqueConstraintError') {
+    const fields = Object.keys(err.fields || {});
+    const fieldName = fields[0] || 'field';
+    const fieldMap: Record<string, string> = {
+      email: 'Email',
+      slug: 'Đường dẫn bài viết',
+      phone: 'Số điện thoại',
+    };
+    return res.status(409).json({
+      success: false,
+      message: ${fieldMap[fieldName] || fieldName} đã tồn tại trong hệ thống,
+    });
+  }
+
+  // 4. MongoDB duplicate key error (code 11000)
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue || {})[0] || 'field';
+    return res.status(409).json({
+      success: false,
+      message: ${field} đã tồn tại,
+    });
+  }
+
+  // 5. Default: Internal Server Error
+  res.status(500).json({
+    success: false,
+    message: 'Lỗi hệ thống, vui lòng thử lại sau',
+  });
+});
 
 export default app;

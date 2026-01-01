@@ -1,0 +1,82 @@
+.tiptap.ProseMirror {
+  --link-text-color: hsl(var(--primary));
+  --placeholder-color: rgba(0, 0, 0, 0.4);
+
+  .dark & {
+    --link-text-color: hsl(var(--primary));
+    --placeholder-color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* Ensure each top-level node has relative positioning */
+.tiptap.ProseMirror > * {
+  position: relative;
+}
+
+/* =====================
+     CORE EDITOR STYLES
+     ===================== */
+.tiptap.ProseMirror {
+  white-space: pre-wrap;
+  outline: none;
+
+  // Paragraph spacing
+  p:not(:first-child):not(td p):not(th p) {
+    font-size: 1rem;
+    line-height: 1.6;
+    font-weight: normal;
+    margin-top: 1.25rem;
+  }
+}
+
+/* =====================
+     TEXT DECORATION
+     ===================== */
+.tiptap.ProseMirror {
+  // Text decoration inheritance for spans
+  a span {
+    text-decoration: underline;
+  }
+
+  s span {
+    text-decoration: line-through;
+  }
+
+  u span {
+    text-decoration: underline;
+  }
+
+  strong {
+    font-weight: 600;
+  }
+
+  em {
+    font-style: italic;
+  }
+}
+
+/* =====================
+     LINKS
+     ===================== */
+.tiptap.ProseMirror {
+  a {
+    color: var(--link-text-color);
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+}
+
+/* =====================
+     HIGHLIGHTS
+     ===================== */
+.tiptap.ProseMirror {
+  mark {
+    background-color: #fef08a;
+    border-radius: 0.125rem;
+    padding: 0.125rem 0;
+  }
+}
