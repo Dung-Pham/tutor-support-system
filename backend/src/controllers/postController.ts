@@ -129,7 +129,7 @@ export const createPost = async (
 
     return res.status(201).json({
       success: true,
-      message: "B? i viáº¿t Ä‘?£ Ä‘Æ°á»£c táº¡o",
+      message: "B?ï¿½i viáº¿t Ä‘?ï¿½ Ä‘Æ°á»£c táº¡o",
       data: {
         ...postHeader.toJSON(),
         author,
@@ -139,7 +139,7 @@ export const createPost = async (
   } catch (error) {
     console.error("Create post error", error);
 
-    // Rollback: X?³a PostHeader náº¿u Ä‘?£ táº¡o m?  PostDetail fail
+    // Rollback: X?ï¿½a PostHeader náº¿u Ä‘?ï¿½ táº¡o m?ï¿½ PostDetail fail
     if (postHeader) {
       try {
         await postHeader.destroy();
@@ -151,7 +151,7 @@ export const createPost = async (
 
     return res.status(500).json({
       success: false,
-      message: "Lá»—i táº¡o b? i viáº¿t",
+      message: "Lá»—i táº¡o b?ï¿½i viáº¿t",
     });
   }
 };
@@ -184,7 +184,7 @@ export const getApprovedPosts = async (
 
     return res.json({
       success: true,
-      message: "L?y danh sách bài vi?t thành công",
+      message: "L?y danh sï¿½ch bï¿½i vi?t thï¿½nh cï¿½ng",
       data: posts,
       page,
       limit,
@@ -195,7 +195,7 @@ export const getApprovedPosts = async (
     console.error("Get approved posts error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i khi l?y danh sách bài vi?t",
+      message: "L?i khi l?y danh sï¿½ch bï¿½i vi?t",
     });
   }
 };
@@ -212,7 +212,7 @@ export const getPostsByStatus = async (
     if (!["pending", "rejected", "deleted"].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "Status không h?p l?",
+        message: "Status khï¿½ng h?p l?",
       });
     }
 
@@ -220,7 +220,7 @@ export const getPostsByStatus = async (
     if (req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Ch? admin có th? xem danh sách này",
+        message: "Ch? admin cï¿½ th? xem danh sï¿½ch nï¿½y",
       });
     }
 
@@ -299,9 +299,9 @@ export const getPostsByStatus = async (
 
     const totalPages = Math.ceil(total / limit);
     const messages: Record<string, string> = {
-      pending: "L?y danh sách bài vi?t ch? duy?t",
-      rejected: "L?y danh sách bài vi?t b? t? ch?i",
-      deleted: "L?y danh sách bài vi?t ð? xóa",
+      pending: "L?y danh sï¿½ch bï¿½i vi?t ch? duy?t",
+      rejected: "L?y danh sï¿½ch bï¿½i vi?t b? t? ch?i",
+      deleted: "L?y danh sï¿½ch bï¿½i vi?t ï¿½? xï¿½a",
     };
 
     return res.json({
@@ -317,7 +317,7 @@ export const getPostsByStatus = async (
     console.error("Get posts by status error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i khi l?y danh sách bài vi?t",
+      message: "L?i khi l?y danh sï¿½ch bï¿½i vi?t",
     });
   }
 };
@@ -347,7 +347,7 @@ export const getPostDetail = async (
     });
 
     if (!post) {
-      return res.status(404).json(formatError("Bài vi?t không t?n t?i"));
+      return res.status(404).json(formatError("Bï¿½i vi?t khï¿½ng t?n t?i"));
     }
 
     // Increment view count
@@ -358,7 +358,7 @@ export const getPostDetail = async (
 
     return res.json({
       success: true,
-      message: "L?y chi ti?t bài vi?t",
+      message: "L?y chi ti?t bï¿½i vi?t",
       data: {
         ...post.toJSON(),
         contentJson: postDetail?.contentJson || null,
@@ -369,7 +369,7 @@ export const getPostDetail = async (
     console.error("Get post detail error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i khi l?y chi ti?t bài vi?t",
+      message: "L?i khi l?y chi ti?t bï¿½i vi?t",
     });
   }
 };
@@ -408,7 +408,7 @@ export const getMyPosts = async (
 
     return res.json({
       success: true,
-      message: "L?y danh sách bài vi?t c?a b?n",
+      message: "L?y danh sï¿½ch bï¿½i vi?t c?a b?n",
       data: posts,
       page,
       limit,
@@ -419,7 +419,7 @@ export const getMyPosts = async (
     console.error("Get my posts error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i khi l?y danh sách bài vi?t",
+      message: "L?i khi l?y danh sï¿½ch bï¿½i vi?t",
     });
   }
 };
@@ -440,14 +440,14 @@ export const updatePost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài vi?t không t?n t?i",
+        message: "Bï¿½i vi?t khï¿½ng t?n t?i",
       });
     }
 
     if (post.authorId !== userId) {
       return res.status(403).json({
         success: false,
-        message: "B?n không có quy?n ch?nh s?a bài vi?t này",
+        message: "B?n khï¿½ng cï¿½ quy?n ch?nh s?a bï¿½i vi?t nï¿½y",
       });
     }
 
@@ -456,8 +456,8 @@ export const updatePost = async (
         success: false,
         message:
           post.status === "approved"
-            ? "Không th? ch?nh s?a bài vi?t ð? ðý?c duy?t"
-            : "Không th? ch?nh s?a bài vi?t t? ch?i",
+            ? "Khï¿½ng th? ch?nh s?a bï¿½i vi?t ï¿½? ï¿½ï¿½?c duy?t"
+            : "Khï¿½ng th? ch?nh s?a bï¿½i vi?t t? ch?i",
       });
     }
 
@@ -495,7 +495,7 @@ export const updatePost = async (
 
     return res.json({
       success: true,
-      message: "Bài vi?t ð? ðý?c c?p nh?t",
+      message: "Bï¿½i vi?t ï¿½? ï¿½ï¿½?c c?p nh?t",
       data: {
         ...post.toJSON(),
         author,
@@ -506,12 +506,12 @@ export const updatePost = async (
     console.error("Update post error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i c?p nh?t bài vi?t",
+      message: "L?i c?p nh?t bï¿½i vi?t",
     });
   }
 };
 
-// Soft delete post (admin only) - chuy?n bài vi?t vào thùng rác ð? có th? khôi ph?c
+// Soft delete post (admin only) - chuy?n bï¿½i vi?t vï¿½o thï¿½ng rï¿½c ï¿½? cï¿½ th? khï¿½i ph?c
 export const softDeletePost = async (
   req: AuthRequest & { params: PostParams; body: DeletePostBody },
   res: Response
@@ -524,7 +524,7 @@ export const softDeletePost = async (
     if (!adminId || req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Ch? admin có th? th?c hi?n soft delete",
+        message: "Ch? admin cï¿½ th? th?c hi?n soft delete",
       });
     }
 
@@ -532,11 +532,11 @@ export const softDeletePost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài vi?t không t?n t?i",
+        message: "Bï¿½i vi?t khï¿½ng t?n t?i",
       });
     }
 
-    // Soft delete - ch? ð?i status thành deleted
+    // Soft delete - ch? ï¿½?i status thï¿½nh deleted
     await post.update({
       status: "deleted",
       deletedBy: adminId,
@@ -546,13 +546,13 @@ export const softDeletePost = async (
 
     return res.json({
       success: true,
-      message: "Bài vi?t ð? ðý?c chuy?n vào thùng rác",
+      message: "Bï¿½i vi?t ï¿½? ï¿½ï¿½?c chuy?n vï¿½o thï¿½ng rï¿½c",
     });
   } catch (error) {
     console.error("Soft delete post error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i xóa bài vi?t",
+      message: "L?i xï¿½a bï¿½i vi?t",
     });
   }
 };
@@ -569,7 +569,7 @@ export const restorePost = async (
     if (!adminId || req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Ch? admin có th? khôi ph?c bài vi?t",
+        message: "Ch? admin cï¿½ th? khï¿½i ph?c bï¿½i vi?t",
       });
     }
 
@@ -577,18 +577,18 @@ export const restorePost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài vi?t không t?n t?i",
+        message: "Bï¿½i vi?t khï¿½ng t?n t?i",
       });
     }
 
     if (post.status !== "deleted") {
       return res.status(400).json({
         success: false,
-        message: "Bài vi?t này chýa b? xóa",
+        message: "Bï¿½i vi?t nï¿½y chï¿½a b? xï¿½a",
       });
     }
 
-    // Khôi ph?c v? tr?ng thái approved
+    // Khï¿½i ph?c v? tr?ng thï¿½i approved
     await post.update({
       status: "approved",
       deletedBy: null,
@@ -598,20 +598,20 @@ export const restorePost = async (
 
     return res.json({
       success: true,
-      message: "Bài vi?t ð? ðý?c khôi ph?c",
+      message: "Bï¿½i vi?t ï¿½? ï¿½ï¿½?c khï¿½i ph?c",
     });
   } catch (error) {
     console.error("Restore post error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i khôi ph?c bài vi?t",
+      message: "L?i khï¿½i ph?c bï¿½i vi?t",
     });
   }
 };
 
 // Permanently delete post
-// - Tutor: ch? xóa ðý?c bài c?a m?nh có status "draft" ho?c "pending"
-// - Admin: xóa ðý?c t?t c?, bao g?m c? bài có status "deleted"
+// - Tutor: ch? xï¿½a ï¿½ï¿½?c bï¿½i c?a m?nh cï¿½ status "draft" ho?c "pending"
+// - Admin: xï¿½a ï¿½ï¿½?c t?t c?, bao g?m c? bï¿½i cï¿½ status "deleted"
 export const hardDeletePost = async (
   req: AuthRequest & { params: PostParams },
   res: Response
@@ -629,35 +629,35 @@ export const hardDeletePost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài vi?t không t?n t?i",
+        message: "Bï¿½i vi?t khï¿½ng t?n t?i",
       });
     }
 
     const isAuthor = post.authorId === userId;
 
-    // Ki?m tra quy?n xóa
+    // Ki?m tra quy?n xï¿½a
     if (post.status === "deleted") {
-      // Bài ð? b? soft delete ? ch? admin m?i ðý?c hard delete
+      // Bï¿½i ï¿½? b? soft delete ? ch? admin m?i ï¿½ï¿½?c hard delete
       if (!isAdmin) {
         return res.status(403).json({
           success: false,
-          message: "Ch? admin có th? xóa v?nh vi?n bài vi?t ð? xóa",
+          message: "Ch? admin cï¿½ th? xï¿½a v?nh vi?n bï¿½i vi?t ï¿½? xï¿½a",
         });
       }
     } else if (["draft", "pending"].includes(post.status)) {
-      // Bài draft/pending ? author ho?c admin có th? xóa
+      // Bï¿½i draft/pending ? author ho?c admin cï¿½ th? xï¿½a
       if (!isAuthor && !isAdmin) {
         return res.status(403).json({
           success: false,
-          message: "B?n không có quy?n xóa bài vi?t này",
+          message: "B?n khï¿½ng cï¿½ quy?n xï¿½a bï¿½i vi?t nï¿½y",
         });
       }
     } else {
-      // Bài approved/rejected ? ch? admin
+      // Bï¿½i approved/rejected ? ch? admin
       if (!isAdmin) {
         return res.status(403).json({
           success: false,
-          message: "Ch? admin có th? xóa v?nh vi?n bài vi?t này",
+          message: "Ch? admin cï¿½ th? xï¿½a v?nh vi?n bï¿½i vi?t nï¿½y",
         });
       }
     }
@@ -670,13 +670,13 @@ export const hardDeletePost = async (
 
     return res.json({
       success: true,
-      message: "Bài vi?t ð? ðý?c xóa v?nh vi?n",
+      message: "Bï¿½i vi?t ï¿½? ï¿½ï¿½?c xï¿½a v?nh vi?n",
     });
   } catch (error) {
     console.error("Hard delete post error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i xóa v?nh vi?n bài vi?t",
+      message: "L?i xï¿½a v?nh vi?n bï¿½i vi?t",
     });
   }
 };
@@ -693,7 +693,7 @@ export const approvePost = async (
     if (!adminId || req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Ch? admin có th? duy?t bài vi?t",
+        message: "Ch? admin cï¿½ th? duy?t bï¿½i vi?t",
       });
     }
 
@@ -701,14 +701,14 @@ export const approvePost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài vi?t không t?n t?i",
+        message: "Bï¿½i vi?t khï¿½ng t?n t?i",
       });
     }
 
     if (post.status !== "pending") {
       return res.status(400).json({
         success: false,
-        message: "Ch? có th? duy?t bài vi?t ch? duy?t",
+        message: "Ch? cï¿½ th? duy?t bï¿½i vi?t ch? duy?t",
       });
     }
 
@@ -729,7 +729,7 @@ export const approvePost = async (
 
     return res.json({
       success: true,
-      message: "B? i viáº¿t Ä‘?£ Ä‘Æ°á»£c duyá»‡t",
+      message: "B?ï¿½i viáº¿t Ä‘?ï¿½ Ä‘Æ°á»£c duyá»‡t",
       data: {
         ...post.toJSON(),
         author,
@@ -740,7 +740,7 @@ export const approvePost = async (
     console.error("Approve post error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i duy?t bài vi?t",
+      message: "L?i duy?t bï¿½i vi?t",
     });
   }
 };
@@ -758,7 +758,7 @@ export const rejectPost = async (
     if (!adminId || req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Ch? admin có th? t? ch?i bài vi?t",
+        message: "Ch? admin cï¿½ th? t? ch?i bï¿½i vi?t",
       });
     }
 
@@ -773,14 +773,14 @@ export const rejectPost = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài vi?t không t?n t?i",
+        message: "Bï¿½i vi?t khï¿½ng t?n t?i",
       });
     }
 
     if (!["pending", "approved"].includes(post.status)) {
       return res.status(400).json({
         success: false,
-        message: "Ch? có th? t? ch?i bài vi?t ch? duy?t ho?c ð? duy?t",
+        message: "Ch? cï¿½ th? t? ch?i bï¿½i vi?t ch? duy?t ho?c ï¿½? duy?t",
       });
     }
 
@@ -802,7 +802,7 @@ export const rejectPost = async (
 
     return res.json({
       success: true,
-      message: "Bài vi?t ð? ðý?c t? ch?i",
+      message: "Bï¿½i vi?t ï¿½? ï¿½ï¿½?c t? ch?i",
       data: {
         ...post.toJSON(),
         author,
@@ -813,7 +813,7 @@ export const rejectPost = async (
     console.error("Reject post error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i t? ch?i bài vi?t",
+      message: "L?i t? ch?i bï¿½i vi?t",
     });
   }
 };
