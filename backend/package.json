@@ -1,7 +1,7 @@
-﻿{
+{
   "name": "tutor-support-system-backend",
   "version": "1.0.0",
-  "description": "Backend cho hệ thống hỗ trợ gia sư",
+  "description": "Backend cho he thong ho tro gia su",
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
@@ -14,13 +14,7 @@
     "seed:conversations": "tsx --env-file=.env src/utils/seedConversations.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "tutor",
-    "education",
-    "express",
-    "mongodb",
-    "sqlserver"
-  ],
+  "keywords": ["tutor", "education", "express", "mongodb", "sqlserver"],
   "author": "",
   "license": "ISC",
   "dependencies": {

@@ -204,8 +204,11 @@ export const getWeekSchedules = async (req: AuthenticatedRequest, res: Response)
       } as ApiResponse);
     }
 
-    // Parse the week start date
-    const startDate = new Date(weekStartDate);
+    // Parse the week start date as LOCAL date (not UTC)
+    // weekStartDate is "YYYY-MM-DD" format, parse it as local date
+    const [year, month, day] = weekStartDate.split('-').map(Number);
+    const startDate = new Date(year, month - 1, day); // Local date
+    
     if (isNaN(startDate.getTime())) {
       return res.status(400).json({
         success: false,
@@ -216,6 +219,14 @@ export const getWeekSchedules = async (req: AuthenticatedRequest, res: Response)
     // Get schedule instances for the week
     const instances = await scheduleService.getScheduleInstancesForWeek(userId, role, startDate);
 
+    // Helper to format date as YYYY-MM-DD using local timezone
+    const toLocalDateString = (date: Date): string => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+
     // Transform to response format
     const sessions = instances.map(({ schedule, sessionDate }) => ({
       schedule_id: schedule.schedule_id,
@@ -225,7 +236,7 @@ export const getWeekSchedules = async (req: AuthenticatedRequest, res: Response)
       end_time: schedule.end_time,
       duration_minutes: schedule.duration_minutes,
       is_active: schedule.is_active,
-      session_date: sessionDate.toISOString().split('T')[0], // YYYY-MM-DD
+      session_date: toLocalDateString(sessionDate), // Use local date format
       class_name: schedule.class_name,
       subject_name: schedule.subject_name,
       tutor_name: schedule.tutor_name,

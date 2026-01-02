@@ -53,25 +53,11 @@ router.get('/v2/sessions-over-time', advancedStatisticsController.getSessionsOve
 router.get('/v2/time-distribution', advancedStatisticsController.getTimeDistribution);
 
 /**
- * @route   GET /api/statistics/v2/learning-effectiveness
- * @desc    Get learning effectiveness for stacked bar chart
+ * @route   GET /api/statistics/v2/student-ranking
+ * @desc    Get student ranking based on average homework score
  * @access  Private (Tutor only)
  */
-router.get('/v2/learning-effectiveness', advancedStatisticsController.getLearningEffectiveness);
-
-/**
- * @route   GET /api/statistics/v2/top-students
- * @desc    Get top performing students
- * @access  Private (Tutor only)
- */
-router.get('/v2/top-students', advancedStatisticsController.getTopStudents);
-
-/**
- * @route   GET /api/statistics/v2/students-needing-attention
- * @desc    Get students needing attention
- * @access  Private (Tutor only)
- */
-router.get('/v2/students-needing-attention', advancedStatisticsController.getStudentsNeedingAttention);
+router.get('/v2/student-ranking', advancedStatisticsController.getStudentRanking);
 
 /**
  * @route   GET /api/statistics/v2/classes

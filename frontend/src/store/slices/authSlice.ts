@@ -6,6 +6,7 @@ import socketService from '@/services/socketService';
 
 interface User {
   user_id: string;
+  id?: string; // Alias for user_id
   email: string;
   firstName: string;
   lastName: string;
@@ -84,11 +85,26 @@ export const signIn = createAsyncThunk(
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await apiClient.post('/auth/signin', { email, password });
-      const { token, user } = response.data;
+      const { token, user: apiUser } = response.data;
 
-      if (!token || !user) {
+      if (!token || !apiUser) {
         return rejectWithValue('Invalid response: missing token or user');
       }
+
+      // Map API response to User interface
+      const user = {
+        user_id: apiUser.id,
+        email: apiUser.email,
+        firstName: apiUser.firstName || '',
+        lastName: apiUser.lastName || '',
+        displayName: apiUser.displayName || apiUser.firstName + ' ' + apiUser.lastName,
+        avatarUrl: apiUser.avatarUrl,
+        role: apiUser.role.toLowerCase(), // Normalize role to lowercase
+        phone: apiUser.phone || '',
+        status: apiUser.status || 'active',
+        created_at: apiUser.createdAt || new Date().toISOString(),
+        updated_at: apiUser.updatedAt || new Date().toISOString(),
+      };
 
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));

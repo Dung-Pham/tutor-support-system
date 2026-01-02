@@ -74,8 +74,8 @@ Notification.init(
       allowNull: false,
       field: "recipient_id",
       references: {
-        model: "Users",
-        key: "id",
+        model: "UserAccount",
+        key: "user_id",
       },
       onDelete: "CASCADE",
     },
@@ -84,8 +84,8 @@ Notification.init(
       allowNull: true,
       field: "sender_id",
       references: {
-        model: "Users",
-        key: "id",
+        model: "UserAccount",
+        key: "user_id",
       },
       onDelete: "SET NULL",
     },

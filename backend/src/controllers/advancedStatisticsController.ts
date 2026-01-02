@@ -167,10 +167,10 @@ export const getLearningEffectiveness = async (req: AuthenticatedRequest, res: R
 };
 
 /**
- * Get top students
- * @route GET /api/statistics/v2/top-students
+ * Get student ranking based on average homework score
+ * @route GET /api/statistics/v2/student-ranking
  */
-export const getTopStudents = async (req: AuthenticatedRequest, res: Response) => {
+export const getStudentRanking = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const validation = validateTutorAccess(req);
     if (!validation.valid) {
@@ -178,59 +178,19 @@ export const getTopStudents = async (req: AuthenticatedRequest, res: Response) =
     }
 
     const filters = parseFilters(req.query);
-    const students = await advancedStats.getTopStudents(validation.tutorId!, filters);
+    const ranking = await advancedStats.getStudentRanking(validation.tutorId!, filters);
 
     return res.json({
       success: true,
-      students,
-      period: filters.timeFilter,
+      data: ranking,
+      totalStudents: ranking.length,
       filters,
     });
   } catch (error) {
-    console.error('Error getting top students:', error);
+    console.error('Error getting student ranking:', error);
     return res.status(500).json({
       success: false,
-      message: 'Lỗi khi lấy học sinh nổi bật',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-};
-
-/**
- * Get students needing attention
- * @route GET /api/statistics/v2/students-needing-attention
- */
-export const getStudentsNeedingAttention = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const validation = validateTutorAccess(req);
-    if (!validation.valid) {
-      return res.status(validation.error!.status).json({ message: validation.error!.message });
-    }
-
-    const filters = parseFilters(req.query);
-    const thresholds = {
-      lowScore: parseFloat(req.query.lowScoreThreshold as string) || 6.5,
-      highAbsence: parseFloat(req.query.highAbsenceThreshold as string) || 0.2,
-      missingAssignments: parseInt(req.query.missingAssignmentsThreshold as string) || 3,
-    };
-
-    const students = await advancedStats.getStudentsNeedingAttention(validation.tutorId!, filters, thresholds);
-
-    return res.json({
-      success: true,
-      students,
-      thresholds: {
-        lowScoreThreshold: thresholds.lowScore,
-        highAbsenceThreshold: thresholds.highAbsence,
-        missingAssignmentsThreshold: thresholds.missingAssignments,
-      },
-      filters,
-    });
-  } catch (error) {
-    console.error('Error getting students needing attention:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Lỗi khi lấy học sinh cần chú ý',
+      message: 'Lỗi khi lấy bảng xếp hạng học sinh',
       error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
@@ -283,17 +243,13 @@ export const getAllAdvancedStatistics = async (req: AuthenticatedRequest, res: R
       overview,
       sessionsOverTime,
       timeDistribution,
-      learningEffectiveness,
-      topStudents,
-      studentsNeedingAttention,
+      studentRanking,
       classes,
     ] = await Promise.all([
       advancedStats.getStatisticsOverview(tutorId, filters),
       advancedStats.getSessionsRevenueOverTime(tutorId, filters),
       advancedStats.getTimeDistribution(tutorId, filters),
-      advancedStats.getLearningEffectiveness(tutorId, filters),
-      advancedStats.getTopStudents(tutorId, filters),
-      advancedStats.getStudentsNeedingAttention(tutorId, filters),
+      advancedStats.getStudentRanking(tutorId, filters),
       advancedStats.getTutorClasses(tutorId),
     ]);
 
@@ -312,21 +268,9 @@ export const getAllAdvancedStatistics = async (req: AuthenticatedRequest, res: R
           totalRevenue: timeDistribution.totalRevenue,
           totalSessions: timeDistribution.totalSessions,
         },
-        learningEffectiveness: {
-          data: learningEffectiveness.data,
-          ...learningEffectiveness.overallStats,
-        },
-        topStudents: {
-          students: topStudents,
-          period: filters.timeFilter,
-        },
-        studentsNeedingAttention: {
-          students: studentsNeedingAttention,
-          thresholds: {
-            lowScoreThreshold: 6.5,
-            highAbsenceThreshold: 0.2,
-            missingAssignmentsThreshold: 3,
-          },
+        studentRanking: {
+          data: studentRanking,
+          totalStudents: studentRanking.length,
         },
         classes,
       },

@@ -36,14 +36,19 @@ export const MyClassesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Get base route based on user role
+  const baseRoute = user?.role?.toLowerCase() === 'tutor' ? '/tutor' : '/student';
+
   useEffect(() => {
-    if (user?.user_id) {
+    const userId = user?.user_id || user?.id;
+    if (userId) {
       loadClasses();
     }
   }, [user]);
 
   const loadClasses = async () => {
-    if (!user?.user_id) return;
+    const userId = user?.user_id || user?.id;
+    if (!userId) return;
 
     try {
       setLoading(true);
@@ -197,7 +202,7 @@ export const MyClassesPage: React.FC = () => {
                   <Button
                     className="w-full"
                     variant="outline"
-                    onClick={() => navigate(`/class-detail/${classInfo.class_id}`)}
+                    onClick={() => navigate(`${baseRoute}/class-detail/${classInfo.class_id}`)}
                   >
                     Xem chi tiết
                   </Button>

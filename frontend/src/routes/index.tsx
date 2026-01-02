@@ -11,26 +11,39 @@ import NotFound from '../pages/public/NotFound';
 import { ProtectedRoute } from './ProtectedRoute';
 import { RoleBasedRoute } from './RoleBasedRoute';
 
-// === LAZY LOADED PAGES - Load khi cần ===
+// Teaching Module Pages (from HEAD)
+import RegisterPage from '../pages/RegisterPage';
+import SchedulePage from '../pages/SchedulePage';
+import MyClassesPage from '../pages/MyClassesPage';
+import { ClassDetailPage } from '../pages/ClassDetailPage';
+import SessionDetailPage from '../pages/SessionDetailPage';
+import AssignmentsPage from '../pages/AssignmentsPage';
+import SubmitAssignmentPage from '../pages/SubmitAssignmentPage';
+import SubmissionsPage from '../pages/SubmissionsPage';
+import DocumentsPage from '../pages/DocumentsPage';
+import StudentHomeworkPage from '../pages/StudentHomeworkPage';
+import TutorHomeworkPage from '../pages/TutorHomeworkPage';
+import HomeworkDetailPage from '../pages/HomeworkDetailPage';
+import StudentHomeworkDetailPage from '../pages/StudentHomeworkDetailPage';
+import StudentsPage from '../pages/StudentsPage';
+import StatisticsDashboard from '../pages/StatisticsDashboard';
 
-// Student pages (chỉ load khi user là student)
+// === LAZY LOADED PAGES ===
+
+// Student pages
 const StudentLayout = lazy(() =>
   import('@/pages/student/StudentLayout').then((m) => ({ default: m.StudentLayout }))
 );
 const StudentMessages = lazy(() => import('@/pages/student/StudentMessages'));
-const TutorsList = lazy(() => import('@/pages/student/TutorsList'));
+const TutorsPage = lazy(() => import('@/pages/TutorsPage'));
 
-// Tutor pages (chỉ load khi user là tutor)
+// Tutor pages
 const TutorLayout = lazy(() =>
   import('@/pages/tutor/TutorLayout').then((m) => ({ default: m.TutorLayout }))
 );
 const CreatePost = lazy(() => import('@/pages/tutor/CreatePost'));
 const MyPosts = lazy(() => import('@/pages/tutor/MyPosts'));
-const TutorMessages = lazy(() => import('@/pages/tutor/TutorMessages')); // Có Emoji picker (100 KB)
-const TutorStudents = lazy(() => import('@/pages/tutor/TutorStudents'));
-const TutorSchedule = lazy(() => import('@/pages/tutor/TutorSchedule'));
-const TutorStatistics = lazy(() => import('@/pages/tutor/TutorStatistics'));
-const TutorSettings = lazy(() => import('@/pages/tutor/TutorSettings'));
+const TutorMessages = lazy(() => import('@/pages/tutor/TutorMessages'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -42,11 +55,10 @@ const PageLoader = () => (
 export const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public routes - Load ngay */}
+      {/* ========== PUBLIC ROUTES ========== */}
       <Route path="/" element={<HomePage />} />
-
-      {/* Authentication routes - Load ngay */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="/register/student" element={<StudentRegistrationPage />} />
       <Route path="/register/tutor" element={<TutorRegistrationPage />} />
 
@@ -57,7 +69,7 @@ export const AppRoutes = () => {
         <Route path="/posts/:id/:slug" element={<PostDetailPage />} />
       </Route>
 
-      {/* Protected Routes cho Student - Lazy loaded */}
+      {/* ========== STUDENT ROUTES - All in one layout ========== */}
       <Route element={<ProtectedRoute />}>
         <Route element={<RoleBasedRoute allowedRoles={['student']} />}>
           <Route
@@ -68,19 +80,18 @@ export const AppRoutes = () => {
               </Suspense>
             }
           >
-            <Route index element={<div>Dashboard Student</div>} />
-            <Route path="schedule" element={<div>Lịch học</div>} />
-            <Route path="classes" element={<div>Lớp học của tôi</div>} />
-            <Route path="assignments" element={<div>Bài tập</div>} />
+            {/* Dashboard / Home */}
+            <Route index element={<CommunityPosts />} />
+            
+            {/* Social Module */}
             <Route path="posts" element={<CommunityPosts />} />
             <Route path="posts/:id" element={<PostDetailPage />} />
             <Route path="posts/:id/:slug" element={<PostDetailPage />} />
-            <Route path="documents" element={<div>Tài liệu</div>} />
             <Route
               path="tutors"
               element={
                 <Suspense fallback={<PageLoader />}>
-                  <TutorsList />
+                  <TutorsPage />
                 </Suspense>
               }
             />
@@ -100,13 +111,22 @@ export const AppRoutes = () => {
                 </Suspense>
               }
             />
-            <Route path="statistics" element={<div>Thống kê</div>} />
-            <Route path="settings" element={<div>Cài đặt</div>} />
+            
+            {/* Teaching Module - Student */}
+            <Route path="schedule" element={<SchedulePage />} />
+            <Route path="classes" element={<MyClassesPage />} />
+            <Route path="class-detail/:classId" element={<ClassDetailPage />} />
+            <Route path="sessions/:sessionId" element={<SessionDetailPage />} />
+            <Route path="documents" element={<DocumentsPage />} />
+            <Route path="assignments" element={<AssignmentsPage />} />
+            <Route path="assignments/:assignmentId/submit" element={<SubmitAssignmentPage />} />
+            <Route path="homework" element={<StudentHomeworkPage />} />
+            <Route path="homework/:assignmentId" element={<StudentHomeworkDetailPage />} />
           </Route>
         </Route>
       </Route>
 
-      {/* Protected Routes cho Tutor - Lazy loaded */}
+      {/* ========== TUTOR ROUTES - All in one layout ========== */}
       <Route element={<ProtectedRoute />}>
         <Route element={<RoleBasedRoute allowedRoles={['tutor']} />}>
           <Route
@@ -117,7 +137,10 @@ export const AppRoutes = () => {
               </Suspense>
             }
           >
+            {/* Dashboard / Home */}
             <Route index element={<CommunityPosts />} />
+            
+            {/* Social Module */}
             <Route path="posts" element={<CommunityPosts />} />
             <Route path="posts/:id" element={<PostDetailPage />} />
             <Route path="posts/:id/:slug" element={<PostDetailPage />} />
@@ -161,38 +184,18 @@ export const AppRoutes = () => {
                 </Suspense>
               }
             />
-            <Route
-              path="students"
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <TutorStudents />
-                </Suspense>
-              }
-            />
-            <Route
-              path="schedule"
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <TutorSchedule />
-                </Suspense>
-              }
-            />
-            <Route
-              path="statistics"
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <TutorStatistics />
-                </Suspense>
-              }
-            />
-            <Route
-              path="settings"
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <TutorSettings />
-                </Suspense>
-              }
-            />
+            
+            {/* Teaching Module - Tutor */}
+            <Route path="schedule" element={<SchedulePage />} />
+            <Route path="classes" element={<MyClassesPage />} />
+            <Route path="class-detail/:classId" element={<ClassDetailPage />} />
+            <Route path="sessions/:sessionId" element={<SessionDetailPage />} />
+            <Route path="documents" element={<DocumentsPage />} />
+            <Route path="homework" element={<TutorHomeworkPage />} />
+            <Route path="homework/:homeworkId" element={<HomeworkDetailPage />} />
+            <Route path="assignments/:assignmentId/submissions" element={<SubmissionsPage />} />
+            <Route path="students" element={<StudentsPage />} />
+            <Route path="statistics" element={<StatisticsDashboard />} />
           </Route>
         </Route>
       </Route>

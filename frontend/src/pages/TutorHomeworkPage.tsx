@@ -43,6 +43,8 @@ const TutorHomeworkPage: React.FC = () => {
   const { homeworks, loading, error, showCreateModal } = useSelector(
     (state: RootState) => state.newHomework
   );
+  const { user } = useSelector((state: RootState) => state.auth);
+  const baseRoute = user?.role?.toLowerCase() === 'tutor' ? '/tutor' : '/student';
 
   // Form state for create homework
   const [formData, setFormData] = useState({
@@ -264,7 +266,7 @@ const TutorHomeworkPage: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/homework/tutor/${homework.homework_id}`)}
+                      onClick={() => navigate(`${baseRoute}/homework/${homework.homework_id}`)}
                     >
                       <Eye className="h-4 w-4 mr-1" />
                       Chi tiết

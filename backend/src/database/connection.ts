@@ -9,7 +9,9 @@
  * - Graceful connection cleanup
  */
 
-import sql, { config as SQLConfig, ConnectionPool, IResult } from 'mssql';
+import sql from 'mssql';
+import type { config as SQLConfig, IResult } from 'mssql';
+const { ConnectionPool } = sql;
 
 /**
  * Database configuration interface

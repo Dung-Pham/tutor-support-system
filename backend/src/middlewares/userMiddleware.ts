@@ -6,6 +6,8 @@ import { User } from "../models/sql/index.js";
 import { AuthRequest } from "../types/common.js";
 import { JwtPayload } from "../types/auth.js";
 
+const JWT_SECRET = process.env.JWT_SECRET || process.env.ACCESS_TOKEN_SECRET || 'your-secret-key-change-in-production';
+
 // Protected route - verify access token
 export const protectedRoute = async (
   req: AuthRequest,
@@ -26,7 +28,7 @@ export const protectedRoute = async (
 
     jwt.verify(
       token,
-      process.env.ACCESS_TOKEN_SECRET as string,
+      JWT_SECRET,
       async (err, decoded) => {
         if (err) {
           res.status(401).json({

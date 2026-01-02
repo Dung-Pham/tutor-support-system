@@ -10,7 +10,7 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
-import { isToday } from '../utils/dateHelper';
+import { isToday, toLocalDateString } from '../utils/dateHelper';
 import type { Schedule, SessionInstance, DayOfWeek } from '../types/session';
 
 interface WeekTimelineViewProps {
@@ -118,10 +118,7 @@ export const WeekTimelineView: React.FC<WeekTimelineViewProps> = ({
   const getSessionsForDateAndHour = (date: Date, hour: number): (Schedule | SessionInstance)[] => {
     const dayOfWeek = date.getDay() as DayOfWeek;
     // Use local date format to avoid timezone issues
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateString = `${year}-${month}-${day}`; // YYYY-MM-DD in local timezone
+    const dateString = toLocalDateString(date); // YYYY-MM-DD in local timezone
 
     return sessions.filter((session) => {
       // Check if session is on this day

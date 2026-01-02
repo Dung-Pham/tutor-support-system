@@ -10,7 +10,9 @@
  *   - Handle database errors appropriately
  */
 
-import sql, { ConnectionPool, IRecordSet } from 'mssql';
+import sql from 'mssql';
+import type { IRecordSet } from 'mssql';
+const { ConnectionPool } = sql;
 
 // Interface definitions
 interface ClassRecord {

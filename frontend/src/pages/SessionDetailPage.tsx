@@ -30,6 +30,7 @@ export const SessionDetailPage: React.FC = () => {
   
   const { currentSchedule, loading } = useSelector((state: RootState) => state.sessions);
   const { user } = useSelector((state: RootState) => state.auth);
+  const baseRoute = user?.role?.toLowerCase() === 'tutor' ? '/tutor' : '/student';
 
   const [attendance, setAttendance] = useState<AttendanceRecord | null>(null);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
@@ -60,7 +61,7 @@ export const SessionDetailPage: React.FC = () => {
     if (!attendance) return;
 
     try {
-      const userRole = user?.role === 'tutor' ? 'tutor' : 'student';
+      const userRole = user?.role?.toLowerCase() === 'tutor' ? 'tutor' : 'student';
       const response = await confirmAttendance(attendance.attendance_id, {
         confirmedBy: userRole,
         notes,
@@ -109,7 +110,7 @@ export const SessionDetailPage: React.FC = () => {
       <div className="container mx-auto max-w-4xl p-6">
         <div className="text-center">
           <p className="text-gray-600">Không tìm thấy buổi học</p>
-          <Button className="mt-4" onClick={() => navigate('/schedule')}>
+          <Button className="mt-4" onClick={() => navigate(`${baseRoute}/schedule`)}>
             Về trang lịch học
           </Button>
         </div>
@@ -124,7 +125,7 @@ export const SessionDetailPage: React.FC = () => {
 
   return (
     <div className="container mx-auto max-w-4xl p-6">
-      <Button variant="ghost" className="mb-4" onClick={() => navigate('/schedule')}>
+      <Button variant="ghost" className="mb-4" onClick={() => navigate(`${baseRoute}/schedule`)}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Quay lại lịch học
       </Button>
@@ -177,10 +178,10 @@ export const SessionDetailPage: React.FC = () => {
               <User className="h-5 w-5 text-gray-400" />
               <div>
                 <p className="text-sm font-medium">
-                  {user?.role === 'tutor' ? 'Học viên' : 'Gia sư'}
+                  {user?.role?.toLowerCase() === 'tutor' ? 'Học viên' : 'Gia sư'}
                 </p>
                 <p className="text-sm text-gray-600">
-                  {user?.role === 'tutor' 
+                  {user?.role?.toLowerCase() === 'tutor' 
                     ? currentSchedule.student_name || 'Chưa có học viên'
                     : currentSchedule.tutor_name || 'Chưa có gia sư'}
                 </p>
@@ -203,7 +204,7 @@ export const SessionDetailPage: React.FC = () => {
 
       <AttendanceWidget
         attendance={attendance}
-        userRole={user?.role === 'tutor' ? 'tutor' : 'student'}
+        userRole={user?.role?.toLowerCase() === 'tutor' ? 'tutor' : 'student'}
         onConfirm={handleConfirmAttendance}
         loading={loadingAttendance}
       />

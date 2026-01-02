@@ -1,8 +1,8 @@
 /**
- * File: pages/StudentsPage.tsx
- * Mục đích: Trang quản lý danh sách học sinh của gia sư
+ * File: pages/TutorsPage.tsx
+ * Mục đích: Trang danh sách gia sư cho học sinh
  * Vai trò:
- *   - Hiển thị danh sách tất cả học viên của tutor
+ *   - Hiển thị danh sách tất cả gia sư của học sinh
  *   - Thông tin cơ bản, môn học, lớp học
  *   - Thông tin liên lạc
  *   - Button chuyển đến nhắn tin
@@ -12,25 +12,20 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../store';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Separator } from '../components/ui/separator';
 import {
   Search,
   Filter,
   MessageCircle,
   Mail,
   Phone,
-  User,
-  BookOpen,
   Users,
-  GraduationCap,
   Loader2,
 } from 'lucide-react';
 import * as conversationService from '../services/conversationService';
 
-interface StudentClass {
+interface TutorClass {
   class_id: string;
   subject_name: string;
   grade_level: number;
@@ -39,22 +34,22 @@ interface StudentClass {
   end_date: string;
 }
 
-interface Student {
-  student_id: string;
-  student_name: string;
+interface Tutor {
+  tutor_id: string;
+  tutor_name: string;
   email: string;
   phone: string;
   avatar_url?: string;
-  status: string;
-  classes: StudentClass[];
+  bio?: string;
+  classes: TutorClass[];
   total_classes: number;
   active_classes: number;
 }
 
-export const StudentsPage: React.FC = () => {
-  const { user, token } = useSelector((state: RootState) => state.auth);
+export const TutorsPage: React.FC = () => {
+  const { token } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
-  const [students, setStudents] = useState<Student[]>([]);
+  const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,16 +57,16 @@ export const StudentsPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed'>('all');
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-  const [messagingStudentId, setMessagingStudentId] = useState<string | null>(null);
+  const [messagingTutorId, setMessagingTutorId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchStudents();
+    fetchTutors();
   }, []);
 
-  const fetchStudents = async () => {
+  const fetchTutors = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/students', {
+      const response = await fetch('http://localhost:5000/api/tutors/my-tutors', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -79,11 +74,11 @@ export const StudentsPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Không thể tải danh sách học sinh');
+        throw new Error('Không thể tải danh sách gia sư');
       }
 
       const data = await response.json();
-      setStudents(data.data || []);
+      setTutors(data.data || []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
@@ -92,106 +87,77 @@ export const StudentsPage: React.FC = () => {
     }
   };
 
-  const handleSearch = async () => {
-    if (searchTerm.trim().length < 2) {
-      fetchStudents();
-      return;
-    }
-
+  const handleMessage = async (tutorId: string) => {
     try {
-      setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/students/search?q=${encodeURIComponent(searchTerm)}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Không thể tìm kiếm học sinh');
-      }
-
-      const data = await response.json();
-      setStudents(data.data || []);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMessage = async (studentId: string) => {
-    try {
-      setMessagingStudentId(studentId);
+      setMessagingTutorId(tutorId);
       
       // First, try to get existing conversations to find if one already exists
       const conversations = await conversationService.getConversations();
       
-      // Find existing direct conversation with this student
+      // Find existing direct conversation with this tutor
       const existingConversation = conversations.find(conv => 
         conv.type === 'direct' && 
-        conv.participants.some(p => p.id === studentId)
+        conv.participants.some(p => p.id?.toUpperCase() === tutorId.toUpperCase())
       );
       
       if (existingConversation) {
         // Navigate to existing conversation
-        navigate(`/tutor/messages/${existingConversation.id}`);
+        navigate(`/student/messages/${existingConversation.id}`);
       } else {
         // Create a new direct conversation
         const newConversation = await conversationService.createConversation({
           type: 'direct',
-          memberIds: [studentId],
+          memberIds: [tutorId],
         });
         
         // Navigate to the new conversation
-        navigate(`/tutor/messages/${newConversation.id}`);
+        navigate(`/student/messages/${newConversation.id}`);
       }
     } catch (error) {
       console.error('Failed to open chat:', error);
       alert('Không thể mở cuộc trò chuyện. Vui lòng thử lại sau.');
     } finally {
-      setMessagingStudentId(null);
+      setMessagingTutorId(null);
     }
   };
 
-  // Get all unique subjects from students
+  // Get all unique subjects from tutors
   const allSubjects = React.useMemo(() => {
     const subjects = new Set<string>();
-    students.forEach(student => {
-      student.classes.forEach(cls => {
+    tutors.forEach(tutor => {
+      tutor.classes.forEach(cls => {
         if (cls.subject_name) subjects.add(cls.subject_name);
       });
     });
     return Array.from(subjects).sort();
-  }, [students]);
+  }, [tutors]);
 
-  // Filter and sort students
-  const filteredStudents = students
-    .filter(student => {
+  // Filter and sort tutors
+  const filteredTutors = tutors
+    .filter(tutor => {
       // Search by name, email, phone
       if (searchTerm.trim()) {
         const search = searchTerm.toLowerCase();
-        const matchName = student.student_name.toLowerCase().includes(search);
-        const matchEmail = student.email?.toLowerCase().includes(search);
-        const matchPhone = student.phone?.includes(search);
+        const matchName = tutor.tutor_name.toLowerCase().includes(search);
+        const matchEmail = tutor.email?.toLowerCase().includes(search);
+        const matchPhone = tutor.phone?.includes(search);
         if (!matchName && !matchEmail && !matchPhone) return false;
       }
       // Filter by status
-      if (filterStatus === 'active' && student.active_classes === 0) {
+      if (filterStatus === 'active' && tutor.active_classes === 0) {
         return false;
       }
-      if (filterStatus === 'completed' && student.active_classes > 0) {
+      if (filterStatus === 'completed' && tutor.active_classes > 0) {
         return false;
       }
       // Filter by subject
       if (filterSubject !== 'all') {
-        const hasSubject = student.classes.some(cls => cls.subject_name === filterSubject);
+        const hasSubject = tutor.classes.some(cls => cls.subject_name === filterSubject);
         if (!hasSubject) return false;
       }
       return true;
     })
-    .sort((a, b) => a.student_name.localeCompare(b.student_name));
+    .sort((a, b) => a.tutor_name.localeCompare(b.tutor_name));
 
   // Get initials from name
   const getInitials = (name: string) => {
@@ -213,26 +179,12 @@ export const StudentsPage: React.FC = () => {
     return colors[index];
   };
 
-  // Get status badge variant
-  const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Đang học</Badge>;
-      case 'completed':
-        return <Badge variant="secondary">Hoàn thành</Badge>;
-      case 'cancelled':
-        return <Badge variant="destructive">Đã hủy</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải danh sách học sinh...</p>
+          <p className="mt-4 text-gray-600">Đang tải danh sách gia sư...</p>
         </div>
       </div>
     );
@@ -243,7 +195,7 @@ export const StudentsPage: React.FC = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={fetchStudents}>Thử lại</Button>
+          <Button onClick={fetchTutors}>Thử lại</Button>
         </div>
       </div>
     );
@@ -253,12 +205,12 @@ export const StudentsPage: React.FC = () => {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div className="text-sm text-gray-500">
-        Học sinh
+        Gia sư của tôi
       </div>
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Học sinh</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Danh sách gia sư</h1>
       </div>
 
       {/* Filter & Sort Bar */}
@@ -346,7 +298,7 @@ export const StudentsPage: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm học sinh..."
+              placeholder="Tìm kiếm gia sư..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
@@ -358,44 +310,44 @@ export const StudentsPage: React.FC = () => {
       {/* Table Header */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-600">
-          <div className="col-span-4">Tên học sinh</div>
+          <div className="col-span-4">Tên gia sư</div>
           <div className="col-span-3">Liên hệ</div>
           <div className="col-span-3">Lớp học</div>
           <div className="col-span-2">Trạng thái</div>
         </div>
 
-        {/* Student List */}
-        {filteredStudents.length === 0 ? (
+        {/* Tutor List */}
+        {filteredTutors.length === 0 ? (
           <div className="text-center py-12">
             <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có học sinh nào</h3>
-            <p className="text-gray-600">Học sinh sẽ xuất hiện khi bạn có lớp học</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có gia sư nào</h3>
+            <p className="text-gray-600">Gia sư sẽ xuất hiện khi bạn đăng ký lớp học</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {filteredStudents.map((student) => (
+            {filteredTutors.map((tutor) => (
               <div 
-                key={student.student_id} 
+                key={tutor.tutor_id} 
                 className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors"
               >
                 {/* Name Column */}
                 <div className="col-span-4 flex items-center gap-3">
                   {/* Avatar */}
-                  {student.avatar_url ? (
+                  {tutor.avatar_url ? (
                     <img 
-                      src={student.avatar_url} 
-                      alt={student.student_name}
+                      src={tutor.avatar_url} 
+                      alt={tutor.tutor_name}
                       className="h-10 w-10 rounded-full object-cover"
                     />
                   ) : (
-                    <div className={`h-10 w-10 rounded-full ${getAvatarColor(student.student_name)} flex items-center justify-center text-white font-medium text-sm`}>
-                      {getInitials(student.student_name)}
+                    <div className={`h-10 w-10 rounded-full ${getAvatarColor(tutor.tutor_name)} flex items-center justify-center text-white font-medium text-sm`}>
+                      {getInitials(tutor.tutor_name)}
                     </div>
                   )}
                   <div>
-                    <div className="font-medium text-gray-900">{student.student_name}</div>
+                    <div className="font-medium text-gray-900">{tutor.tutor_name}</div>
                     <div className="text-sm text-gray-500">
-                      {student.active_classes} lớp đang học
+                      {tutor.active_classes} lớp đang dạy
                     </div>
                   </div>
                 </div>
@@ -404,19 +356,19 @@ export const StudentsPage: React.FC = () => {
                 <div className="col-span-3">
                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
                     <Phone className="h-3.5 w-3.5" />
-                    <span>{student.phone || 'Chưa có'}</span>
+                    <span>{tutor.phone || 'Chưa có'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-blue-600 hover:underline cursor-pointer">
                     <Mail className="h-3.5 w-3.5" />
-                    <a href={`mailto:${student.email}`}>{student.email}</a>
+                    <a href={`mailto:${tutor.email}`}>{tutor.email}</a>
                   </div>
                 </div>
 
                 {/* Classes Column */}
                 <div className="col-span-3">
-                  {student.classes.length > 0 ? (
+                  {tutor.classes.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">
-                      {student.classes.slice(0, 2).map((cls, index) => (
+                      {tutor.classes.slice(0, 2).map((cls) => (
                         <Badge 
                           key={cls.class_id} 
                           variant={cls.status === 'active' ? 'default' : 'secondary'}
@@ -425,9 +377,9 @@ export const StudentsPage: React.FC = () => {
                           {cls.subject_name}
                         </Badge>
                       ))}
-                      {student.classes.length > 2 && (
+                      {tutor.classes.length > 2 && (
                         <Badge variant="outline" className="text-xs">
-                          +{student.classes.length - 2}
+                          +{tutor.classes.length - 2}
                         </Badge>
                       )}
                     </div>
@@ -438,8 +390,8 @@ export const StudentsPage: React.FC = () => {
 
                 {/* Status & Action Column */}
                 <div className="col-span-2 flex items-center justify-between">
-                  {student.active_classes > 0 ? (
-                    <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Đang học</Badge>
+                  {tutor.active_classes > 0 ? (
+                    <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Đang dạy</Badge>
                   ) : (
                     <Badge variant="secondary">Đã kết thúc</Badge>
                   )}
@@ -448,12 +400,12 @@ export const StudentsPage: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleMessage(student.student_id)}
+                    onClick={() => handleMessage(tutor.tutor_id)}
                     className="text-gray-500 hover:text-blue-600 hover:bg-blue-50"
                     title="Nhắn tin"
-                    disabled={messagingStudentId === student.student_id}
+                    disabled={messagingTutorId === tutor.tutor_id}
                   >
-                    {messagingStudentId === student.student_id ? (
+                    {messagingTutorId === tutor.tutor_id ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
                       <MessageCircle className="h-5 w-5" />
@@ -468,10 +420,10 @@ export const StudentsPage: React.FC = () => {
 
       {/* Summary Footer */}
       <div className="text-sm text-gray-500">
-        Tổng cộng {filteredStudents.length} học sinh
+        Tổng cộng {filteredTutors.length} gia sư
       </div>
     </div>
   );
 };
 
-export default StudentsPage;
+export default TutorsPage;

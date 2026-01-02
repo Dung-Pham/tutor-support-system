@@ -67,7 +67,7 @@ export const DocumentsPage: React.FC = () => {
   // State for viewing document
   const [viewingDocument, setViewingDocument] = useState<any>(null);
 
-  const isTutor = user?.role === 'tutor';
+  const isTutor = user?.role?.toLowerCase() === 'tutor';
 
   useEffect(() => {
     dispatch(fetchMyDocuments());

@@ -86,45 +86,22 @@ export interface LearningEffectivenessResponse {
   overallAverageScore: number | null;
 }
 
-// ===== WIDGET: Top Students =====
-export interface TopStudent {
-  studentId: string;
-  name: string;
-  email: string;
-  avatarUrl?: string;
-  averageScore: number;
-  onTimeSubmissionRate: number;
-  attendedSessions: number;
-  totalSessions: number;
+// ===== WIDGET: Student Ranking (based on average homework score) =====
+export interface StudentRankingItem {
   rank: number;
-}
-
-export interface TopStudentsResponse {
-  students: TopStudent[];
-  period: string;
-}
-
-// ===== WIDGET: Students Needing Attention =====
-export interface StudentNeedingAttention {
   studentId: string;
   name: string;
   email: string;
   className: string;
-  absentSessions: number;
-  totalSessions: number;
-  absentRate: number;
-  missingAssignments: number;
+  totalHomeworks: number;
+  submittedHomeworks: number;
   averageScore: number | null;
-  reasons: ('low_score' | 'high_absence' | 'missing_assignments')[];
+  submissionRate: number;
 }
 
-export interface StudentsNeedingAttentionResponse {
-  students: StudentNeedingAttention[];
-  thresholds: {
-    lowScoreThreshold: number;
-    highAbsenceThreshold: number;
-    missingAssignmentsThreshold: number;
-  };
+export interface StudentRankingResponse {
+  data: StudentRankingItem[];
+  totalStudents: number;
 }
 
 // ===== CLASS DROPDOWN =====
@@ -142,9 +119,7 @@ export interface FullStatisticsApiResponse {
     overview: StatisticsOverview;
     sessionsOverTime: SessionsRevenueOverTimeResponse;
     timeDistribution: TimeDistributionResponse;
-    learningEffectiveness: LearningEffectivenessResponse;
-    topStudents: TopStudentsResponse;
-    studentsNeedingAttention: StudentsNeedingAttentionResponse;
+    studentRanking: StudentRankingResponse;
     classes: ClassOption[];
   };
   filters: StatisticsFilters;
@@ -184,21 +159,10 @@ export interface LearningEffectivenessApiResponse {
   filters: StatisticsFilters;
 }
 
-export interface TopStudentsApiResponse {
+export interface StudentRankingApiResponse {
   success: boolean;
-  students: TopStudent[];
-  period: string;
-  filters: StatisticsFilters;
-}
-
-export interface StudentsNeedingAttentionApiResponse {
-  success: boolean;
-  students: StudentNeedingAttention[];
-  thresholds: {
-    lowScoreThreshold: number;
-    highAbsenceThreshold: number;
-    missingAssignmentsThreshold: number;
-  };
+  data: StudentRankingItem[];
+  totalStudents: number;
   filters: StatisticsFilters;
 }
 

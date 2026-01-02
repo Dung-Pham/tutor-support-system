@@ -81,8 +81,9 @@ interface StudentActivity {
 }
 
 export const StatisticsPage: React.FC = () => {
-  const { token } = useSelector((state: RootState) => state.auth);
+  const { token, user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
+  const baseRoute = user?.role?.toLowerCase() === 'tutor' ? '/tutor' : '/student';
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -268,7 +269,7 @@ export const StatisticsPage: React.FC = () => {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold">Lớp đang dạy</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/my-classes')}>
+                <Button variant="ghost" size="sm" onClick={() => navigate(`${baseRoute}/classes`)}>
                   Xem tất cả <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
@@ -355,7 +356,7 @@ export const StatisticsPage: React.FC = () => {
                     <div 
                       key={hw.homework_id}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                      onClick={() => navigate(`/homework/tutor/${hw.homework_id}`)}
+                      onClick={() => navigate(`${baseRoute}/homework/${hw.homework_id}`)}
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -383,7 +384,7 @@ export const StatisticsPage: React.FC = () => {
               <Button 
                 variant="outline" 
                 className="w-full mt-4"
-                onClick={() => navigate('/homework/tutor')}
+                onClick={() => navigate(`${baseRoute}/homework`)}
               >
                 Xem tất cả bài tập
               </Button>

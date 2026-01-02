@@ -11,7 +11,7 @@
  */
 
 import { Response, NextFunction } from 'express';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../types';
 import { getUserById } from '../database/queries/userQueries';
 
@@ -78,17 +78,18 @@ export const authenticate = async (
     };
 
     next();
-  } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
+  } catch (error: unknown) {
+    const err = error as Error;
+    if (err.name === 'JsonWebTokenError') {
       res.status(401).json({
         success: false,
         message: 'Invalid token',
-        error: error.message,
+        error: err.message,
       });
       return;
     }
 
-    if (error instanceof jwt.TokenExpiredError) {
+    if (err.name === 'TokenExpiredError') {
       res.status(401).json({
         success: false,
         message: 'Token expired',

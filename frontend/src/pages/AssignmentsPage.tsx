@@ -29,14 +29,16 @@ export const AssignmentsPage: React.FC = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedClassId] = useState(''); // TODO: Add class selection
 
-  const isTutor = user?.role === 'TUTOR';
+  const isTutor = user?.role?.toLowerCase() === 'tutor';
+  const baseRoute = isTutor ? '/tutor' : '/student';
 
   useEffect(() => {
     loadAssignments();
   }, []);
 
   const loadAssignments = () => {
-    const params = isTutor ? { tutorId: user?.user_id } : {};
+    const userId = user?.user_id || user?.id;
+    const params = isTutor ? { tutorId: userId } : {};
     dispatch(fetchAssignments(params));
   };
 
@@ -52,9 +54,9 @@ export const AssignmentsPage: React.FC = () => {
 
   const handleAssignmentClick = (assignmentId: string) => {
     if (isTutor) {
-      navigate(`/assignments/${assignmentId}/submissions`);
+      navigate(`${baseRoute}/assignments/${assignmentId}/submissions`);
     } else {
-      navigate(`/assignments/${assignmentId}/submit`);
+      navigate(`${baseRoute}/assignments/${assignmentId}/submit`);
     }
   };
 

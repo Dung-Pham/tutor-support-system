@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import {
   fetchSessionsByWeek,
 } from '../store/slices/sessionsSlice';
+import { toLocalDateString } from '../utils/dateHelper';
 import type { RootState, AppDispatch } from '../store';
 import type { Schedule, SessionInstance } from '../types/session';
 
@@ -31,23 +32,25 @@ export const SchedulePage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
-    if (user?.user_id) {
+    const userId = user?.user_id || user?.id;
+    if (userId) {
       loadSchedule();
     }
   }, [user, viewType, currentDate]);
 
   const loadSchedule = () => {
-    if (!user?.user_id) return;
+    const userId = user?.user_id || user?.id;
+    if (!userId) return;
 
     // Get Monday of current week
     const weekStart = getWeekStart(currentDate);
-    const weekStartStr = weekStart.toISOString().split('T')[0];
+    const weekStartStr = toLocalDateString(weekStart); // Use local date, not ISO
 
     dispatch(
       fetchSessionsByWeek({
         weekStartDate: weekStartStr,
-        userId: user.user_id,
-        role: user.role === 'tutor' ? 'tutor' : 'student',
+        userId: userId,
+        role: user?.role?.toLowerCase() === 'tutor' ? 'tutor' : 'student',
       })
     );
   };
@@ -64,12 +67,14 @@ export const SchedulePage: React.FC = () => {
   const handleSessionClick = (session: Schedule | SessionInstance) => {
     const scheduleId = session.schedule_id;
     if (scheduleId) {
+      // Determine base route based on user role
+      const baseRoute = user?.role?.toLowerCase() === 'tutor' ? '/tutor' : '/student';
       // If it's a SessionInstance with a specific date, include the date in the URL
       const sessionDate = 'session_date' in session ? session.session_date : null;
       if (sessionDate) {
-        navigate(`/sessions/${scheduleId}?date=${sessionDate}`);
+        navigate(`${baseRoute}/sessions/${scheduleId}?date=${sessionDate}`);
       } else {
-        navigate(`/sessions/${scheduleId}`);
+        navigate(`${baseRoute}/sessions/${scheduleId}`);
       }
     }
   };
@@ -87,7 +92,7 @@ export const SchedulePage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold">Lịch học</h1>
           <p className="mt-1 text-gray-600">
-            Xem và quản lý lịch {user?.role === 'tutor' ? 'dạy' : 'học'} của bạn
+            Xem và quản lý lịch {user?.role?.toLowerCase() === 'tutor' ? 'dạy' : 'học'} của bạn
           </p>
         </div>
 

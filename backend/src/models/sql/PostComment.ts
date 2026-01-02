@@ -68,8 +68,8 @@ PostComment.init(
       allowNull: false,
       field: "user_id",
       references: {
-        model: "Users",
-        key: "id",
+        model: "UserAccount",
+        key: "user_id",
       },
     },
     content: {

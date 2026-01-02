@@ -16,7 +16,7 @@ import { register, clearError } from '../store/slices/authSlice';
 export default function RegisterPage() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { isAuthenticated, loading, error } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, loading, error, user } = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -38,10 +38,11 @@ export default function RegisterPage() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/schedule');
+    if (isAuthenticated && user) {
+      const baseRoute = user.role?.toLowerCase() === 'tutor' ? '/tutor' : '/student';
+      navigate(`${baseRoute}/schedule`);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   // Clear error when component unmounts
   useEffect(() => {

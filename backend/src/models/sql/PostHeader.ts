@@ -96,8 +96,8 @@ PostHeader.init(
       allowNull: false,
       field: "author_id",
       references: {
-        model: "Users",
-        key: "id",
+        model: "UserAccount",
+        key: "user_id",
       },
     },
     status: {
@@ -118,8 +118,8 @@ PostHeader.init(
       allowNull: true,
       field: "approved_by",
       references: {
-        model: "Users",
-        key: "id",
+        model: "UserAccount",
+        key: "user_id",
       },
     },
     approvedAt: {
@@ -132,8 +132,8 @@ PostHeader.init(
       allowNull: true,
       field: "rejected_by",
       references: {
-        model: "Users",
-        key: "id",
+        model: "UserAccount",
+        key: "user_id",
       },
     },
     rejectedAt: {
@@ -146,8 +146,8 @@ PostHeader.init(
       allowNull: true,
       field: "deleted_by",
       references: {
-        model: "Users",
-        key: "id",
+        model: "UserAccount",
+        key: "user_id",
       },
     },
     deletedAt: {

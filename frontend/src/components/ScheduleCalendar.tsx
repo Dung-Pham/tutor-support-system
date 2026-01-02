@@ -12,7 +12,7 @@ import { Card } from './ui/card';
 import { Calendar } from 'lucide-react';
 import { SessionCard } from './SessionCard';
 import { WeekTimelineView } from './WeekTimelineView';
-import { isToday } from '../utils/dateHelper';
+import { isToday, toLocalDateString } from '../utils/dateHelper';
 import type { Schedule, SessionInstance, DayOfWeek } from '../types/session';
 
 interface ScheduleCalendarProps {
@@ -53,7 +53,7 @@ export const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({
   // For SessionInstance: match by session_date
   const getSessionsForDate = (date: Date): (Schedule | SessionInstance)[] => {
     const dayOfWeek = date.getDay() as DayOfWeek;
-    const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD
+    const dateString = toLocalDateString(date); // Use local date string, not ISO
 
     return sessions.filter((session) => {
       // Check if it's a SessionInstance (has session_date)

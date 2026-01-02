@@ -1,10 +1,17 @@
-﻿// Conversation Controller - SQL Server + MongoDB
+// Conversation Controller - SQL Server + MongoDB
 
 import { Response } from "express";
 import { Conversation, Participant, User } from "../models/sql/index.js";
 import { Message } from "../models/mongo/index.js";
 import { AuthRequest } from "../types/common.js";
 import { Op } from "sequelize";
+
+// Attribute mappings for UserAccount table (column_name -> alias)
+const USER_ATTRS_BASIC: [string, string][] = [
+  ["user_id", "id"],
+  ["name", "displayName"],
+  ["avatar_url", "avatarUrl"],
+];
 
 interface CreateConversationBody {
   type: "direct" | "group";
@@ -21,7 +28,7 @@ interface GetMessagesQuery {
   cursor?: string;
 }
 
-// Táº¡o conversation má»›i
+// Tạo conversation mới
 export const createConversation = async (
   req: AuthRequest & { body: CreateConversationBody },
   res: Response
@@ -121,23 +128,32 @@ export const createConversation = async (
             {
               model: User,
               as: "user",
-              attributes: [
-                "id",
-                "displayName",
-                "avatarUrl",
-                "role",
-                "lastSeenAt",
-              ],
+              attributes: ["userId", "name", "avatarUrl", "role"],
             },
           ],
         },
       ],
     });
 
+    // Format response to match expected structure
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const convJson = (fullConversation as any)?.toJSON();
+    const formattedConversation = convJson ? {
+      ...convJson,
+      participants: convJson.participants?.map((p: { user?: { userId: string; name: string; avatarUrl?: string; role?: string }; joinedAt?: Date }) => ({
+        id: p.user?.userId,
+        displayName: p.user?.name,
+        avatarUrl: p.user?.avatarUrl ?? null,
+        role: p.user?.role,
+        isOnline: false,
+        joinAt: p.joinedAt,
+      })),
+    } : null;
+
     return res.status(201).json({
       success: true,
       message: "Conversation created",
-      data: fullConversation,
+      data: formattedConversation,
     });
   } catch (error) {
     console.error("Error in createConversation", error);
@@ -147,7 +163,7 @@ export const createConversation = async (
   }
 };
 
-// Láº¥y danh sÃ¡ch conversations
+// Lấy danh s?�ch conversations
 export const getConversations = async (
   req: AuthRequest,
   res: Response
@@ -178,13 +194,7 @@ export const getConversations = async (
             {
               model: User,
               as: "user",
-              attributes: [
-                "id",
-                "displayName",
-                "avatarUrl",
-                "role",
-                "lastSeenAt",
-              ],
+              attributes: ["userId", "name", "avatarUrl", "role"],
             },
           ],
         },
@@ -201,28 +211,19 @@ export const getConversations = async (
         participants: convJson.participants?.map(
           (p: {
             user?: {
-              id: string;
-              displayName: string;
+              userId: string;
+              name: string;
               avatarUrl?: string;
               role?: string;
-              lastSeenAt?: Date;
             };
             joinedAt?: Date;
           }) => {
-            // Tính isOnline dựa trên lastSeenAt (online nếu hoạt động trong 5 phút gần đây)
-            const lastSeenAt = p.user?.lastSeenAt;
-            const isOnline = lastSeenAt
-              ? new Date().getTime() - new Date(lastSeenAt).getTime() <
-                5 * 60 * 1000
-              : false;
-
             return {
-              id: p.user?.id,
-              displayName: p.user?.displayName,
+              id: p.user?.userId,
+              displayName: p.user?.name,
               avatarUrl: p.user?.avatarUrl ?? null,
               role: p.user?.role,
-              lastSeenAt: p.user?.lastSeenAt,
-              isOnline,
+              isOnline: false, // Will be updated via Socket.IO
               joinAt: p.joinedAt,
             };
           }
@@ -243,7 +244,7 @@ export const getConversations = async (
   }
 };
 
-// Láº¥y messages cá»§a conversation (tá»« MongoDB)
+// Lấy messages của conversation (từ MongoDB)
 export const getMessages = async (
   req: AuthRequest & { params: ConversationParams; query: GetMessagesQuery },
   res: Response
@@ -303,11 +304,12 @@ export const getMessages = async (
     // Get sender info from SQL
     const senderIds = [...new Set(messages.map((m) => m.senderId))];
     const senders = await User.findAll({
-      where: { id: { [Op.in]: senderIds } },
-      attributes: ["id", "displayName", "avatarUrl"],
+      where: { userId: { [Op.in]: senderIds } },
+      attributes: USER_ATTRS_BASIC,
     });
 
-    const senderMap = new Map(senders.map((s) => [s.id, s.toJSON()]));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const senderMap = new Map(senders.map((s: any) => [s.get('id'), s.toJSON()]));
 
     // Attach sender info to messages
     const messagesWithSender = messages.map((m) => ({

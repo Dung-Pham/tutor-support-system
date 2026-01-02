@@ -78,8 +78,8 @@ Conversation.init(
       allowNull: true,
       field: "created_by",
       references: {
-        model: "Users",
-        key: "id",
+        model: "UserAccount",
+        key: "user_id",
       },
     },
     lastMessageAt: {
@@ -97,8 +97,8 @@ Conversation.init(
       allowNull: true,
       field: "last_message_sender_id",
       references: {
-        model: "Users",
-        key: "id",
+        model: "UserAccount",
+        key: "user_id",
       },
     },
     createdAt: {

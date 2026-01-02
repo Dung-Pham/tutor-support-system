@@ -13,7 +13,7 @@ import type { RootState } from '@/store';
 export function CommunityPosts() {
   const location = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
-  const isTutor = user?.role === 'tutor';
+  const isTutor = user?.role?.toLowerCase() === 'tutor';
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);

@@ -130,9 +130,21 @@ export const sendDirectMessage = async (
       fileUrls: fileUrls || [],
     });
 
-    // Update conversation's last message timestamp
+    // Update conversation's last message timestamp and preview
+    const messagePreview = content 
+      ? content.substring(0, 100) 
+      : imgUrls?.length 
+        ? '📷 Hình ảnh' 
+        : videoUrl 
+          ? '🎬 Video' 
+          : fileUrls?.length 
+            ? '📎 Tệp đính kèm' 
+            : '';
+    
     await conversation.update({
       lastMessageAt: new Date(),
+      lastMessagePreview: messagePreview,
+      lastMessageSenderId: senderId,
     });
 
     // Increment unread count for recipient
@@ -222,9 +234,17 @@ export const sendGroupMessage = async (
       imgUrls: imgUrls || [],
     });
 
-    // Update conversation's last message timestamp
+    // Update conversation's last message timestamp and preview
+    const messagePreview = content 
+      ? content.substring(0, 100) 
+      : imgUrls?.length 
+        ? '📷 Hình ảnh' 
+        : '';
+    
     await conversation.update({
       lastMessageAt: new Date(),
+      lastMessagePreview: messagePreview,
+      lastMessageSenderId: senderId,
     });
 
     // Increment unread count for all participants except sender

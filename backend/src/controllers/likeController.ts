@@ -1,4 +1,4 @@
-﻿// Like Controller - SQL Server
+// Like Controller - SQL Server
 
 import { Response } from "express";
 import {
@@ -11,6 +11,13 @@ import {
   User,
 } from "../models/sql/index.js";
 import { AuthRequest } from "../types/common.js";
+
+// Attribute mappings for UserAccount table (column_name -> alias)
+const USER_ATTRS_BASIC: [string, string][] = [
+  ["user_id", "id"],
+  ["name", "displayName"],
+  ["avatar_url", "avatarUrl"],
+];
 
 interface PostParams {
   id: string;
@@ -29,7 +36,7 @@ interface PaginationQuery {
   limit?: string;
 }
 
-// Like/Unlike bÃ i viáº¿t (toggle)
+// Like/Unlike b?�i viết (toggle)
 export const togglePostLike = async (
   req: AuthRequest & { params: PostParams },
   res: Response
@@ -41,7 +48,7 @@ export const togglePostLike = async (
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: "Vui lÃ²ng Ä‘Äƒng nháº­p",
+        message: "Vui l?�ng đăng nhập",
         timestamp: new Date().toISOString(),
       });
     }
@@ -52,16 +59,16 @@ export const togglePostLike = async (
     if (!post) {
       return res.status(404).json({
         success: false,
-        message: "Bài viết không tồn tại",
+        message: "B�i vi?t kh�ng t?n t?i",
         timestamp: new Date().toISOString(),
       });
     }
 
-    // Kiểm tra không thể like bài viết của chính mình
+    // Ki?m tra kh�ng th? like b�i vi?t c?a ch�nh m?nh
     if (post.authorId === userId) {
       return res.status(400).json({
         success: false,
-        message: "Bạn không thể thích bài viết của chính mình",
+        message: "B?n kh�ng th? th�ch b�i vi?t c?a ch�nh m?nh",
         timestamp: new Date().toISOString(),
       });
     }
@@ -69,7 +76,7 @@ export const togglePostLike = async (
     if (post.status !== "approved") {
       return res.status(400).json({
         success: false,
-        message: "Chá»‰ cÃ³ thá»ƒ like bÃ i viáº¿t Ä‘Ã£ Ä‘Æ°á»£c duyá»‡t",
+        message: "Chỉ c?� thể like b?�i viết đ?� được duyệt",
         timestamp: new Date().toISOString(),
       });
     }
@@ -86,7 +93,7 @@ export const togglePostLike = async (
 
       return res.json({
         success: true,
-        message: "ÄÃ£ bá» thÃ­ch bÃ i viáº¿t",
+        message: "Đ?� bỏ th?�ch b?�i viết",
         data: { liked: false, likeCount: post.likeCount - 1 },
         timestamp: new Date().toISOString(),
       });
@@ -97,7 +104,7 @@ export const togglePostLike = async (
 
       return res.json({
         success: true,
-        message: "ÄÃ£ thÃ­ch bÃ i viáº¿t",
+        message: "Đ?� th?�ch b?�i viết",
         data: { liked: true, likeCount: post.likeCount + 1 },
         timestamp: new Date().toISOString(),
       });
@@ -106,13 +113,13 @@ export const togglePostLike = async (
     console.error("Toggle post like error", error);
     return res.status(500).json({
       success: false,
-      message: "Lá»—i khi thao tÃ¡c like",
+      message: "Lỗi khi thao t?�c like",
       timestamp: new Date().toISOString(),
     });
   }
 };
 
-// Kiá»ƒm tra user Ä‘Ã£ like bÃ i viáº¿t chÆ°a
+// Kiểm tra user đ?� like b?�i viết chưa
 export const checkPostLike = async (
   req: AuthRequest & { params: PostParams },
   res: Response
@@ -143,13 +150,13 @@ export const checkPostLike = async (
     console.error("Check post like error", error);
     return res.status(500).json({
       success: false,
-      message: "Lá»—i khi kiá»ƒm tra like",
+      message: "Lỗi khi kiểm tra like",
       timestamp: new Date().toISOString(),
     });
   }
 };
 
-// Láº¥y danh sÃ¡ch user Ä‘Ã£ like bÃ i viáº¿t
+// Lấy danh s?�ch user đ?� like b?�i viết
 export const getPostLikes = async (
   req: AuthRequest & { params: PostParams; query: PaginationQuery },
   res: Response
@@ -166,7 +173,7 @@ export const getPostLikes = async (
         {
           model: User,
           as: "user",
-          attributes: ["id", "displayName", "avatarUrl"],
+          attributes: USER_ATTRS_BASIC,
         },
       ],
       order: [["createdAt", "DESC"]],
@@ -178,7 +185,7 @@ export const getPostLikes = async (
 
     return res.json({
       success: true,
-      message: "Láº¥y danh sÃ¡ch like thÃ nh cÃ´ng",
+      message: "Lấy danh s?�ch like th?�nh c?�ng",
       data: likes,
       page,
       limit,
@@ -190,7 +197,7 @@ export const getPostLikes = async (
     console.error("Get post likes error", error);
     return res.status(500).json({
       success: false,
-      message: "Lá»—i khi láº¥y danh sÃ¡ch like",
+      message: "Lỗi khi lấy danh s?�ch like",
       timestamp: new Date().toISOString(),
     });
   }
@@ -208,7 +215,7 @@ export const toggleCommentLike = async (
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: "Vui lÃ²ng Ä‘Äƒng nháº­p",
+        message: "Vui l?�ng đăng nhập",
         timestamp: new Date().toISOString(),
       });
     }
@@ -219,7 +226,7 @@ export const toggleCommentLike = async (
     if (!comment || comment.status === "deleted") {
       return res.status(404).json({
         success: false,
-        message: "Comment khÃ´ng tá»“n táº¡i",
+        message: "Comment kh?�ng tồn tại",
         timestamp: new Date().toISOString(),
       });
     }
@@ -234,7 +241,7 @@ export const toggleCommentLike = async (
 
       return res.json({
         success: true,
-        message: "ÄÃ£ bá» thÃ­ch comment",
+        message: "Đ?� bỏ th?�ch comment",
         data: { liked: false, likeCount: comment.likeCount - 1 },
         timestamp: new Date().toISOString(),
       });
@@ -244,7 +251,7 @@ export const toggleCommentLike = async (
 
       return res.json({
         success: true,
-        message: "ÄÃ£ thÃ­ch comment",
+        message: "Đ?� th?�ch comment",
         data: { liked: true, likeCount: comment.likeCount + 1 },
         timestamp: new Date().toISOString(),
       });
@@ -253,13 +260,13 @@ export const toggleCommentLike = async (
     console.error("Toggle comment like error", error);
     return res.status(500).json({
       success: false,
-      message: "Lá»—i khi thao tÃ¡c like",
+      message: "Lỗi khi thao t?�c like",
       timestamp: new Date().toISOString(),
     });
   }
 };
 
-// Kiá»ƒm tra user Ä‘Ã£ like comment chÆ°a
+// Kiểm tra user đ?� like comment chưa
 export const checkCommentLike = async (
   req: AuthRequest & { params: CommentParams },
   res: Response
@@ -290,7 +297,7 @@ export const checkCommentLike = async (
     console.error("Check comment like error", error);
     return res.status(500).json({
       success: false,
-      message: "Lá»—i khi kiá»ƒm tra like",
+      message: "Lỗi khi kiểm tra like",
       timestamp: new Date().toISOString(),
     });
   }
@@ -308,7 +315,7 @@ export const toggleReplyLike = async (
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: "Vui lÃ²ng Ä‘Äƒng nháº­p",
+        message: "Vui l?�ng đăng nhập",
         timestamp: new Date().toISOString(),
       });
     }
@@ -319,7 +326,7 @@ export const toggleReplyLike = async (
     if (!reply || reply.status === "deleted") {
       return res.status(404).json({
         success: false,
-        message: "Reply khÃ´ng tá»“n táº¡i",
+        message: "Reply kh?�ng tồn tại",
         timestamp: new Date().toISOString(),
       });
     }
@@ -334,7 +341,7 @@ export const toggleReplyLike = async (
 
       return res.json({
         success: true,
-        message: "ÄÃ£ bá» thÃ­ch reply",
+        message: "Đ?� bỏ th?�ch reply",
         data: { liked: false, likeCount: reply.likeCount - 1 },
         timestamp: new Date().toISOString(),
       });
@@ -344,7 +351,7 @@ export const toggleReplyLike = async (
 
       return res.json({
         success: true,
-        message: "ÄÃ£ thÃ­ch reply",
+        message: "Đ?� th?�ch reply",
         data: { liked: true, likeCount: reply.likeCount + 1 },
         timestamp: new Date().toISOString(),
       });
@@ -353,13 +360,13 @@ export const toggleReplyLike = async (
     console.error("Toggle reply like error", error);
     return res.status(500).json({
       success: false,
-      message: "Lá»—i khi thao tÃ¡c like",
+      message: "Lỗi khi thao t?�c like",
       timestamp: new Date().toISOString(),
     });
   }
 };
 
-// Kiá»ƒm tra user Ä‘Ã£ like reply chÆ°a
+// Kiểm tra user đ?� like reply chưa
 export const checkReplyLike = async (
   req: AuthRequest & { params: ReplyParams },
   res: Response
@@ -390,7 +397,7 @@ export const checkReplyLike = async (
     console.error("Check reply like error", error);
     return res.status(500).json({
       success: false,
-      message: "Lá»—i khi kiá»ƒm tra like",
+      message: "Lỗi khi kiểm tra like",
       timestamp: new Date().toISOString(),
     });
   }

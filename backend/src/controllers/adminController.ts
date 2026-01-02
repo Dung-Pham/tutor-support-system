@@ -7,6 +7,23 @@ import { AuthRequest } from "../types/common.js";
 import { UserRole } from "../types/user.js";
 import { Op, fn, col, literal } from "sequelize";
 
+// Attribute mappings for UserAccount table
+const USER_ATTRS_AVATAR: ([string, string] | string)[] = [
+  ["user_id", "id"],
+  ["name", "displayName"],
+  ["avatar_url", "avatarUrl"],
+];
+const USER_ATTRS_EMAIL: ([string, string] | string)[] = [
+  ["user_id", "id"],
+  ["name", "displayName"],
+  ["avatar_url", "avatarUrl"],
+  "email",
+];
+const USER_ATTRS_BASIC: [string, string][] = [
+  ["user_id", "id"],
+  ["name", "displayName"],
+];
+
 interface StatsRequest extends AuthRequest {
   query: Record<string, never>;
 }
@@ -110,14 +127,14 @@ export const getStats = async (
           {
             model: User,
             as: "author",
-            attributes: ["id", "displayName", "avatarUrl"],
+            attributes: USER_ATTRS_AVATAR,
           },
         ],
         order: [["createdAt", "DESC"]],
         limit: 5,
       }),
       User.findAll({
-        attributes: ["role", [fn("COUNT", col("id")), "count"]],
+        attributes: ["role", [fn("COUNT", col("user_id")), "count"]],
         group: ["role"],
         raw: true,
       }),
@@ -418,12 +435,12 @@ export const getPosts = async (
         {
           model: User,
           as: "author",
-          attributes: ["id", "displayName", "avatarUrl", "email"],
+          attributes: USER_ATTRS_EMAIL,
         },
         {
           model: User,
           as: "rejecter",
-          attributes: ["id", "displayName"],
+          attributes: USER_ATTRS_BASIC,
         },
       ],
       order,
@@ -481,12 +498,12 @@ export const getPostById = async (
         {
           model: User,
           as: "author",
-          attributes: ["id", "displayName", "avatarUrl", "email"],
+          attributes: USER_ATTRS_EMAIL,
         },
         {
           model: User,
           as: "approver",
-          attributes: ["id", "displayName"],
+          attributes: USER_ATTRS_BASIC,
         },
       ],
     });
@@ -660,7 +677,7 @@ export const getTopPosts = async (
         {
           model: User,
           as: "author",
-          attributes: ["id", "displayName", "avatarUrl"],
+          attributes: USER_ATTRS_AVATAR,
         },
       ],
       order: [

@@ -58,6 +58,9 @@ export const ClassDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   
+  // Get base route based on user role
+  const baseRoute = user?.role?.toLowerCase() === 'tutor' ? '/tutor' : '/student';
+  
   const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
   const [lessonPlans, setLessonPlans] = useState<LessonPlan[]>([]);
   const [stats, setStats] = useState<ClassStats | null>(null);
@@ -156,7 +159,7 @@ export const ClassDetailPage: React.FC = () => {
     try {
       // Navigate to session detail page with lesson date as parameter
       // The session detail page will look up the corresponding schedule based on date and class
-      navigate(`/sessions/${classId}?date=${lesson.session_date}`);
+      navigate(`${baseRoute}/sessions/${classId}?date=${lesson.session_date}`);
     } catch (err) {
       console.error('Error navigating to lesson:', err);
     }
@@ -240,7 +243,7 @@ export const ClassDetailPage: React.FC = () => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="text-red-500 mb-4">⚠️ {error || 'Không tìm thấy lớp học'}</div>
-          <Button onClick={() => navigate('/my-classes')} variant="outline">
+          <Button onClick={() => navigate(`${baseRoute}/classes`)} variant="outline">
             Quay lại
           </Button>
         </div>
@@ -252,7 +255,7 @@ export const ClassDetailPage: React.FC = () => {
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" onClick={() => navigate('/my-classes')}>
+        <Button variant="ghost" onClick={() => navigate(`${baseRoute}/classes`)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Quay lại
         </Button>

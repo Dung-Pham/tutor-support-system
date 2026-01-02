@@ -87,7 +87,7 @@ export const confirmAttendanceValidation = (): ValidationChain[] => [
   param('attendanceId')
     .matches(/^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$/)
     .withMessage('Valid attendanceId is required'),
-  body('confirmedBy').isIn(['tutor', 'user']).withMessage('confirmedBy must be tutor or user'),
+  body('confirmedBy').isIn(['tutor', 'student', 'user']).withMessage('confirmedBy must be tutor, student or user'),
   body('notes').optional().isString().trim(),
 ];
 

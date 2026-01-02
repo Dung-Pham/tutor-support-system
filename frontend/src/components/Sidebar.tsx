@@ -81,22 +81,31 @@ export default function Sidebar() {
   );
 
   const isActive = (path: string) => {
+    const role = user?.role?.toUpperCase();
+    const baseRoute = role === 'TUTOR' ? '/tutor' : '/student';
+    const fullPath = `${baseRoute}${path}`;
+    
     if (path === '/schedule') {
-      return location.pathname === '/schedule';
+      return location.pathname === fullPath || location.pathname === baseRoute;
     }
     if (path === '/homework') {
-      return location.pathname.startsWith('/homework');
+      return location.pathname.startsWith(`${baseRoute}/homework`);
     }
-    return location.pathname.startsWith(path);
+    return location.pathname.startsWith(fullPath);
   };
 
   // Get dynamic path based on role
   const getDynamicPath = (path: string) => {
+    const role = user?.role?.toUpperCase();
+    const baseRoute = role === 'TUTOR' ? '/tutor' : '/student';
+    
+    // Handle homework special case
     if (path === '/homework') {
-      const role = user?.role?.toUpperCase();
-      return role === 'TUTOR' ? '/homework/tutor' : '/homework/student';
+      return role === 'TUTOR' ? `${baseRoute}/homework` : `${baseRoute}/homework`;
     }
-    return path;
+    
+    // All other paths need baseRoute prefix
+    return `${baseRoute}${path}`;
   };
 
   return (

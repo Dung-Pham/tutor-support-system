@@ -31,6 +31,8 @@ export const SubmissionsPage: React.FC = () => {
   const { submissions, loading: submissionsLoading } = useSelector(
     (state: RootState) => state.submissions
   );
+  const { user } = useSelector((state: RootState) => state.auth);
+  const baseRoute = user?.role?.toLowerCase() === 'tutor' ? '/tutor' : '/student';
 
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [showGradeDialog, setShowGradeDialog] = useState(false);
@@ -80,7 +82,7 @@ export const SubmissionsPage: React.FC = () => {
       <div className="container mx-auto max-w-6xl p-6">
         <div className="text-center">
           <p className="text-gray-600">Không tìm thấy bài tập</p>
-          <Button className="mt-4" onClick={() => navigate('/assignments')}>
+          <Button className="mt-4" onClick={() => navigate(`${baseRoute}/assignments`)}>
             Về danh sách bài tập
           </Button>
         </div>
@@ -90,7 +92,7 @@ export const SubmissionsPage: React.FC = () => {
 
   return (
     <div className="container mx-auto max-w-6xl p-6">
-      <Button variant="ghost" className="mb-4" onClick={() => navigate('/assignments')}>
+      <Button variant="ghost" className="mb-4" onClick={() => navigate(`${baseRoute}/assignments`)}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Quay lại danh sách bài tập
       </Button>

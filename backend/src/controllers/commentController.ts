@@ -9,6 +9,14 @@ import {
 } from "../models/sql/index.js";
 import { AuthRequest } from "../types/common.js";
 
+// Attribute mappings for UserAccount table (column_name -> alias)
+const USER_ATTRS_FULL: ([string, string] | string)[] = [
+  ["user_id", "id"],
+  ["name", "displayName"],
+  ["avatar_url", "avatarUrl"],
+  "role",
+];
+
 interface PostParams {
   postId: string;
 }
@@ -88,7 +96,7 @@ export const createComment = async (
 
     // Get author info
     const user = await User.findByPk(userId, {
-      attributes: ["id", "displayName", "avatarUrl", "role"],
+      attributes: USER_ATTRS_FULL,
     });
 
     return res.status(201).json({
@@ -135,7 +143,7 @@ export const getComments = async (
         {
           model: User,
           as: "user",
-          attributes: ["id", "displayName", "avatarUrl", "role"],
+          attributes: USER_ATTRS_FULL,
         },
       ],
       order: [["createdAt", "DESC"]],
@@ -209,7 +217,7 @@ export const updateComment = async (
 
     // Get user info
     const user = await User.findByPk(userId, {
-      attributes: ["id", "displayName", "avatarUrl", "role"],
+      attributes: USER_ATTRS_FULL,
     });
 
     return res.json({
@@ -335,14 +343,14 @@ export const createReply = async (
 
     // Get user info
     const user = await User.findByPk(userId, {
-      attributes: ["id", "displayName", "avatarUrl", "role"],
+      attributes: USER_ATTRS_FULL,
     });
 
     // Get mentioned user info if exists
     let mentionedUser = null;
     if (mentionedUserId) {
       mentionedUser = await User.findByPk(mentionedUserId, {
-        attributes: ["id", "displayName", "avatarUrl", "role"],
+        attributes: USER_ATTRS_FULL,
       });
     }
 
@@ -391,12 +399,12 @@ export const getReplies = async (
         {
           model: User,
           as: "user",
-          attributes: ["id", "displayName", "avatarUrl", "role"],
+          attributes: USER_ATTRS_FULL,
         },
         {
           model: User,
           as: "mentionedUser",
-          attributes: ["id", "displayName", "avatarUrl", "role"],
+          attributes: USER_ATTRS_FULL,
         },
       ],
       order: [["createdAt", "ASC"]],
@@ -470,7 +478,7 @@ export const updateReply = async (
 
     // Get user info
     const user = await User.findByPk(userId, {
-      attributes: ["id", "displayName", "avatarUrl", "role"],
+      attributes: USER_ATTRS_FULL,
     });
 
     return res.json({

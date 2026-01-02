@@ -26,8 +26,8 @@ import {
 } from '../utils/fileHelper';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Set worker source for PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Set worker source for PDF.js - use unpkg CDN which has all versions
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 interface AttachmentPreviewProps {
   url: string | null | undefined;
@@ -74,7 +74,7 @@ const PDFViewer: React.FC<{
         
         const loadingTask = pdfjsLib.getDocument({
           url: url,
-          cMapUrl: `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
+          cMapUrl: 'https://unpkg.com/pdfjs-dist@5.4.530/cmaps/',
           cMapPacked: true,
         });
         

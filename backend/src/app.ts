@@ -12,7 +12,7 @@ import { fileURLToPath } from 'url';
 // Import Error Handler from HEAD
 import { errorHandler } from './middlewares/errorHandler.js';
 // Import Protected Route middleware from dang
-import { protectedRoute } from './middlewares/protectedRoute.js';
+import { protectedRoute } from './middlewares/userMiddleware.js';
 
 // ============================================
 // HEAD Routes - Teaching Module
@@ -24,6 +24,7 @@ import homeworkRoutes from './routes/homework.js';
 import uploadRoutes from './routes/upload.js';
 import documentRoutes from './routes/documents.js';
 import studentRoutes from './routes/students.js';
+import tutorRoutes from './routes/tutors.js';
 import statisticsRoutes from './routes/statistics.js';
 import scheduleRoutes from './routes/schedules.js';
 import attendanceRoutes from './routes/attendance.js';
@@ -50,14 +51,12 @@ app.use(
   helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false, // Allow cross-origin resource loading
   })
 );
 app.use(compression());
 
-// Static files for uploads (from HEAD)
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
-// CORS Configuration (merged from both)
+// CORS Configuration (merged from both) - MUST be before static files
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -77,6 +76,14 @@ app.use(
     credentials: true,
   })
 );
+
+// Static files for uploads (from HEAD) - AFTER CORS middleware
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+  setHeaders: (res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
 
 app.use(morgan('dev'));
 app.use(express.json());
@@ -103,8 +110,9 @@ app.get('/health', (_req: Request, res: Response) => {
 // ============================================
 
 // --- Public Routes ---
-// Auth routes (both branches - use HEAD's auth for now, can switch to dang's authRoute)
-app.use('/api/auth', authRoutes);
+// Auth routes (both branches merged)
+app.use('/api/auth', authRoutes);    // HEAD: /login, /register, /me
+app.use('/api/auth', authRoute);     // dang: /signin, /signout, /refresh, /register/student, /register/tutor
 // Social public routes (from dang)
 app.use('/api/posts', postRoute);
 app.use('/api', commentRoute);
@@ -119,6 +127,7 @@ app.use('/api/homework', homeworkRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/students', studentRoutes);
+app.use('/api/tutors', tutorRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/attendance', attendanceRoutes);
@@ -177,7 +186,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     };
     return res.status(409).json({
       success: false,
-      message: ${fieldMap[fieldName] || fieldName} đã tồn tại trong hệ thống,
+      message: `${fieldMap[fieldName] || fieldName} đã tồn tại trong hệ thống`,
     });
   }
 
@@ -186,7 +195,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const field = Object.keys(err.keyValue || {})[0] || 'field';
     return res.status(409).json({
       success: false,
-      message: ${field} đã tồn tại,
+      message: `${field} đã tồn tại`,
     });
   }
 

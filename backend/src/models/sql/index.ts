@@ -1,6 +1,7 @@
 // SQL Server Models - Associations
+// Using UserAccount as the main user table
 
-import User from "./User.js";
+import UserAccount from "./UserAccount.js";
 import Session from "./Session.js";
 import PostHeader from "./PostHeader.js";
 import PostComment from "./PostComment.js";
@@ -12,33 +13,36 @@ import Conversation from "./Conversation.js";
 import Participant from "./Participant.js";
 import Notification from "./Notification.js";
 
+// Alias for backward compatibility
+const User = UserAccount;
+
 // User associations
-User.hasMany(Session, { foreignKey: "userId", as: "sessions" });
-User.hasMany(PostHeader, { foreignKey: "authorId", as: "posts" });
-User.hasMany(PostComment, { foreignKey: "userId", as: "comments" });
-User.hasMany(ReplyComment, { foreignKey: "userId", as: "replies" });
-User.hasMany(PostLike, { foreignKey: "userId", as: "postLikes" });
-User.hasMany(CommentLike, { foreignKey: "userId", as: "commentLikes" });
-User.hasMany(ReplyCommentLike, { foreignKey: "userId", as: "replyLikes" });
-User.hasMany(Participant, { foreignKey: "userId", as: "participations" });
-User.hasMany(Notification, { foreignKey: "recipientId", as: "notifications" });
-User.hasMany(Notification, { foreignKey: "senderId", as: "sentNotifications" });
+UserAccount.hasMany(Session, { foreignKey: "userId", as: "sessions" });
+UserAccount.hasMany(PostHeader, { foreignKey: "authorId", as: "posts" });
+UserAccount.hasMany(PostComment, { foreignKey: "userId", as: "comments" });
+UserAccount.hasMany(ReplyComment, { foreignKey: "userId", as: "replies" });
+UserAccount.hasMany(PostLike, { foreignKey: "userId", as: "postLikes" });
+UserAccount.hasMany(CommentLike, { foreignKey: "userId", as: "commentLikes" });
+UserAccount.hasMany(ReplyCommentLike, { foreignKey: "userId", as: "replyLikes" });
+UserAccount.hasMany(Participant, { foreignKey: "userId", as: "participations" });
+UserAccount.hasMany(Notification, { foreignKey: "recipientId", as: "notifications" });
+UserAccount.hasMany(Notification, { foreignKey: "senderId", as: "sentNotifications" });
 
 // Session associations
-Session.belongsTo(User, { foreignKey: "userId", as: "user" });
+Session.belongsTo(UserAccount, { foreignKey: "userId", as: "user" });
 
 // PostHeader associations
-PostHeader.belongsTo(User, { foreignKey: "authorId", as: "author" });
-PostHeader.belongsTo(User, { foreignKey: "approvedBy", as: "approver" });
-PostHeader.belongsTo(User, { foreignKey: "rejectedBy", as: "rejecter" });
-PostHeader.belongsTo(User, { foreignKey: "deletedBy", as: "deletedByUser" });
+PostHeader.belongsTo(UserAccount, { foreignKey: "authorId", as: "author" });
+PostHeader.belongsTo(UserAccount, { foreignKey: "approvedBy", as: "approver" });
+PostHeader.belongsTo(UserAccount, { foreignKey: "rejectedBy", as: "rejecter" });
+PostHeader.belongsTo(UserAccount, { foreignKey: "deletedBy", as: "deletedByUser" });
 PostHeader.hasMany(PostComment, { foreignKey: "postId", as: "comments" });
 PostHeader.hasMany(PostLike, { foreignKey: "postId", as: "likes" });
 PostHeader.hasMany(Notification, { foreignKey: "postId", as: "notifications" });
 
 // PostComment associations
 PostComment.belongsTo(PostHeader, { foreignKey: "postId", as: "post" });
-PostComment.belongsTo(User, { foreignKey: "userId", as: "user" });
+PostComment.belongsTo(UserAccount, { foreignKey: "userId", as: "user" });
 PostComment.hasMany(ReplyComment, { foreignKey: "commentId", as: "replies" });
 PostComment.hasMany(CommentLike, { foreignKey: "commentId", as: "likes" });
 PostComment.hasMany(Notification, {
@@ -48,8 +52,8 @@ PostComment.hasMany(Notification, {
 
 // ReplyComment associations
 ReplyComment.belongsTo(PostComment, { foreignKey: "commentId", as: "comment" });
-ReplyComment.belongsTo(User, { foreignKey: "userId", as: "user" });
-ReplyComment.belongsTo(User, {
+ReplyComment.belongsTo(UserAccount, { foreignKey: "userId", as: "user" });
+ReplyComment.belongsTo(UserAccount, {
   foreignKey: "mentionedUserId",
   as: "mentionedUser",
 });
@@ -57,22 +61,22 @@ ReplyComment.hasMany(ReplyCommentLike, { foreignKey: "replyId", as: "likes" });
 
 // PostLike associations
 PostLike.belongsTo(PostHeader, { foreignKey: "postId", as: "post" });
-PostLike.belongsTo(User, { foreignKey: "userId", as: "user" });
+PostLike.belongsTo(UserAccount, { foreignKey: "userId", as: "user" });
 
 // CommentLike associations
 CommentLike.belongsTo(PostComment, { foreignKey: "commentId", as: "comment" });
-CommentLike.belongsTo(User, { foreignKey: "userId", as: "user" });
+CommentLike.belongsTo(UserAccount, { foreignKey: "userId", as: "user" });
 
 // ReplyCommentLike associations
 ReplyCommentLike.belongsTo(ReplyComment, {
   foreignKey: "replyId",
   as: "reply",
 });
-ReplyCommentLike.belongsTo(User, { foreignKey: "userId", as: "user" });
+ReplyCommentLike.belongsTo(UserAccount, { foreignKey: "userId", as: "user" });
 
 // Conversation associations
-Conversation.belongsTo(User, { foreignKey: "createdBy", as: "creator" });
-Conversation.belongsTo(User, {
+Conversation.belongsTo(UserAccount, { foreignKey: "createdBy", as: "creator" });
+Conversation.belongsTo(UserAccount, {
   foreignKey: "lastMessageSenderId",
   as: "lastSender",
 });
@@ -90,11 +94,11 @@ Participant.belongsTo(Conversation, {
   foreignKey: "conversationId",
   as: "conversation",
 });
-Participant.belongsTo(User, { foreignKey: "userId", as: "user" });
+Participant.belongsTo(UserAccount, { foreignKey: "userId", as: "user" });
 
 // Notification associations
-Notification.belongsTo(User, { foreignKey: "recipientId", as: "recipient" });
-Notification.belongsTo(User, { foreignKey: "senderId", as: "sender" });
+Notification.belongsTo(UserAccount, { foreignKey: "recipientId", as: "recipient" });
+Notification.belongsTo(UserAccount, { foreignKey: "senderId", as: "sender" });
 Notification.belongsTo(PostHeader, { foreignKey: "postId", as: "post" });
 Notification.belongsTo(PostComment, { foreignKey: "commentId", as: "comment" });
 Notification.belongsTo(Conversation, {
@@ -103,13 +107,13 @@ Notification.belongsTo(Conversation, {
 });
 
 // Many-to-Many through Participant
-User.belongsToMany(Conversation, {
+UserAccount.belongsToMany(Conversation, {
   through: Participant,
   foreignKey: "userId",
   otherKey: "conversationId",
   as: "conversations",
 });
-Conversation.belongsToMany(User, {
+Conversation.belongsToMany(UserAccount, {
   through: Participant,
   foreignKey: "conversationId",
   otherKey: "userId",
@@ -117,13 +121,13 @@ Conversation.belongsToMany(User, {
 });
 
 // Many-to-Many through PostLike
-User.belongsToMany(PostHeader, {
+UserAccount.belongsToMany(PostHeader, {
   through: PostLike,
   foreignKey: "userId",
   otherKey: "postId",
   as: "likedPosts",
 });
-PostHeader.belongsToMany(User, {
+PostHeader.belongsToMany(UserAccount, {
   through: PostLike,
   foreignKey: "postId",
   otherKey: "userId",
@@ -132,6 +136,7 @@ PostHeader.belongsToMany(User, {
 
 export {
   User,
+  UserAccount,
   Session,
   PostHeader,
   PostComment,
@@ -145,7 +150,7 @@ export {
 };
 
 // Export types
-export * from "./User.js";
+export * from "./UserAccount.js";
 export * from "./Session.js";
 export * from "./PostHeader.js";
 export * from "./PostComment.js";

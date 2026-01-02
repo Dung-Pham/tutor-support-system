@@ -98,6 +98,11 @@ function buildDateRangeCondition(
   let condition = '';
 
   switch (filters.timeFilter) {
+    case 'this_week':
+      // Get Monday of current week to Sunday
+      condition = `${dateColumn} >= DATEADD(DAY, 1 - DATEPART(WEEKDAY, GETDATE()), CAST(GETDATE() AS DATE)) 
+                   AND ${dateColumn} <= DATEADD(DAY, 7 - DATEPART(WEEKDAY, GETDATE()), CAST(GETDATE() AS DATE))`;
+      break;
     case 'this_month':
       condition = `${dateColumn} >= DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0) AND ${dateColumn} < DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) + 1, 0)`;
       break;
@@ -117,7 +122,9 @@ function buildDateRangeCondition(
       }
       break;
     default:
-      condition = `${dateColumn} >= DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)`;
+      // Default to this_week
+      condition = `${dateColumn} >= DATEADD(DAY, 1 - DATEPART(WEEKDAY, GETDATE()), CAST(GETDATE() AS DATE)) 
+                   AND ${dateColumn} <= DATEADD(DAY, 7 - DATEPART(WEEKDAY, GETDATE()), CAST(GETDATE() AS DATE))`;
   }
 
   return { condition, params };
@@ -177,11 +184,12 @@ export async function getStatisticsOverview(
       ${classCondition}
   `;
 
-  // 2. Get attendance stats (confirmed sessions)
+  // 2. Get attendance stats (confirmed sessions) - count sessions that have been confirmed
   const attendanceQuery = `
     SELECT 
       COUNT(DISTINCT CASE WHEN ar.overall_status = 'CONFIRMED' THEN ar.attendance_id END) as completedSessions,
-      COUNT(DISTINCT CASE WHEN ar.overall_status = 'CANCELLED' THEN ar.attendance_id END) as canceledSessions,
+      COUNT(DISTINCT CASE WHEN ar.overall_status IN ('CANCELLED', 'ABSENT') THEN ar.attendance_id END) as canceledSessions,
+      COUNT(DISTINCT ar.attendance_id) as totalAttendanceRecords,
       ISNULL(SUM(
         CASE WHEN ar.overall_status = 'CONFIRMED' 
         THEN CAST(c.hourly_price AS FLOAT) * s.duration_minutes / 60.0
@@ -200,23 +208,26 @@ export async function getStatisticsOverview(
       ${classCondition}
   `;
 
-  const request = pool.request();
-  request.input('tutorId', tutorId);
-  Object.entries(params).forEach(([key, value]) => {
-    request.input(key, value);
-  });
+  // Build requests with proper params
+  const schedulesRequest = pool.request();
+  schedulesRequest.input('tutorId', tutorId);
   if (filters.classId && filters.classId !== 'all') {
-    request.input('classId', filters.classId);
+    schedulesRequest.input('classId', filters.classId);
   }
 
+  const attendanceRequest = pool.request();
+  attendanceRequest.input('tutorId', tutorId);
+  if (filters.classId && filters.classId !== 'all') {
+    attendanceRequest.input('classId', filters.classId);
+  }
+  // Add date params if they exist (for custom filter)
+  Object.entries(params).forEach(([key, value]) => {
+    attendanceRequest.input(key, value);
+  });
+
   const [schedulesResult, attendanceResult] = await Promise.all([
-    request.query(schedulesQuery),
-    pool.request()
-      .input('tutorId', tutorId)
-      .input('classId', filters.classId || null)
-      .input('fromDate', params.fromDate || null)
-      .input('toDate', params.toDate || null)
-      .query(attendanceQuery)
+    schedulesRequest.query(schedulesQuery),
+    attendanceRequest.query(attendanceQuery)
   ]);
 
   // Calculate total sessions from schedules
@@ -798,4 +809,96 @@ export async function getTutorClasses(tutorId: string): Promise<ClassOption[]> {
     .query(query);
 
   return result.recordset;
+}
+
+/**
+ * Student Ranking Item type
+ */
+export interface StudentRankingItem {
+  rank: number;
+  studentId: string;
+  name: string;
+  email: string;
+  className: string;
+  totalHomeworks: number;
+  submittedHomeworks: number;
+  averageScore: number | null;
+  submissionRate: number;
+}
+
+/**
+ * Get Student Ranking based on average homework score
+ * Tính điểm trung bình từ tất cả bài tập đã nộp của học sinh
+ */
+export async function getStudentRanking(
+  tutorId: string,
+  filters: StatisticsFilters
+): Promise<StudentRankingItem[]> {
+  const pool = await dbConnection.getPool();
+  
+  const classCondition = filters.classId && filters.classId !== 'all' 
+    ? 'AND c.class_id = @classId' 
+    : '';
+
+  const query = `
+    WITH StudentHomeworkStats AS (
+      SELECT 
+        u.user_id as studentId,
+        u.name as name,
+        u.email,
+        sub.name + ' - Lớp ' + CAST(c.grade_level AS VARCHAR) as className,
+        COUNT(DISTINCT ha.assignment_id) as totalHomeworks,
+        COUNT(DISTINCT CASE WHEN hs.submitted_at IS NOT NULL THEN hs.submission_id END) as submittedHomeworks,
+        AVG(CAST(hs.score AS FLOAT)) as averageScore
+      FROM UserAccount u
+      INNER JOIN Class c ON c.student_id = u.user_id
+      INNER JOIN Subjects sub ON c.subject_id = sub.subject_id
+      LEFT JOIN HomeworkAssignment ha ON ha.student_id = u.user_id
+      LEFT JOIN Homework h ON h.homework_id = ha.homework_id AND h.class_id = c.class_id
+      LEFT JOIN HomeworkSubmission hs ON hs.assignment_id = ha.assignment_id
+      WHERE c.tutor_id = @tutorId
+        AND c.status = 'active'
+        ${classCondition}
+      GROUP BY u.user_id, u.name, u.email, sub.name, c.grade_level
+    )
+    SELECT 
+      studentId,
+      name,
+      email,
+      className,
+      totalHomeworks,
+      submittedHomeworks,
+      averageScore,
+      CASE WHEN totalHomeworks > 0 
+        THEN CAST(submittedHomeworks AS FLOAT) / totalHomeworks 
+        ELSE 0 
+      END as submissionRate
+    FROM StudentHomeworkStats
+    WHERE totalHomeworks > 0
+    ORDER BY 
+      CASE WHEN averageScore IS NULL THEN 1 ELSE 0 END,
+      averageScore DESC,
+      submissionRate DESC,
+      name ASC
+  `;
+
+  const request = pool.request();
+  request.input('tutorId', tutorId);
+  if (filters.classId && filters.classId !== 'all') {
+    request.input('classId', filters.classId);
+  }
+
+  const result = await request.query(query);
+
+  return result.recordset.map((row, index) => ({
+    rank: index + 1,
+    studentId: row.studentId,
+    name: row.name,
+    email: row.email,
+    className: row.className,
+    totalHomeworks: row.totalHomeworks,
+    submittedHomeworks: row.submittedHomeworks,
+    averageScore: row.averageScore !== null ? Math.round(row.averageScore * 10) / 10 : null,
+    submissionRate: Math.round(row.submissionRate * 100),
+  }));
 }

@@ -65,7 +65,7 @@ export const getAllUsers = async (
     const offset = (page - 1) * limit;
 
     const { count: total, rows: users } = await User.findAndCountAll({
-      attributes: { exclude: ['hashedPassword'] },
+      attributes: { exclude: ['passwordHash'] },
       limit,
       offset,
       order: [['createdAt', 'DESC']],
@@ -122,7 +122,7 @@ export const updateUserStatus = async (
 
     return res.status(200).json({
       success: true,
-      message: User ${isActive ? 'activated' : 'deactivated'} successfully,
+      message: `User ${isActive ? 'activated' : 'deactivated'} successfully`,
       data: user,
     });
   } catch (error) {
@@ -150,12 +150,18 @@ export const getTutors = async (
     const { count: total, rows: tutors } = await User.findAndCountAll({
       where: {
         role: 'tutor',
-        isActive: true,
+        status: true,
       },
-      attributes: ['id', 'displayName', 'avatarUrl', 'bio', 'createdAt'],
+      attributes: [
+        ['user_id', 'id'],
+        ['name', 'displayName'],
+        ['avatar_url', 'avatarUrl'],
+        'bio',
+        ['created_at', 'createdAt'],
+      ],
       limit,
       offset,
-      order: [['displayName', 'ASC']],
+      order: [['name', 'ASC']],
     });
 
     return res.status(200).json({

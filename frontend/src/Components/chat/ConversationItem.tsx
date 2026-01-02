@@ -24,8 +24,10 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
   const isActive = activeConversation?.id === conversation.id;
 
   // Lấy thông tin người chat (participant còn lại, không phải current user)
-  const currentUserId = currentUser?.id;
-  const otherParticipant = conversation.participants.find((p) => p.id !== currentUserId);
+  const currentUserId = currentUser?.user_id || currentUser?.id;
+  const otherParticipant = conversation.participants.find(
+    (p) => p.id?.toUpperCase() !== currentUserId?.toUpperCase()
+  );
   const otherParticipantId = otherParticipant?.id || '';
   const conversationName = otherParticipant?.displayName || 'Unknown User';
   const avatarUrl = otherParticipant?.avatarUrl;

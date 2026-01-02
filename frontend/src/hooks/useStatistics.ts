@@ -7,19 +7,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { apiClient } from '../services/api';
 import {
   StatisticsFilters,
   FullStatisticsApiResponse,
   OverviewApiResponse,
   SessionsOverTimeApiResponse,
   TimeDistributionApiResponse,
-  LearningEffectivenessApiResponse,
-  TopStudentsApiResponse,
-  StudentsNeedingAttentionApiResponse,
+  StudentRankingApiResponse,
   ClassOptionsApiResponse,
 } from '../types/statistics.types';
 
-const API_BASE_URL = 'http://localhost:5000/api/statistics/v2';
+const API_BASE_URL = '/statistics/v2';
 
 /**
  * Build query string from filters
@@ -42,22 +41,11 @@ function buildQueryString(filters: StatisticsFilters): string {
 }
 
 /**
- * Generic fetch function with auth
+ * Generic fetch function using apiClient (has auto-refresh token)
  */
-async function fetchWithAuth<T>(url: string, token: string): Promise<T> {
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Lỗi kết nối' }));
-    throw new Error(error.message || `HTTP error ${response.status}`);
-  }
-
-  return response.json();
+async function fetchWithAuth<T>(url: string): Promise<T> {
+  const response = await apiClient.get<T>(url);
+  return response.data;
 }
 
 /**
@@ -70,8 +58,7 @@ export function useAllStatistics(filters: StatisticsFilters) {
   return useQuery<FullStatisticsApiResponse, Error>({
     queryKey: ['statistics', 'all', filters],
     queryFn: () => fetchWithAuth<FullStatisticsApiResponse>(
-      `${API_BASE_URL}/all?${queryString}`,
-      token!
+      `${API_BASE_URL}/all?${queryString}`
     ),
     enabled: !!token,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -89,8 +76,7 @@ export function useStatisticsOverview(filters: StatisticsFilters) {
   return useQuery<OverviewApiResponse, Error>({
     queryKey: ['statistics', 'overview', filters],
     queryFn: () => fetchWithAuth<OverviewApiResponse>(
-      `${API_BASE_URL}/overview?${queryString}`,
-      token!
+      `${API_BASE_URL}/overview?${queryString}`
     ),
     enabled: !!token,
     staleTime: 5 * 60 * 1000,
@@ -107,8 +93,7 @@ export function useSessionsOverTime(filters: StatisticsFilters) {
   return useQuery<SessionsOverTimeApiResponse, Error>({
     queryKey: ['statistics', 'sessions-over-time', filters],
     queryFn: () => fetchWithAuth<SessionsOverTimeApiResponse>(
-      `${API_BASE_URL}/sessions-over-time?${queryString}`,
-      token!
+      `${API_BASE_URL}/sessions-over-time?${queryString}`
     ),
     enabled: !!token,
     staleTime: 5 * 60 * 1000,
@@ -125,8 +110,7 @@ export function useTimeDistribution(filters: StatisticsFilters) {
   return useQuery<TimeDistributionApiResponse, Error>({
     queryKey: ['statistics', 'time-distribution', filters],
     queryFn: () => fetchWithAuth<TimeDistributionApiResponse>(
-      `${API_BASE_URL}/time-distribution?${queryString}`,
-      token!
+      `${API_BASE_URL}/time-distribution?${queryString}`
     ),
     enabled: !!token,
     staleTime: 5 * 60 * 1000,
@@ -134,53 +118,16 @@ export function useTimeDistribution(filters: StatisticsFilters) {
 }
 
 /**
- * Hook: Get learning effectiveness
+ * Hook: Get student ranking based on average homework score
  */
-export function useLearningEffectiveness(filters: StatisticsFilters) {
+export function useStudentRanking(filters: StatisticsFilters) {
   const { token } = useSelector((state: RootState) => state.auth);
   const queryString = buildQueryString(filters);
 
-  return useQuery<LearningEffectivenessApiResponse, Error>({
-    queryKey: ['statistics', 'learning-effectiveness', filters],
-    queryFn: () => fetchWithAuth<LearningEffectivenessApiResponse>(
-      `${API_BASE_URL}/learning-effectiveness?${queryString}`,
-      token!
-    ),
-    enabled: !!token,
-    staleTime: 5 * 60 * 1000,
-  });
-}
-
-/**
- * Hook: Get top students
- */
-export function useTopStudents(filters: StatisticsFilters) {
-  const { token } = useSelector((state: RootState) => state.auth);
-  const queryString = buildQueryString(filters);
-
-  return useQuery<TopStudentsApiResponse, Error>({
-    queryKey: ['statistics', 'top-students', filters],
-    queryFn: () => fetchWithAuth<TopStudentsApiResponse>(
-      `${API_BASE_URL}/top-students?${queryString}`,
-      token!
-    ),
-    enabled: !!token,
-    staleTime: 5 * 60 * 1000,
-  });
-}
-
-/**
- * Hook: Get students needing attention
- */
-export function useStudentsNeedingAttention(filters: StatisticsFilters) {
-  const { token } = useSelector((state: RootState) => state.auth);
-  const queryString = buildQueryString(filters);
-
-  return useQuery<StudentsNeedingAttentionApiResponse, Error>({
-    queryKey: ['statistics', 'students-needing-attention', filters],
-    queryFn: () => fetchWithAuth<StudentsNeedingAttentionApiResponse>(
-      `${API_BASE_URL}/students-needing-attention?${queryString}`,
-      token!
+  return useQuery<StudentRankingApiResponse, Error>({
+    queryKey: ['statistics', 'student-ranking', filters],
+    queryFn: () => fetchWithAuth<StudentRankingApiResponse>(
+      `${API_BASE_URL}/student-ranking?${queryString}`
     ),
     enabled: !!token,
     staleTime: 5 * 60 * 1000,
@@ -196,8 +143,7 @@ export function useClassOptions() {
   return useQuery<ClassOptionsApiResponse, Error>({
     queryKey: ['statistics', 'class-options'],
     queryFn: () => fetchWithAuth<ClassOptionsApiResponse>(
-      `${API_BASE_URL}/classes`,
-      token!
+      `${API_BASE_URL}/classes`
     ),
     enabled: !!token,
     staleTime: 10 * 60 * 1000, // 10 minutes - class list doesn't change often

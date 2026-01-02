@@ -25,6 +25,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'), // @ -> src/
     },
   },
+  optimizeDeps: {
+    include: ['pdfjs-dist'], // Pre-bundle pdfjs-dist
+  },
   css: {
     preprocessorOptions: {
       scss: {

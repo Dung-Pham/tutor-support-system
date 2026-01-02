@@ -52,6 +52,8 @@ const HomeworkDetailPage: React.FC = () => {
   const { currentHomework, students, loading, showAssignModal, showGradeModal } = useSelector(
     (state: RootState) => state.newHomework
   );
+  const { user } = useSelector((state: RootState) => state.auth);
+  const baseRoute = user?.role?.toLowerCase() === 'tutor' ? '/tutor' : '/student';
 
   // Assign form state
   const [assignForm, setAssignForm] = useState({
@@ -183,7 +185,7 @@ const HomeworkDetailPage: React.FC = () => {
           <CardContent className="py-12 text-center">
             <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium">Không tìm thấy bài tập</h3>
-            <Button className="mt-4" onClick={() => navigate('/homework/tutor')}>
+            <Button className="mt-4" onClick={() => navigate(`${baseRoute}/homework`)}>
               Quay lại danh sách
             </Button>
           </CardContent>
@@ -196,7 +198,7 @@ const HomeworkDetailPage: React.FC = () => {
     <div className="container mx-auto p-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="outline" size="sm" onClick={() => navigate('/homework/tutor')}>
+        <Button variant="outline" size="sm" onClick={() => navigate(`${baseRoute}/homework`)}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Quay lại
         </Button>

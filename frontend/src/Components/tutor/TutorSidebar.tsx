@@ -8,6 +8,7 @@ import {
   Settings,
   MessageCircle,
   CheckCircle2,
+  GraduationCap,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -20,11 +21,12 @@ const navItems = [
   { label: 'Bài viết', icon: FileText, to: '/tutor/posts' },
   { label: 'Tạo bài viết', icon: BookMarked, to: '/tutor/create-post' },
   { label: 'Bài viết của tôi', icon: CheckCircle2, to: '/tutor/my-posts' },
-  { label: 'Học sinh', icon: Users, to: '/tutor/students' },
+  { label: 'Lớp học', icon: Users, to: '/tutor/classes' },
   { label: 'Lịch dạy', icon: Clock, to: '/tutor/schedule' },
+  { label: 'Bài tập', icon: FileText, to: '/tutor/homework' },
+  { label: 'Quản lý học sinh', icon: GraduationCap, to: '/tutor/students' },
   { label: 'Thống kê', icon: TrendingUp, to: '/tutor/statistics' },
   { label: 'Nhắn tin', icon: MessageCircle, to: '/tutor/messages' },
-  { label: 'Cài đặt', icon: Settings, to: '/tutor/settings' },
 ];
 
 export function TutorSidebar({ onNavigate }: TutorSidebarProps = {}) {

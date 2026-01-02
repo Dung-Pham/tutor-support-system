@@ -2,7 +2,30 @@
  * File: utils/dateHelper.ts
  * Purpose: Date formatting and manipulation utilities
  * Usage: Import functions for date display, week calculation, etc.
+ * Note: All dates use Vietnam timezone (UTC+7)
  */
+
+// Vietnam timezone offset in minutes
+const VIETNAM_TIMEZONE_OFFSET = -420; // UTC+7 = -7 * 60 = -420
+
+/**
+ * Format date to YYYY-MM-DD string using local (Vietnam) timezone
+ * This avoids the UTC conversion issue with toISOString()
+ */
+export const toLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Parse a YYYY-MM-DD string as local date (not UTC)
+ */
+export const parseLocalDate = (dateString: string): Date => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
 
 /**
  * Format ISO date string to readable format
@@ -51,17 +74,18 @@ export const formatDate = (isoDate: string, format: 'short' | 'long' | 'time' | 
  * @returns { startDate: string, endDate: string } in YYYY-MM-DD format
  */
 export const getWeekRange = (referenceDate?: Date): { startDate: string; endDate: string } => {
-  const date = referenceDate || new Date();
+  const date = referenceDate ? new Date(referenceDate) : new Date();
   const day = date.getDay();
   const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
   
-  const monday = new Date(date.setDate(diff));
+  const monday = new Date(date);
+  monday.setDate(diff);
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
   
   return {
-    startDate: monday.toISOString().split('T')[0],
-    endDate: sunday.toISOString().split('T')[0],
+    startDate: toLocalDateString(monday),
+    endDate: toLocalDateString(sunday),
   };
 };
 
@@ -76,8 +100,8 @@ export const getMonthRange = (referenceDate?: Date): { startDate: string; endDat
   const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
   
   return {
-    startDate: firstDay.toISOString().split('T')[0],
-    endDate: lastDay.toISOString().split('T')[0],
+    startDate: toLocalDateString(firstDay),
+    endDate: toLocalDateString(lastDay),
   };
 };
 

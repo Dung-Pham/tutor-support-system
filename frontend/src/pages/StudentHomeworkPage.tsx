@@ -34,6 +34,8 @@ const StudentHomeworkPage: React.FC = () => {
   const navigate = useNavigate();
 
   const { studentHomeworks, loading } = useSelector((state: RootState) => state.newHomework);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const baseRoute = user?.role?.toLowerCase() === 'tutor' ? '/tutor' : '/student';
   const [filter, setFilter] = useState<string>('ALL');
 
   useEffect(() => {
@@ -244,7 +246,7 @@ const StudentHomeworkPage: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <Button
-                        onClick={() => navigate(`/homework/student/${homework.assignment_id}`)}
+                        onClick={() => navigate(`${baseRoute}/homework/${homework.assignment_id}`)}
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         Chi tiết

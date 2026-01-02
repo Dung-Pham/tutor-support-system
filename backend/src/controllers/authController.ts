@@ -2,7 +2,7 @@
 // Supports both SQL Server queries (HEAD) and Sequelize models (dang)
 
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { getUserByEmail, createUser } from '../database/queries/userQueries.js';
@@ -11,7 +11,7 @@ import { ApiResponse } from '../types/index.js';
 import { JwtPayload } from '../types/auth.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.ACCESS_TOKEN_SECRET || 'your-secret-key-change-in-production';
-const ACCESS_TOKEN_TTL = '30m';
+const ACCESS_TOKEN_TTL = '7d'; // 7 days for development
 const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
 // ============================================
@@ -275,7 +275,7 @@ export const registerStudent = async (
       hashedPassword,
       firstName,
       lastName,
-      displayName: ${firstName} ${lastName},
+      displayName: `${firstName} ${lastName}`,
       role: 'student',
     });
 
@@ -325,7 +325,7 @@ export const registerTutor = async (
       hashedPassword,
       firstName,
       lastName,
-      displayName: ${firstName} ${lastName},
+      displayName: `${firstName} ${lastName}`,
       role: 'tutor',
     });
 
@@ -392,7 +392,7 @@ export const signIn = async (
 
     const accessToken = jwt.sign(
       payload,
-      process.env.ACCESS_TOKEN_SECRET as string,
+      JWT_SECRET,
       { expiresIn: ACCESS_TOKEN_TTL }
     );
 
@@ -413,7 +413,7 @@ export const signIn = async (
 
     return res.status(200).json({
       success: true,
-      message: Welcome back, ${user.displayName}!,
+      message: `Welcome back, ${user.displayName}!`,
       token: accessToken,
       user: {
         id: user.id,
@@ -505,14 +505,14 @@ export const refreshToken = async (
     }
 
     const payload: JwtPayload = {
-      userId: user.id,
+      userId: user.userId,
       email: user.email,
       role: user.role,
     };
 
     const accessToken = jwt.sign(
       payload,
-      process.env.ACCESS_TOKEN_SECRET as string,
+      JWT_SECRET,
       { expiresIn: ACCESS_TOKEN_TTL }
     );
 

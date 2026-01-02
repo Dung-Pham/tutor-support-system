@@ -23,10 +23,13 @@ export const RoleBasedRoute = ({
     return <Navigate to="/login" replace />;
   }
 
-  // Check role có được phép không
-  if (!allowedRoles.includes(user.role)) {
+  // Check role có được phép không (case-insensitive)
+  const userRole = user.role.toLowerCase();
+  const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
+  
+  if (!normalizedAllowedRoles.includes(userRole)) {
     // Redirect theo role thực tế của user
-    const userRoleRedirect = getRoleDefaultRoute(user.role);
+    const userRoleRedirect = getRoleDefaultRoute(userRole);
     return <Navigate to={userRoleRedirect || redirectTo} replace />;
   }
 
@@ -37,7 +40,8 @@ export const RoleBasedRoute = ({
  * Helper function để lấy route mặc định theo role
  */
 export const getRoleDefaultRoute = (role: string): string => {
-  switch (role) {
+  const normalizedRole = role.toLowerCase();
+  switch (normalizedRole) {
     case 'tutor':
       return '/tutor/';
     case 'student':

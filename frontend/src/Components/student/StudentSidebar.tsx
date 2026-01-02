@@ -19,13 +19,11 @@ interface StudentSidebarProps {
 const navItems = [
   { label: 'Lịch học', icon: CalendarRange, to: '/student/schedule' },
   { label: 'Lớp học của tôi', icon: BookOpen, to: '/student/classes' },
-  { label: 'Bài tập', icon: ClipboardList, to: '/student/assignments' },
+  { label: 'Bài tập', icon: ClipboardList, to: '/student/homework' },
   { label: 'Bài viết chung', icon: BookOpen, to: '/student/posts' },
   { label: 'Tài liệu', icon: BookOpen, to: '/student/documents' },
   { label: 'Danh sách gia sư', icon: Users, to: '/student/tutors' },
   { label: 'Nhắn tin', icon: MessageCircle, to: '/student/messages' },
-  { label: 'Thống kê', icon: BarChart2, to: '/student/statistics' },
-  { label: 'Cài đặt', icon: Settings, to: '/student/settings' },
 ];
 
 export function StudentSidebar({ onNavigate }: StudentSidebarProps = {}) {

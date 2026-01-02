@@ -26,7 +26,7 @@ export default function LoginPage(): JSX.Element {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const baseRoute = user.role === 'tutor' ? '/tutor' : '/student';
+      const baseRoute = user.role.toLowerCase() === 'tutor' ? '/tutor' : '/student';
       navigate(baseRoute);
     }
   }, [isAuthenticated, user, navigate]);

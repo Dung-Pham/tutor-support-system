@@ -6,11 +6,10 @@
  *   - KPI cards with trend indicators
  *   - Sessions & Revenue combination chart
  *   - Time distribution pie chart with summary table
- *   - Learning effectiveness stacked bar chart
- *   - Top students & Students needing attention widgets
+ *   - Student ranking based on average homework score
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useAllStatistics, useClassOptions } from '../hooks/useStatistics';
 import { StatisticsFilters, TimeFilterType } from '../types/statistics.types';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -23,7 +22,7 @@ import {
   TrendingUp,
   TrendingDown,
   AlertTriangle,
-  Award,
+  Trophy,
   BookOpen,
   RefreshCw,
   Filter,
@@ -41,16 +40,10 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
 } from 'recharts';
 
 // Colors for charts
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
-const SUBMISSION_COLORS = {
-  onTime: '#10B981',
-  late: '#F59E0B', 
-  missing: '#EF4444',
-};
 
 // Time filter options
 const TIME_FILTER_OPTIONS: { value: TimeFilterType; label: string }[] = [
@@ -92,24 +85,23 @@ const SessionsRevenueTooltip = (props: any) => {
   return null;
 };
 
-// Custom Tooltip for Learning Effectiveness chart
-const LearningEffectivenessTooltip = (props: any) => {
-  const { active, payload } = props;
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-        <p className="font-semibold text-gray-900 mb-2">{data.fullName}</p>
-        <p className="text-green-600">Đúng hạn: {data.onTime}%</p>
-        <p className="text-yellow-600">Muộn: {data.late}%</p>
-        <p className="text-red-600">Chưa nộp: {data.missing}%</p>
-        {data.avgScore !== null && (
-          <p className="text-blue-600 mt-1">Điểm TB: {data.avgScore}</p>
-        )}
-      </div>
-    );
+// Get medal color based on rank
+const getMedalColor = (rank: number): string => {
+  switch (rank) {
+    case 1: return 'bg-yellow-500';
+    case 2: return 'bg-gray-400';
+    case 3: return 'bg-orange-400';
+    default: return 'bg-blue-500';
   }
-  return null;
+};
+
+// Get score color
+const getScoreColor = (score: number | null): string => {
+  if (score === null) return 'text-gray-400';
+  if (score >= 8) return 'text-green-600';
+  if (score >= 6.5) return 'text-blue-600';
+  if (score >= 5) return 'text-yellow-600';
+  return 'text-red-600';
 };
 
 export const StatisticsDashboard: React.FC = () => {
@@ -150,19 +142,6 @@ export const StatisticsDashboard: React.FC = () => {
   const handleClassFilterChange = (classId: string) => {
     setFilters(prev => ({ ...prev, classId }));
   };
-
-  // Transform data for stacked bar chart
-  const learningEffectivenessChartData = useMemo(() => {
-    if (!data?.data.learningEffectiveness.data) return [];
-    return data.data.learningEffectiveness.data.map(item => ({
-      name: item.className.length > 15 ? item.className.substring(0, 15) + '...' : item.className,
-      fullName: item.className,
-      onTime: Math.round(item.onTimePercent * 100),
-      late: Math.round(item.latePercent * 100),
-      missing: Math.round(item.missingPercent * 100),
-      avgScore: item.averageScore,
-    }));
-  }, [data?.data.learningEffectiveness.data]);
 
   // Loading state
   if (isLoading) {
@@ -348,7 +327,7 @@ export const StatisticsDashboard: React.FC = () => {
                   {formatPercent(stats.overview.sessionCompletionRate)}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  {stats.overview.canceledSessions} buổi hủy / {stats.overview.totalSessions} buổi
+                  {stats.overview.completedSessions} hoàn thành / {stats.overview.totalSessions} buổi
                 </p>
               </div>
               <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
@@ -490,185 +469,89 @@ export const StatisticsDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Row 3: Learning Effectiveness + Top Students + Students Needing Attention */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Learning Effectiveness Stacked Bar Chart - 2 columns */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-purple-600" />
-              Tình trạng nộp bài theo lớp
-            </CardTitle>
-            <div className="flex items-center gap-4 mt-2 text-sm">
-              <span className="flex items-center gap-1">
-                <span className="w-3 h-3 rounded" style={{ backgroundColor: SUBMISSION_COLORS.onTime }} />
-                Đúng hạn
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-3 h-3 rounded" style={{ backgroundColor: SUBMISSION_COLORS.late }} />
-                Muộn
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-3 h-3 rounded" style={{ backgroundColor: SUBMISSION_COLORS.missing }} />
-                Chưa nộp
-              </span>
+      {/* Row 3: Student Ranking Table */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-yellow-500" />
+            Bảng xếp hạng học sinh (theo điểm trung bình bài tập)
+          </CardTitle>
+          <p className="text-sm text-gray-500 mt-1">
+            Tổng số: {stats.studentRanking.totalStudents} học sinh
+          </p>
+        </CardHeader>
+        <CardContent>
+          {stats.studentRanking.data.length === 0 ? (
+            <div className="flex items-center justify-center py-12 text-gray-500">
+              <div className="text-center">
+                <BookOpen className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                <p>Chưa có dữ liệu bài tập được chấm điểm</p>
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            {learningEffectivenessChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-[250px] text-gray-500">
-                Chưa có dữ liệu bài tập
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={learningEffectivenessChartData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} unit="%" />
-                  <YAxis 
-                    type="category" 
-                    dataKey="name" 
-                    width={100} 
-                    tick={{ fontSize: 11 }}
-                  />
-                  <Tooltip content={<LearningEffectivenessTooltip />} />
-                  <Bar dataKey="onTime" stackId="a" fill={SUBMISSION_COLORS.onTime} name="Đúng hạn" />
-                  <Bar dataKey="late" stackId="a" fill={SUBMISSION_COLORS.late} name="Muộn" />
-                  <Bar dataKey="missing" stackId="a" fill={SUBMISSION_COLORS.missing} name="Chưa nộp" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-
-            {/* Overall Stats */}
-            <div className="flex justify-center gap-6 mt-4 pt-4 border-t border-gray-100">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">
-                  {formatPercent(stats.learningEffectiveness.overallOnTimePercent)}
-                </p>
-                <p className="text-xs text-gray-500">Tổng đúng hạn</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-600">
-                  {formatPercent(stats.learningEffectiveness.overallLatePercent)}
-                </p>
-                <p className="text-xs text-gray-500">Tổng muộn</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-red-600">
-                  {formatPercent(stats.learningEffectiveness.overallMissingPercent)}
-                </p>
-                <p className="text-xs text-gray-500">Tổng chưa nộp</p>
-              </div>
-              {stats.learningEffectiveness.overallAverageScore !== null && (
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600">
-                    {stats.learningEffectiveness.overallAverageScore}
-                  </p>
-                  <p className="text-xs text-gray-500">Điểm TB chung</p>
-                </div>
-              )}
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600 w-16">Hạng</th>
+                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Học sinh</th>
+                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Lớp</th>
+                    <th className="py-3 px-4 text-center text-sm font-semibold text-gray-600">Số bài tập</th>
+                    <th className="py-3 px-4 text-center text-sm font-semibold text-gray-600">Đã nộp</th>
+                    <th className="py-3 px-4 text-center text-sm font-semibold text-gray-600">Tỉ lệ nộp</th>
+                    <th className="py-3 px-4 text-center text-sm font-semibold text-gray-600">Điểm TB</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.studentRanking.data.map((student) => (
+                    <tr 
+                      key={student.studentId}
+                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="py-3 px-4">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${getMedalColor(student.rank)}`}>
+                          {student.rank}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium text-gray-900">{student.name}</p>
+                          <p className="text-xs text-gray-500">{student.email}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-sm text-gray-600">{student.className}</span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="font-medium">{student.totalHomeworks}</span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="font-medium text-green-600">{student.submittedHomeworks}</span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center">
+                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                            <div 
+                              className="bg-blue-500 h-2 rounded-full" 
+                              style={{ width: `${student.submissionRate}%` }}
+                            />
+                          </div>
+                          <span className="text-sm text-gray-600">{student.submissionRate}%</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className={`text-lg font-bold ${getScoreColor(student.averageScore)}`}>
+                          {student.averageScore !== null ? student.averageScore.toFixed(1) : '-'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Widgets Column */}
-        <div className="space-y-6">
-          {/* Top Students */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Award className="h-5 w-5 text-yellow-500" />
-                Top học sinh nổi bật
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {stats.topStudents.students.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">Chưa có dữ liệu</p>
-              ) : (
-                <div className="space-y-3">
-                  {stats.topStudents.students.map((student, index) => (
-                    <div 
-                      key={student.studentId}
-                      className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg"
-                    >
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white font-bold ${
-                        index === 0 ? 'bg-yellow-500' :
-                        index === 1 ? 'bg-gray-400' :
-                        'bg-orange-400'
-                      }`}>
-                        {index + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{student.name}</p>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <span>Điểm: {student.averageScore}</span>
-                          <span>•</span>
-                          <span>Đúng hạn: {formatPercent(student.onTimeSubmissionRate)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Students Needing Attention */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-red-500" />
-                Học sinh cần chú ý
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {stats.studentsNeedingAttention.students.length === 0 ? (
-                <div className="text-center py-4">
-                  <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                  <p className="text-gray-500">Tất cả học sinh đều tốt!</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {stats.studentsNeedingAttention.students.slice(0, 3).map((student) => (
-                    <div 
-                      key={student.studentId}
-                      className="p-2 border border-red-100 bg-red-50 rounded-lg"
-                    >
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium text-gray-900">{student.name}</p>
-                        <div className="flex gap-1">
-                          {student.reasons.includes('low_score') && (
-                            <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-xs rounded">
-                              Điểm thấp
-                            </span>
-                          )}
-                          {student.reasons.includes('high_absence') && (
-                            <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded">
-                              Vắng nhiều
-                            </span>
-                          )}
-                          {student.reasons.includes('missing_assignments') && (
-                            <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 text-xs rounded">
-                              Thiếu bài
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">{student.className}</p>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-600">
-                        {student.averageScore !== null && (
-                          <span>Điểm TB: {student.averageScore}</span>
-                        )}
-                        <span>Vắng: {student.absentSessions}/{student.totalSessions}</span>
-                        <span>Thiếu: {student.missingAssignments} bài</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
