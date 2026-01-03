@@ -14,13 +14,19 @@
     "seed:conversations": "tsx --env-file=.env src/utils/seedConversations.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["tutor", "education", "express", "mongodb", "sqlserver"],
+  "keywords": [
+    "tutor",
+    "education",
+    "express",
+    "mongodb",
+    "sqlserver"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.8.0",
-    "compression": "^1.7.4",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -41,7 +47,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/compression": "^1.7.5",
+    "@types/compression": "^1.8.1",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
