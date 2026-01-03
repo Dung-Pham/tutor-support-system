@@ -42,6 +42,10 @@ const ManageClassesPage = lazy(() => import('@/pages/Student/ManageClassesPage')
 const ViewTutorsPage = lazy(() => import('@/pages/Student/ViewTutorsPage'));
 const FavoritesPage = lazy(() => import('@/pages/Student/FavoritesPage'));
 const StudentClassDetailQuynh = lazy(() => import('@/pages/Student/ClassDetailPage'));
+const CreateClassPage = lazy(() => import('@/components/student/CreateClassPage'));
+
+// Notifications page
+const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
 
 // Tutor pages
 const TutorLayout = lazy(() =>
@@ -144,6 +148,14 @@ export const AppRoutes = () => {
               }
             />
             <Route
+              path="create-class"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <CreateClassPage />
+                </Suspense>
+              }
+            />
+            <Route
               path="view-tutors"
               element={
                 <Suspense fallback={<PageLoader />}>
@@ -164,6 +176,16 @@ export const AppRoutes = () => {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <StudentClassDetailQuynh />
+                </Suspense>
+              }
+            />
+            
+            {/* Notifications */}
+            <Route
+              path="notifications"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <NotificationsPage />
                 </Suspense>
               }
             />
@@ -264,6 +286,16 @@ export const AppRoutes = () => {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <TutorClassDetailQuynh />
+                </Suspense>
+              }
+            />
+            
+            {/* Notifications */}
+            <Route
+              path="notifications"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <NotificationsPage />
                 </Suspense>
               }
             />

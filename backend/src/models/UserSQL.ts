@@ -50,19 +50,19 @@ class UserAccount
   extends Model<UserAttributes, UserCreationAttributes>
   implements UserAttributes
 {
-  public user_id!: string;
-  public email!: string;
-  public password_hash!: string;
-  public name!: string;
-  public phone!: string | null;
-  public role!: string;
-  public status!: boolean;
-  public is_verified!: boolean;
-  public dateOfBirth!: string | Date | null;
-  public locationDetail!: string | null;
-  public address_id!: string | null;
-  public created_at!: Date;
-  public updated_at!: Date;
+  declare user_id: string;
+  declare email: string;
+  declare password_hash: string;
+  declare name: string;
+  declare phone: string | null;
+  declare role: string;
+  declare status: boolean;
+  declare is_verified: boolean;
+  declare dateOfBirth: string | Date | null;
+  declare locationDetail: string | null;
+  declare address_id: string | null;
+  declare created_at: Date;
+  declare updated_at: Date;
 
   // Instance method: So sánh password
   public async comparePassword(candidatePassword: string): Promise<boolean> {

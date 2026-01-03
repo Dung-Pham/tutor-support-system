@@ -1,10 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import redisModule from "../config/redis";
-import UserAccount from "../models/UserSQL"; // Import Model chuẩn
-
-// Xử lý Redis client
-const redisClient = (redisModule as any).client || redisModule;
+import UserAccount from "../models/UserSQL";
 
 interface DecodedToken extends JwtPayload {
   userId: string;
@@ -14,11 +10,12 @@ interface DecodedToken extends JwtPayload {
 const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
     let token = req.headers.authorization;
+    console.log('🔐 [protect] Authorization header:', token ? 'Present' : 'Missing');
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Token không được cung cấp",
+        message: "Không xác thực được người dùng",
       });
     }
 
@@ -27,34 +24,19 @@ const protect = async (req: Request, res: Response, next: NextFunction) => {
       token = token.slice(7);
     }
 
-    // 1. Kiểm tra blacklist từ Redis
-    const isBlacklisted = await redisClient.get(`blacklist_token:${token}`);
-    if (isBlacklisted) {
-      console.warn("🚫 [protect] Token bị từ chối (nằm trong blacklist)");
-      return res.status(401).json({
-        success: false,
-        message: "Phiên đăng nhập đã kết thúc, vui lòng đăng nhập lại",
-      });
-    }
-
     // Verify token
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || "your-secret-key"
     ) as DecodedToken;
+    
+    console.log('🔐 [protect] Decoded token userId:', decoded.userId);
 
-    // 2. Cache user profile
-    const cacheKey = `user_profile:${decoded.userId}`;
-    const cachedUser = await redisClient.get(cacheKey);
-
-    if (cachedUser) {
-      (req as any).user = JSON.parse(cachedUser);
-      (req as any).isAuthenticated = true;
-      return next();
-    }
-
-    // 3. Fetch DB (Đã bỏ :any vì UserAccount đã có Type)
+    // Fetch user from DB
     const user = await UserAccount.findByPk(decoded.userId);
+    console.log('🔐 [protect] User from DB raw:', user);
+    console.log('🔐 [protect] User from DB:', user ? `${user.email} (${user.role})` : 'NOT FOUND');
+    console.log('🔐 [protect] User dataValues:', user?.dataValues);
 
     if (!user) {
       return res.status(401).json({
@@ -64,7 +46,6 @@ const protect = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     // Attach user to request
-    // TypeScript sẽ tự động gợi ý các trường user_id, email... từ Model
     const userPayload = {
       user_id: user.user_id,
       email: user.email,
@@ -76,15 +57,15 @@ const protect = async (req: Request, res: Response, next: NextFunction) => {
 
     (req as any).user = userPayload;
     (req as any).isAuthenticated = true;
-    // Lưu user vào redis cache với TTL 1 giờ
-    await redisClient.set(cacheKey, JSON.stringify(userPayload), { EX: 3600 });
+    console.log('🔐 [protect] User attached to req:', userPayload.email, userPayload.role);
 
     next();
   } catch (error: any) {
-    console.error("🔐 Token verification error:", error.message);
-    console.log("⏭️ [protect] Token invalid - cho phép truy cập public");
-    (req as any).isAuthenticated = false;
-    return next();
+    console.error("Token verification error:", error.message);
+    return res.status(401).json({
+      success: false,
+      message: "Không xác thực được người dùng",
+    });
   }
 };
 

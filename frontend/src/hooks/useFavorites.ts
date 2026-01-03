@@ -2,6 +2,8 @@ const API_URL = 'http://localhost:5000/api';
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 import { FavoritesTutor } from '@/types';
 import { favoritesAPI } from '@/services/favoritesService';
 
@@ -9,9 +11,19 @@ export const useFavorites = () => {
   const [favorites, setFavorites] = useState<FavoritesTutor[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get user role from Redux store
+  const user = useSelector((state: RootState) => state.auth.user);
+  const isStudent = user?.role?.toLowerCase() === 'student';
 
   // Lấy danh sánh gia sư yêu thích của học viên
   const fetchFavorites = async () => {
+    // Only fetch if user is student
+    if (!isStudent) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     try {
@@ -68,8 +80,12 @@ export const useFavorites = () => {
   };
 
   useEffect(() => {
-    fetchFavorites();
-  }, []);
+    if (isStudent) {
+      fetchFavorites();
+    } else {
+      setLoading(false);
+    }
+  }, [isStudent]);
   return {
     favorites,
     loading,

@@ -125,6 +125,11 @@ class SocketService {
       this.socket.emit(event, data);
     }
   }
+
+  // Get the socket instance (for direct access)
+  getSocket(): Socket | null {
+    return this.socket;
+  }
 }
 
 export const socketService = new SocketService();

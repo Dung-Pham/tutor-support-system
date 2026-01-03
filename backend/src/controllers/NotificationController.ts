@@ -137,28 +137,42 @@ class NotificationController {
       }
       const cacheKey = `notif:unread_count:${userId}`;
 
-      // 1. Check Redis cache first
-      const cachedCount = await redisClient.get(cacheKey);
-      if (cachedCount !== null) {
-        console.log("⚡ [getUnreadCount] From Cache");
-        res
-          .status(200)
-          .json(
-            responseFormatter(
-              { unreadCount: parseInt(cachedCount) },
-              "Lấy từ cache",
-              200
-            )
-          );
-        return;
+      // 1. Check Redis cache first (if available)
+      if (redisClient) {
+        try {
+          const cachedCount = await redisClient.get(cacheKey);
+          if (cachedCount !== null) {
+            console.log("⚡ [getUnreadCount] From Cache");
+            res
+              .status(200)
+              .json(
+                responseFormatter(
+                  { unreadCount: parseInt(cachedCount) },
+                  "Lấy từ cache",
+                  200
+                )
+              );
+            return;
+          }
+        } catch (cacheError) {
+          console.warn("⚠️ Redis cache error, skipping:", cacheError.message);
+        }
       }
 
       //2. If no cache, fetch from Service/DB
       const count = await NotificationService.getUnreadCount(userId);
 
       console.log(`✅ Unread count: ${count}`);
-      // 3. Cache the count(không hết hạn, sẽ update khi có sự kiện)
-      await redisClient.set(cacheKey, count.toString());
+      
+      // 3. Cache the count if Redis available
+      if (redisClient) {
+        try {
+          await redisClient.set(cacheKey, count.toString());
+        } catch (cacheError) {
+          console.warn("⚠️ Redis set error, skipping:", cacheError.message);
+        }
+      }
+      
       res
         .status(200)
         .json(
@@ -200,11 +214,17 @@ class NotificationController {
 
       await NotificationService.markAsRead(notificationId, userId);
 
-      // update redis: giảm counter đi 1
-      const cacheKey = `notif:unread_count:${userId}`;
-      const currentCount = await redisClient.get(cacheKey);
-      if (currentCount && parseInt(currentCount) > 0) {
-        await redisClient.decr(cacheKey);
+      // update redis: giảm counter đi 1 (if Redis available)
+      if (redisClient) {
+        try {
+          const cacheKey = `notif:unread_count:${userId}`;
+          const currentCount = await redisClient.get(cacheKey);
+          if (currentCount && parseInt(currentCount) > 0) {
+            await redisClient.decr(cacheKey);
+          }
+        } catch (cacheError) {
+          console.warn("⚠️ Redis decr error, skipping:", cacheError.message);
+        }
       }
 
       console.log(`✅ Marked ${notificationId} as read`);
@@ -235,8 +255,16 @@ class NotificationController {
       await NotificationService.markAllAsRead(userId);
 
       console.log(`✅ Marked all notifications as read`);
-      // update redis: đặt lại counter về 0
-      await redisClient.set(`notif:unread_count:${userId}`, "0");
+      
+      // update redis: đặt lại counter về 0 (if Redis available)
+      if (redisClient) {
+        try {
+          await redisClient.set(`notif:unread_count:${userId}`, "0");
+        } catch (cacheError) {
+          console.warn("⚠️ Redis set error, skipping:", cacheError.message);
+        }
+      }
+      
       res
         .status(200)
         .json(

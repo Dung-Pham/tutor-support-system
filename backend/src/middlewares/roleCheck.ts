@@ -14,11 +14,13 @@ const roleCheck = (...allowedRoles: string[]) => {
         message: "Không xác thực được người dùng",
       });
     }
-    const userRole = user.role;
+    const userRole = user.role?.toLowerCase(); // Normalize to lowercase
     const userEmail = user.email;
-    if (!allowedRoles.includes(userRole)) {
+    const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase()); // Normalize allowed roles
+    
+    if (!normalizedAllowedRoles.includes(userRole)) {
       console.warn(
-        `❌ [roleCheck] Access denied for user ${userEmail} with role '${userRole}'. Required: ${allowedRoles.join(
+        `❌ [roleCheck] Access denied for user ${userEmail} with role '${user.role}'. Required: ${allowedRoles.join(
           ", "
         )}`
       );

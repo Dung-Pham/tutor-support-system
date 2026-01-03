@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
-import DevNavigation from '../components/DevNavigation';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { useNavigate } from 'react-router-dom';
 import NotificationItem from '@/components/Notifications/NotificationItem';
 dayjs.extend(utc);
 
@@ -19,7 +17,7 @@ export const NotificationsPage: React.FC = () => {
   } = useNotifications();
 
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
-  const navigate = useNavigate();
+  
   useEffect(() => {
     console.log('🎯 Component mounted - Fetching all notifications');
     fetchAll();
@@ -72,17 +70,15 @@ export const NotificationsPage: React.FC = () => {
   //   }
   // };
   return (
-    <div className="flex">
-      <DevNavigation />
-      <div className="flex-1 flex flex-col">
-        {/* Top Header */}
-        <div className="bg-white border-b border-gray-200 p-6">
-          <h1 className="text-3xl font-bold text-gray-800">Thông báo</h1>
-        </div>
+    <div className="flex flex-col h-full">
+      {/* Top Header */}
+      <div className="bg-white border-b border-gray-200 p-6">
+        <h1 className="text-3xl font-bold text-gray-800">Thông báo</h1>
+      </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-auto p-6">
-          <div className="max-w-4xl">
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto p-6">
+        <div className="max-w-4xl mx-auto">
             {/* Filter Tabs and Button */}
             <div className="flex justify-between items-center mb-6 gap-4">
               <div className="flex gap-4">
@@ -135,21 +131,13 @@ export const NotificationsPage: React.FC = () => {
                   <NotificationItem
                     key={notification.notification_id}
                     notification={notification}
-                    // ✅ onClick: Chỉ mark as read
                     onClick={() => {
                       console.log('✅ Mark as read:', notification.notification_id);
                       markAsRead(notification.notification_id);
                     }}
-                    // ✅ onDelete: Xóa notification
                     onDelete={() => {
                       console.log('🗑️ Delete notification:', notification.notification_id);
                       deleteNotification(notification.notification_id);
-                    }}
-                    // ✅ onNavigate: Navigate sang trang khác
-                    // path được lấy từ metadata.targetPage trong NotificationItem
-                    onNavigate={(path: string) => {
-                      console.log('🚀 NotificationsPage.onNavigate:', path);
-                      navigate(path);
                     }}
                   />
                 ))}
@@ -166,7 +154,6 @@ export const NotificationsPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

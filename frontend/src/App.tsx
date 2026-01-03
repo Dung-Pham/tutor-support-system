@@ -38,20 +38,19 @@ function AuthInitializer() {
     }
 
     console.log('User authenticated, connecting socket...');
-    try {
-      const token = localStorage.getItem('token') || '';
-      const socket = socketService.connect(token, user.user_id);
-
-      if (socket && socket.connected) {
-        socket.emit('authenticate', user.user_id);
-      } else {
-        socket?.once('connect', () => {
+    const token = localStorage.getItem('token') || '';
+    
+    socketService.connect(token)
+      .then(() => {
+        const socket = socketService.getSocket();
+        if (socket) {
           socket.emit('authenticate', user.user_id);
-        });
-      }
-    } catch (error) {
-      console.error('Error connecting socket:', error);
-    }
+          console.log('Socket authenticated for user:', user.user_id);
+        }
+      })
+      .catch((error) => {
+        console.error('Error connecting socket:', error);
+      });
   }, [isAuthenticated, user?.user_id]);
 
   return null;

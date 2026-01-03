@@ -1,21 +1,35 @@
-import { createClient } from "redis";
+import { createClient, RedisClientType } from "redis";
 
-const client = createClient({
-  url: process.env.REDIS_URL || "redis://localhost:6379",
-});
+let client: RedisClientType | null = null;
+let isConnected = false;
 
-client.on("error", (err) => {
-  console.error("Redis Client Error", err);
-});
-client.on("connect", () => console.log("✅ Redis connected"));
+// Only connect if REDIS_URL is defined
+if (process.env.REDIS_URL) {
+  client = createClient({
+    url: process.env.REDIS_URL,
+  });
 
-// Kết nối ngay lập tức
-(async () => {
-  try {
-    await client.connect();
-  } catch (error) {
-    console.warn("⚠️ Redis connection failed (skipping)");
-  }
-})();
+  client.on("error", (err) => {
+    if (!isConnected) {
+      console.warn("Redis connection failed (optional service)");
+    }
+  });
+  
+  client.on("connect", () => {
+    isConnected = true;
+    console.log("Redis connected");
+  });
 
-export default { client };
+  // Connect asynchronously
+  (async () => {
+    try {
+      await client?.connect();
+    } catch (error) {
+      console.warn("Redis not available (skipping)");
+    }
+  })();
+} else {
+  console.log("Redis URL not configured (skipping)");
+}
+
+export default { client, isConnected };
