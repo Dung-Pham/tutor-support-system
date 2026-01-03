@@ -8,6 +8,9 @@ import {
   Settings,
   MessageCircle,
   Users,
+  Heart,
+  FolderKanban,
+  Search,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -19,10 +22,13 @@ interface StudentSidebarProps {
 const navItems = [
   { label: 'Lịch học', icon: CalendarRange, to: '/student/schedule' },
   { label: 'Lớp học của tôi', icon: BookOpen, to: '/student/classes' },
+  { label: 'Quản lý lớp', icon: FolderKanban, to: '/student/manage-classes' },
   { label: 'Bài tập', icon: ClipboardList, to: '/student/homework' },
   { label: 'Bài viết chung', icon: BookOpen, to: '/student/posts' },
   { label: 'Tài liệu', icon: BookOpen, to: '/student/documents' },
   { label: 'Danh sách gia sư', icon: Users, to: '/student/tutors' },
+  { label: 'Tìm gia sư', icon: Search, to: '/student/view-tutors' },
+  { label: 'Gia sư yêu thích', icon: Heart, to: '/student/favorites' },
   { label: 'Nhắn tin', icon: MessageCircle, to: '/student/messages' },
 ];
 

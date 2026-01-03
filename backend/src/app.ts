@@ -9,7 +9,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
-// Import Error Handler from HEAD
+// Import Error Handler
 import { errorHandler } from './middlewares/errorHandler.js';
 // Import Protected Route middleware from dang
 import { protectedRoute } from './middlewares/userMiddleware.js';
@@ -40,23 +40,36 @@ import postRoute from './routes/postRoute.js';
 import commentRoute from './routes/commentRoute.js';
 import adminRoute from './routes/adminRoute.js';
 
+// ============================================
+// quynh Routes - Student/Tutor Management Module
+// ============================================
+import locationRoutes from './routes/locationRoutes.js';
+import subjectsRoutes from './routes/subjectsRoutes.js';
+import notificationRoutes from './routes/NotificationRoutes.js';
+// Routes for Student module
+import studentManageRoutes from './routes/Student/studentRouter.js';
+// Routes for Tutor module
+import tutorManageRoutes from './routes/Tutor/tutorRoutes.js';
+import applicationRoutes from './routes/Tutor/applicationRoutes.js';
+import searchRoutes from './routes/Tutor/searchRoutes.js';
+
 // ESM __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Security Middleware (from HEAD - disabled for development)
+// Security Middleware (disabled for development)
 app.use(
   helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: false, // Allow cross-origin resource loading
+    crossOriginResourcePolicy: false,
   })
 );
 app.use(compression());
 
-// CORS Configuration (merged from both) - MUST be before static files
+// CORS Configuration - MUST be before static files
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -65,7 +78,7 @@ app.use(
         'http://localhost:5173',
         'http://localhost:5174',
         'http://127.0.0.1:5173',
-        undefined, // for same-origin requests
+        undefined,
       ];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -77,7 +90,7 @@ app.use(
   })
 );
 
-// Static files for uploads (from HEAD) - AFTER CORS middleware
+// Static files for uploads - AFTER CORS middleware
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   setHeaders: (res) => {
     res.set('Access-Control-Allow-Origin', '*');
@@ -86,17 +99,17 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
 }));
 
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// Swagger Documentation Setup (from dang)
+// Swagger Documentation Setup
 const swaggerDocument = JSON.parse(
   fs.readFileSync('./src/config/swagger.json', 'utf-8')
 );
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Health check endpoint (merged)
+// Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
@@ -110,17 +123,21 @@ app.get('/health', (_req: Request, res: Response) => {
 // ============================================
 
 // --- Public Routes ---
-// Auth routes (both branches merged)
-app.use('/api/auth', authRoutes);    // HEAD: /login, /register, /me
-app.use('/api/auth', authRoute);     // dang: /signin, /signout, /refresh, /register/student, /register/tutor
+app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoute);
+
 // Social public routes (from dang)
 app.use('/api/posts', postRoute);
 app.use('/api', commentRoute);
 
-// --- Admin Routes (from dang - has its own auth middleware) ---
+// Location and Subjects (from quynh)
+app.use('/api/locations', locationRoutes);
+app.use('/api/subjects', subjectsRoutes);
+
+// --- Admin Routes ---
 app.use('/api/admin', adminRoute);
 
-// --- Teaching Module Routes (from HEAD) ---
+// --- Teaching Module Routes ---
 app.use('/api/classes', classRoutes);
 app.use('/api/lesson-plans', lessonPlanRoutes);
 app.use('/api/homework', homeworkRoutes);
@@ -132,11 +149,20 @@ app.use('/api/statistics', statisticsRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/attendance', attendanceRoutes);
 
-// --- Protected Routes (from dang - with middleware) ---
+// --- Student/Tutor Management Routes (from quynh) ---
+app.use('/api/student', studentManageRoutes);
+app.use('/api/tutor', tutorManageRoutes);
+app.use('/api/applications', applicationRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+// --- Protected Routes (from dang) ---
 app.use(protectedRoute);
 app.use('/api/users', userRoute);
 app.use('/api/messages', messageRoute);
 app.use('/api/conversations', conversationRoute);
+
+console.log('All routes mounted!');
 
 // ============================================
 // Error Handling
@@ -150,59 +176,49 @@ app.use((_req: Request, res: Response) => {
   });
 });
 
-// Error Handler (merged from both - comprehensive version from dang)
+// Error Handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err.message || err);
 
-  // 1. Multer errors (file upload)
   if (err.name === 'MulterError') {
     const multerMessages: Record<string, string> = {
-      LIMIT_FILE_SIZE: 'File vượt quá kích thước cho phép (tối đa 4MB)',
-      LIMIT_FILE_COUNT: 'Số lượng file vượt quá giới hạn (tối đa 10 files)',
-      LIMIT_UNEXPECTED_FILE: 'Trường file không hợp lệ',
+      LIMIT_FILE_SIZE: 'File vuot qua kich thuoc cho phep (toi da 4MB)',
+      LIMIT_FILE_COUNT: 'So luong file vuot qua gioi han (toi da 10 files)',
+      LIMIT_UNEXPECTED_FILE: 'Truong file khong hop le',
     };
     return res.status(400).json({
       success: false,
-      message: multerMessages[err.code] || 'Lỗi upload file',
+      message: multerMessages[err.code] || 'Loi upload file',
     });
   }
 
-  // 2. Custom file type error from multer fileFilter
   if (err.message === 'Only image files are allowed') {
     return res.status(400).json({
       success: false,
-      message: 'Chỉ chấp nhận file ảnh (jpg, png, gif, webp)',
+      message: 'Chi chap nhan file anh (jpg, png, gif, webp)',
     });
   }
 
-  // 3. Sequelize UniqueConstraint error
   if (err.name === 'SequelizeUniqueConstraintError') {
     const fields = Object.keys(err.fields || {});
     const fieldName = fields[0] || 'field';
-    const fieldMap: Record<string, string> = {
-      email: 'Email',
-      slug: 'Đường dẫn bài viết',
-      phone: 'Số điện thoại',
-    };
     return res.status(409).json({
       success: false,
-      message: `${fieldMap[fieldName] || fieldName} đã tồn tại trong hệ thống`,
+      message: fieldName + ' da ton tai trong he thong',
     });
   }
 
-  // 4. MongoDB duplicate key error (code 11000)
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue || {})[0] || 'field';
     return res.status(409).json({
       success: false,
-      message: `${field} đã tồn tại`,
+      message: field + ' da ton tai',
     });
   }
 
-  // 5. Default: Internal Server Error
   res.status(500).json({
     success: false,
-    message: 'Lỗi hệ thống, vui lòng thử lại sau',
+    message: 'Loi he thong, vui long thu lai sau',
   });
 });
 

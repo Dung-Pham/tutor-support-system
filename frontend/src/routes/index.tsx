@@ -37,6 +37,12 @@ const StudentLayout = lazy(() =>
 const StudentMessages = lazy(() => import('@/pages/student/StudentMessages'));
 const TutorsPage = lazy(() => import('@/pages/TutorsPage'));
 
+// Student pages from quynh
+const ManageClassesPage = lazy(() => import('@/pages/Student/ManageClassesPage'));
+const ViewTutorsPage = lazy(() => import('@/pages/Student/ViewTutorsPage'));
+const FavoritesPage = lazy(() => import('@/pages/Student/FavoritesPage'));
+const StudentClassDetailQuynh = lazy(() => import('@/pages/Student/ClassDetailPage'));
+
 // Tutor pages
 const TutorLayout = lazy(() =>
   import('@/pages/tutor/TutorLayout').then((m) => ({ default: m.TutorLayout }))
@@ -44,6 +50,11 @@ const TutorLayout = lazy(() =>
 const CreatePost = lazy(() => import('@/pages/tutor/CreatePost'));
 const MyPosts = lazy(() => import('@/pages/tutor/MyPosts'));
 const TutorMessages = lazy(() => import('@/pages/tutor/TutorMessages'));
+
+// Tutor pages from quynh
+const SearchPage = lazy(() => import('@/pages/Tutor/SearchPage'));
+const ManageApplicationsPage = lazy(() => import('@/pages/Tutor/ManageApplicationsPage'));
+const TutorClassDetailQuynh = lazy(() => import('@/pages/Tutor/ClassDetailPage'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -122,6 +133,40 @@ export const AppRoutes = () => {
             <Route path="assignments/:assignmentId/submit" element={<SubmitAssignmentPage />} />
             <Route path="homework" element={<StudentHomeworkPage />} />
             <Route path="homework/:assignmentId" element={<StudentHomeworkDetailPage />} />
+            
+            {/* Student Management pages from quynh */}
+            <Route
+              path="manage-classes"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ManageClassesPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="view-tutors"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ViewTutorsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="favorites"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <FavoritesPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="class-detail-manage/:classId"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <StudentClassDetailQuynh />
+                </Suspense>
+              }
+            />
           </Route>
         </Route>
       </Route>
@@ -196,6 +241,32 @@ export const AppRoutes = () => {
             <Route path="assignments/:assignmentId/submissions" element={<SubmissionsPage />} />
             <Route path="students" element={<StudentsPage />} />
             <Route path="statistics" element={<StatisticsDashboard />} />
+            
+            {/* Tutor Management pages from quynh */}
+            <Route
+              path="search"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <SearchPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="applications"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <ManageApplicationsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="class-detail-search/:classId"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <TutorClassDetailQuynh />
+                </Suspense>
+              }
+            />
           </Route>
         </Route>
       </Route>

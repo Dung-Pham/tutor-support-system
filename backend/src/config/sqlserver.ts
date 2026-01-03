@@ -1,58 +1,64 @@
-// SQL Server Connection
+﻿// SQL Server Connection
 
-import { Sequelize } from "sequelize";
+import { Sequelize, Options } from 'sequelize';
 
-// Validate required environment variables
-const requiredEnvVars = ["MSSQL_DATABASE", "MSSQL_USER", "MSSQL_PASSWORD"];
-const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
-
-if (missingEnvVars.length > 0) {
-  throw new Error(
-    `Missing required SQL Server environment variables: ${missingEnvVars.join(
-      ", "
-    )}`
-  );
+// Helper function to read environment variables
+function env(key: string): string | undefined {
+  if (process.env[key] !== undefined) return process.env[key];
+  const alt = key.replace(/^MSSQL_/, 'DB_');
+  return process.env[alt];
 }
 
-const instanceName = process.env.MSSQL_INSTANCE;
+const instanceName = env('MSSQL_INSTANCE');
 
 const sequelize = new Sequelize(
-  process.env.MSSQL_DATABASE!,
-  process.env.MSSQL_USER!,
-  process.env.MSSQL_PASSWORD!,
+  env('MSSQL_DATABASE') || 'tutorsupportdb1',
+  env('MSSQL_USER') || 'sa',
+  env('MSSQL_PASSWORD') || '12345',
   {
-    host: process.env.MSSQL_HOST || "localhost",
-    // Không dùng port khi có instanceName (SQL Browser sẽ tìm port)
-    ...(instanceName
-      ? {}
-      : { port: parseInt(process.env.MSSQL_PORT || "1433") }),
-    dialect: "mssql",
+    host: env('MSSQL_HOST') || 'localhost',
+    // Don't use port when using instanceName (SQL Browser will find port)
+    ...(instanceName ? {} : { port: parseInt(env('MSSQL_PORT') || '1433') }),
+    dialect: 'mssql',
     dialectOptions: {
       options: {
-        encrypt: process.env.MSSQL_ENCRYPT === "true",
-        trustServerCertificate:
-          process.env.MSSQL_TRUST_SERVER_CERTIFICATE === "true",
-        // Named instance support
+        encrypt: env('MSSQL_ENCRYPT') === 'true',
+        trustServerCertificate: env('MSSQL_TRUST_SERVER_CERTIFICATE') !== 'false',
+        enableArithAbort: true,
+        requestTimeout: 30000,
+        connectionTimeout: 30000,
+        charset: 'UTF-8',
         ...(instanceName && { instanceName }),
       },
     },
-    logging:
-      process.env.NODE_ENV === "development"
-        ? (msg) => console.log(msg)
-        : false,
-  }
+    pool: { max: 5, min: 0, acquire: 30000, idle: 10000 },
+    logging: process.env.NODE_ENV === 'development' ? (msg) => console.log(msg) : false,
+  } as Options
 );
 
 const connectSQLServer = async (): Promise<void> => {
   try {
     await sequelize.authenticate();
-    console.log("✅ SQL Server Connected successfully");
+    console.log('SQL Server Connected successfully');
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    console.error(`❌ SQL Server Connection Error: ${errorMessage}`);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('SQL Server Connection Error: ' + errorMessage);
     process.exit(1);
   }
 };
 
-export { sequelize, connectSQLServer };
+// Test connection function (from quynh)
+async function testSQLServerConnection(): Promise<boolean> {
+  console.log('Testing SQL Server connection...');
+  try {
+    await sequelize.authenticate();
+    console.log('SQL Server connection test passed');
+    return true;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('SQL Server connection test failed: ' + errorMessage);
+    return false;
+  }
+}
+
+export { sequelize, connectSQLServer, testSQLServerConnection };
