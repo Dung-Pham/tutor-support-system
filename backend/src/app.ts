@@ -39,6 +39,7 @@ import conversationRoute from './routes/conversationRoute.js';
 import postRoute from './routes/postRoute.js';
 import commentRoute from './routes/commentRoute.js';
 import adminRoute from './routes/adminRoute.js';
+import cloudinaryUploadRoute from './routes/uploadRoute.js'; // Cloudinary upload for chat/post
 
 // ESM __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -124,7 +125,8 @@ app.use('/api/admin', adminRoute);
 app.use('/api/classes', classRoutes);
 app.use('/api/lesson-plans', lessonPlanRoutes);
 app.use('/api/homework', homeworkRoutes);
-app.use('/api/upload', uploadRoutes);
+app.use('/api/upload', uploadRoutes);            // Local file upload (homework, submission, document)
+app.use('/api/upload', cloudinaryUploadRoute);   // Cloudinary upload (chat, post, avatar)
 app.use('/api/documents', documentRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/tutors', tutorRoutes);
