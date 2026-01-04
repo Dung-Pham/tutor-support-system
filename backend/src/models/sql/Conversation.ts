@@ -18,20 +18,19 @@ export interface ConversationAttributes {
   updatedAt: Date;
 }
 
-export interface ConversationCreationAttributes
-  extends Optional<
-    ConversationAttributes,
-    | "id"
-    | "type"
-    | "name"
-    | "avatarUrl"
-    | "createdBy"
-    | "lastMessageAt"
-    | "lastMessagePreview"
-    | "lastMessageSenderId"
-    | "createdAt"
-    | "updatedAt"
-  > {}
+export interface ConversationCreationAttributes extends Optional<
+  ConversationAttributes,
+  | "id"
+  | "type"
+  | "name"
+  | "avatarUrl"
+  | "createdBy"
+  | "lastMessageAt"
+  | "lastMessagePreview"
+  | "lastMessageSenderId"
+  | "createdAt"
+  | "updatedAt"
+> {}
 
 class Conversation
   extends Model<ConversationAttributes, ConversationCreationAttributes>
@@ -65,7 +64,7 @@ Conversation.init(
       },
     },
     name: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(100),
       allowNull: true,
     },
     avatarUrl: {

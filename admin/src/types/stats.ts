@@ -15,7 +15,7 @@ export interface StatsData {
   usersByRole?: { role: string; count: number }[];
   recentUsers?: Array<{
     id: string;
-    displayName: string;
+    name: string;
     email: string;
     avatarUrl?: string;
     role: string;
@@ -30,7 +30,7 @@ export interface StatsData {
     viewCount: number;
     author?: {
       id: string;
-      displayName: string;
+      name: string;
       avatarUrl?: string;
     };
   }>;
@@ -57,7 +57,7 @@ export interface TopPost {
   createdAt: string;
   author?: {
     id: string;
-    displayName: string;
+    name: string;
     avatarUrl?: string;
   };
 }

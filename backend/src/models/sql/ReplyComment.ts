@@ -18,17 +18,16 @@ export interface ReplyCommentAttributes {
   updatedAt: Date;
 }
 
-export interface ReplyCommentCreationAttributes
-  extends Optional<
-    ReplyCommentAttributes,
-    | "id"
-    | "mentionedUserId"
-    | "likeCount"
-    | "isEdited"
-    | "status"
-    | "createdAt"
-    | "updatedAt"
-  > {}
+export interface ReplyCommentCreationAttributes extends Optional<
+  ReplyCommentAttributes,
+  | "id"
+  | "mentionedUserId"
+  | "likeCount"
+  | "isEdited"
+  | "status"
+  | "createdAt"
+  | "updatedAt"
+> {}
 
 class ReplyComment
   extends Model<ReplyCommentAttributes, ReplyCommentCreationAttributes>

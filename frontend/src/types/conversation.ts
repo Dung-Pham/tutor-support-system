@@ -9,7 +9,7 @@ export type ConversationType = 'direct' | 'group';
  */
 export interface Participant {
   id: string; // User ID
-  displayName: string;
+  name: string;
   avatarUrl?: string | null;
   joinAt?: string; // ISO date string
 }

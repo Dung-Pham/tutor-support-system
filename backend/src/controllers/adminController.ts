@@ -10,18 +10,18 @@ import { Op, fn, col, literal } from "sequelize";
 // Attribute mappings for UserAccount table
 const USER_ATTRS_AVATAR: ([string, string] | string)[] = [
   ["user_id", "id"],
-  ["name", "displayName"],
+  "name",
   ["avatar_url", "avatarUrl"],
 ];
 const USER_ATTRS_EMAIL: ([string, string] | string)[] = [
   ["user_id", "id"],
-  ["name", "displayName"],
+  "name",
   ["avatar_url", "avatarUrl"],
   "email",
 ];
 const USER_ATTRS_BASIC: [string, string][] = [
   ["user_id", "id"],
-  ["name", "displayName"],
+  ["name", "name"],
 ];
 
 interface StatsRequest extends AuthRequest {
@@ -110,7 +110,7 @@ export const getStats = async (
       User.findAll({
         attributes: [
           "id",
-          "displayName",
+          "name",
           "email",
           "avatarUrl",
           "role",
@@ -146,15 +146,15 @@ export const getStats = async (
             ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 100
           )
         : newUsersThisMonth > 0
-        ? 100
-        : 0;
+          ? 100
+          : 0;
 
     const postGrowth =
       postsLastMonth > 0
         ? Math.round(((postsThisMonth - postsLastMonth) / postsLastMonth) * 100)
         : postsThisMonth > 0
-        ? 100
-        : 0;
+          ? 100
+          : 0;
 
     return res.json({
       success: true,
@@ -209,10 +209,8 @@ export const getUsers = async (
 
     if (search) {
       where[Op.or] = [
-        { displayName: { [Op.like]: `%${search}%` } },
+        { name: { [Op.like]: `%${search}%` } },
         { email: { [Op.like]: `%${search}%` } },
-        { firstName: { [Op.like]: `%${search}%` } },
-        { lastName: { [Op.like]: `%${search}%` } },
       ];
     }
 
@@ -595,7 +593,7 @@ export const getChartData = async (
     const usersData = await User.findAll({
       attributes: [
         [fn("CAST", literal("created_at AS DATE")), "date"],
-        [fn("COUNT", col("id")), "count"],
+        [fn("COUNT", col("user_id")), "count"],
       ],
       where: {
         createdAt: { [Op.between]: [startDate, endDate] },

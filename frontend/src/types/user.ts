@@ -3,9 +3,7 @@ export type UserRole = 'student' | 'tutor' | 'admin';
 export interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  displayName: string;
+  name: string;
   avatarUrl?: string;
   avatarId?: string;
   bio?: string;
@@ -29,15 +27,13 @@ export interface UserProfile extends User {
 
 export interface UserInfo {
   id: string;
-  displayName: string;
+  name: string;
   avatarUrl?: string;
   role: UserRole;
 }
 
 export interface UpdateUserRequest {
-  firstName?: string;
-  lastName?: string;
-  displayName?: string;
+  name?: string;
   bio?: string;
   phone?: string;
   avatarUrl?: string;

@@ -23,7 +23,7 @@ export interface Message {
 export interface MessageWithSender extends Message {
   sender?: {
     _id: string;
-    displayName: string;
+    name: string;
     avatarUrl?: string;
   };
 }

@@ -8,9 +8,7 @@ interface User {
   user_id: string;
   id?: string; // Alias for user_id
   email: string;
-  firstName: string;
-  lastName: string;
-  displayName?: string;
+  name: string;
   avatarUrl?: string | null;
   role: string;
   phone: string;
@@ -68,10 +66,10 @@ export const login = createAsyncThunk(
     try {
       const response = await apiClient.post('/auth/login', credentials);
       const { user, token } = response.data.data;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       return { user, token };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
@@ -95,9 +93,7 @@ export const signIn = createAsyncThunk(
       const user = {
         user_id: apiUser.id,
         email: apiUser.email,
-        firstName: apiUser.firstName || '',
-        lastName: apiUser.lastName || '',
-        displayName: apiUser.displayName || apiUser.firstName + ' ' + apiUser.lastName,
+        name: apiUser.name || '',
         avatarUrl: apiUser.avatarUrl,
         role: apiUser.role.toLowerCase(), // Normalize role to lowercase
         phone: apiUser.phone || '',
@@ -132,10 +128,10 @@ export const register = createAsyncThunk(
     try {
       const response = await apiClient.post('/auth/register', userData);
       const { user, token } = response.data.data;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       return { user, token };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Registration failed');

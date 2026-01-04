@@ -11,8 +11,7 @@ import { BookOpen, Mail, Lock, User } from 'lucide-react';
 
 const studentSchema = z
   .object({
-    firstName: z.string().min(1, 'Tên là bắt buộc'),
-    lastName: z.string().min(1, 'Họ là bắt buộc'),
+    name: z.string().min(1, 'Họ và tên là bắt buộc'),
     email: z.string().email('Email không hợp lệ'),
     password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
     confirmPassword: z.string(),
@@ -42,8 +41,7 @@ export default function StudentRegistrationPage(): JSX.Element {
       setIsLoading(true);
 
       const registrationData = {
-        firstName: data.firstName,
-        lastName: data.lastName,
+        name: data.name,
         email: data.email,
         password: data.password,
       };
@@ -76,37 +74,20 @@ export default function StudentRegistrationPage(): JSX.Element {
         {/* Form Container */}
         <div className="bg-card rounded-lg shadow-md p-8 border border-border">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Last Name */}
+            {/* Name */}
             <div>
               <div className="flex items-center text-foreground mb-2">
                 <User className="w-4 h-4 text-primary mr-2" />
-                <label className="font-semibold">Họ</label>
+                <label className="font-semibold">Họ và tên</label>
               </div>
               <Input
                 type="text"
-                placeholder="Nguyễn"
-                {...register('lastName')}
-                className={`h-10 ${errors.lastName ? 'border-destructive' : ''}`}
+                placeholder="Nguyễn Văn A"
+                {...register('name')}
+                className={`h-10 ${errors.name ? 'border-destructive' : ''}`}
               />
-              {errors.lastName && (
-                <p className="text-destructive text-sm mt-1">{errors.lastName.message}</p>
-              )}
-            </div>
-
-            {/* First Name */}
-            <div>
-              <div className="flex items-center text-foreground mb-2">
-                <User className="w-4 h-4 text-primary mr-2" />
-                <label className="font-semibold">Tên</label>
-              </div>
-              <Input
-                type="text"
-                placeholder="Văn A"
-                {...register('firstName')}
-                className={`h-10 ${errors.firstName ? 'border-destructive' : ''}`}
-              />
-              {errors.firstName && (
-                <p className="text-destructive text-sm mt-1">{errors.firstName.message}</p>
+              {errors.name && (
+                <p className="text-destructive text-sm mt-1">{errors.name.message}</p>
               )}
             </div>
 

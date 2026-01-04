@@ -1,17 +1,20 @@
 ﻿// Auth Controller - Merged from HEAD and dang branches
 // Supports both SQL Server queries (HEAD) and Sequelize models (dang)
 
-import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import { getUserByEmail, createUser } from '../database/queries/userQueries.js';
-import { User, Session } from '../models/sql/index.js';
-import { ApiResponse } from '../types/index.js';
-import { JwtPayload } from '../types/auth.js';
+import { Request, Response } from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { getUserByEmail, createUser } from "../database/queries/userQueries.js";
+import { User, Session } from "../models/sql/index.js";
+import { ApiResponse } from "../types/index.js";
+import { JwtPayload } from "../types/auth.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.ACCESS_TOKEN_SECRET || 'your-secret-key-change-in-production';
-const ACCESS_TOKEN_TTL = '7d'; // 7 days for development
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  process.env.ACCESS_TOKEN_SECRET ||
+  "your-secret-key-change-in-production";
+const ACCESS_TOKEN_TTL = "7d"; // 7 days for development
 const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
 // ============================================
@@ -26,10 +29,8 @@ interface RegisterRequestBody {
   email: string;
   password: string;
   name: string;
-  phone: string;
-  role: 'USER' | 'TUTOR' | 'student' | 'tutor';
-  firstName?: string;
-  lastName?: string;
+  phone?: string;
+  role: "USER" | "TUTOR" | "student" | "tutor";
 }
 
 interface RefreshTokenRequest extends Request {
@@ -54,7 +55,7 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required',
+        message: "Email and password are required",
       });
     }
 
@@ -64,7 +65,7 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+        message: "Invalid email or password",
       });
     }
 
@@ -74,7 +75,7 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+        message: "Invalid email or password",
       });
     }
 
@@ -94,18 +95,18 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
 
     return res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       data: {
         user: userData,
         token,
       },
     } as ApiResponse);
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Login failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Login failed",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -114,15 +115,19 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
  * Register new user (HEAD version - using createUser)
  * POST /api/auth/register
  */
-export const register = async (req: Request, res: Response): Promise<Response> => {
+export const register = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
-    const { email, password, name, phone, role } = req.body as RegisterRequestBody;
+    const { email, password, name, phone, role } =
+      req.body as RegisterRequestBody;
 
     // Validate input
     if (!email || !password || !name || !phone || !role) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required: email, password, name, phone, role',
+        message: "All fields are required: email, password, name, phone, role",
       });
     }
 
@@ -131,7 +136,7 @@ export const register = async (req: Request, res: Response): Promise<Response> =
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid email format',
+        message: "Invalid email format",
       });
     }
 
@@ -139,16 +144,16 @@ export const register = async (req: Request, res: Response): Promise<Response> =
     if (password.length < 6) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be at least 6 characters',
+        message: "Password must be at least 6 characters",
       });
     }
 
     // Validate role
-    const validRoles = ['USER', 'TUTOR', 'student', 'tutor'];
+    const validRoles = ["USER", "TUTOR", "student", "tutor"];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
-        message: 'Role must be USER, TUTOR, student, or tutor',
+        message: "Role must be USER, TUTOR, student, or tutor",
       });
     }
 
@@ -158,7 +163,7 @@ export const register = async (req: Request, res: Response): Promise<Response> =
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: 'Email already registered',
+        message: "Email already registered",
       });
     }
 
@@ -173,7 +178,7 @@ export const register = async (req: Request, res: Response): Promise<Response> =
       password_hash,
       name,
       phone,
-      role: role.toUpperCase() === 'STUDENT' ? 'USER' : role.toUpperCase(),
+      role: role.toUpperCase() === "STUDENT" ? "USER" : role.toUpperCase(),
     });
 
     // Generate JWT token
@@ -192,18 +197,18 @@ export const register = async (req: Request, res: Response): Promise<Response> =
 
     return res.status(201).json({
       success: true,
-      message: 'Registration successful',
+      message: "Registration successful",
       data: {
         user: userData,
         token,
       },
     } as ApiResponse);
   } catch (error) {
-    console.error('Register error:', error);
+    console.error("Register error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Registration failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Registration failed",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -212,28 +217,31 @@ export const register = async (req: Request, res: Response): Promise<Response> =
  * Get current user (requires authentication)
  * GET /api/auth/me
  */
-export const getCurrentUser = async (req: Request, res: Response): Promise<Response> => {
+export const getCurrentUser = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const user = (req as any).user;
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Not authenticated',
+        message: "Not authenticated",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'User retrieved',
+      message: "User retrieved",
       data: user,
     } as ApiResponse);
   } catch (error) {
-    console.error('Get current user error:', error);
+    console.error("Get current user error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to get user',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Failed to get user",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -251,12 +259,12 @@ export const registerStudent = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, name } = req.body;
 
-    if (!email || !password || !firstName || !lastName) {
+    if (!email || !password || !name) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required',
+        message: "All fields are required",
       });
     }
 
@@ -264,7 +272,7 @@ export const registerStudent = async (
     if (duplicate) {
       return res.status(409).json({
         success: false,
-        message: 'Email already exists',
+        message: "Email already exists",
       });
     }
 
@@ -272,22 +280,20 @@ export const registerStudent = async (
 
     await User.create({
       email,
-      hashedPassword,
-      firstName,
-      lastName,
-      displayName: `${firstName} ${lastName}`,
-      role: 'student',
+      passwordHash: hashedPassword,
+      name,
+      role: "student",
     });
 
     return res.status(201).json({
       success: true,
-      message: 'Student account created successfully',
+      message: "Student account created successfully",
     });
   } catch (error) {
-    console.error('Error in registerStudent', error);
+    console.error("Error in registerStudent", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -301,12 +307,12 @@ export const registerTutor = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, name } = req.body;
 
-    if (!email || !password || !firstName || !lastName) {
+    if (!email || !password || !name) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required',
+        message: "All fields are required",
       });
     }
 
@@ -314,7 +320,7 @@ export const registerTutor = async (
     if (duplicate) {
       return res.status(409).json({
         success: false,
-        message: 'Email already exists',
+        message: "Email already exists",
       });
     }
 
@@ -322,22 +328,20 @@ export const registerTutor = async (
 
     await User.create({
       email,
-      hashedPassword,
-      firstName,
-      lastName,
-      displayName: `${firstName} ${lastName}`,
-      role: 'tutor',
+      passwordHash: hashedPassword,
+      name,
+      role: "tutor",
     });
 
     return res.status(201).json({
       success: true,
-      message: 'Tutor account created successfully',
+      message: "Tutor account created successfully",
     });
   } catch (error) {
-    console.error('Error in registerTutor', error);
+    console.error("Error in registerTutor", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -356,7 +360,7 @@ export const signIn = async (
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required',
+        message: "Email and password are required",
       });
     }
 
@@ -364,7 +368,7 @@ export const signIn = async (
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+        message: "Invalid email or password",
       });
     }
 
@@ -372,7 +376,7 @@ export const signIn = async (
     if (!user.isActive) {
       return res.status(403).json({
         success: false,
-        message: 'Account has been deactivated. Please contact support.',
+        message: "Account has been deactivated. Please contact support.",
       });
     }
 
@@ -380,7 +384,7 @@ export const signIn = async (
     if (!passwordCorrect) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+        message: "Invalid email or password",
       });
     }
 
@@ -390,13 +394,11 @@ export const signIn = async (
       role: user.role,
     };
 
-    const accessToken = jwt.sign(
-      payload,
-      JWT_SECRET,
-      { expiresIn: ACCESS_TOKEN_TTL }
-    );
+    const accessToken = jwt.sign(payload, JWT_SECRET, {
+      expiresIn: ACCESS_TOKEN_TTL,
+    });
 
-    const refreshTokenValue = crypto.randomBytes(64).toString('hex');
+    const refreshTokenValue = crypto.randomBytes(64).toString("hex");
 
     await Session.create({
       userId: user.id,
@@ -404,32 +406,30 @@ export const signIn = async (
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL),
     });
 
-    res.cookie('refreshToken', refreshTokenValue, {
+    res.cookie("refreshToken", refreshTokenValue, {
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
+      sameSite: "none",
       maxAge: REFRESH_TOKEN_TTL,
     });
 
     return res.status(200).json({
       success: true,
-      message: `Welcome back, ${user.displayName}!`,
+      message: `Welcome back, ${user.name}!`,
       token: accessToken,
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        displayName: user.displayName,
+        name: user.name,
         avatarUrl: user.avatarUrl || null,
         role: user.role,
       },
     });
   } catch (error) {
-    console.error('Error in signIn', error);
+    console.error("Error in signIn", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -449,14 +449,14 @@ export const signOut = async (
       await Session.destroy({ where: { refreshToken: token } });
     }
 
-    res.clearCookie('refreshToken');
+    res.clearCookie("refreshToken");
 
     return res.status(204).send();
   } catch (error) {
-    console.error('Error in signOut', error);
+    console.error("Error in signOut", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -475,7 +475,7 @@ export const refreshToken = async (
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Refresh token is required',
+        message: "Refresh token is required",
       });
     }
 
@@ -483,7 +483,7 @@ export const refreshToken = async (
     if (!session) {
       return res.status(403).json({
         success: false,
-        message: 'Invalid refresh token',
+        message: "Invalid refresh token",
       });
     }
 
@@ -491,7 +491,7 @@ export const refreshToken = async (
       await Session.destroy({ where: { id: session.id } });
       return res.status(403).json({
         success: false,
-        message: 'Refresh token has expired',
+        message: "Refresh token has expired",
       });
     }
 
@@ -500,7 +500,7 @@ export const refreshToken = async (
     if (!user) {
       return res.status(403).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
@@ -510,21 +510,19 @@ export const refreshToken = async (
       role: user.role,
     };
 
-    const accessToken = jwt.sign(
-      payload,
-      JWT_SECRET,
-      { expiresIn: ACCESS_TOKEN_TTL }
-    );
+    const accessToken = jwt.sign(payload, JWT_SECRET, {
+      expiresIn: ACCESS_TOKEN_TTL,
+    });
 
     return res.status(200).json({
       success: true,
       accessToken,
     });
   } catch (error) {
-    console.error('Error in refreshToken', error);
+    console.error("Error in refreshToken", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };

@@ -6,7 +6,10 @@ import jwt from "jsonwebtoken";
 import { JwtPayload } from "../types/auth.js";
 
 // Use same JWT secret as authController
-const JWT_SECRET = process.env.JWT_SECRET || process.env.ACCESS_TOKEN_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  process.env.ACCESS_TOKEN_SECRET ||
+  "your-secret-key-change-in-production";
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -19,7 +22,13 @@ const connectedUsers = new Map<string, string>();
 export function initSocket(server: HttpServer): Server {
   io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      origin: [
+        "http://localhost:3000",
+        "http://localhost:3002",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5173",
+      ],
       methods: ["GET", "POST"],
       credentials: true,
     },
@@ -32,10 +41,7 @@ export function initSocket(server: HttpServer): Server {
     }
 
     try {
-      const decoded = jwt.verify(
-        token,
-        JWT_SECRET
-      ) as JwtPayload;
+      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
       socket.userId = decoded.userId;
       next();
     } catch (err) {

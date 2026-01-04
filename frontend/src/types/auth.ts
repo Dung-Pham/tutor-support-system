@@ -8,8 +8,7 @@ export interface RegisterStudentRequest {
   email: string;
   password: string;
   confirmPassword: string;
-  firstName: string;
-  lastName: string;
+  name: string;
 }
 
 export interface RegisterTutorRequest extends RegisterStudentRequest {

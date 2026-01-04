@@ -1,14 +1,14 @@
 /**
  * File: UserAccountQueries.ts
  * Purpose: Database queries for User operations (SQL Server)
- * Tables: UserAccount, TutorProfile, StudentProfile, ParentProfile
- * Updated: 2025-11-16 - Fixed to use dbConnection
+ * Tables: UserAccount, TutorProfile, StudentProfile
+ * Updated: 2026-01-04 - Fixed to match schema.sql (status is BIT, not VARCHAR)
  */
 
-import dbConnection from '../connection';
+import dbConnection from "../connection.js";
 
 // ==========================================
-// INTERFACES
+// INTERFACES (matching schema.sql)
 // ==========================================
 
 export interface UserAccount {
@@ -16,43 +16,41 @@ export interface UserAccount {
   email: string;
   password_hash: string;
   name: string;
-  phone: string;
-  // avatar_url: string | null;
-  role: 'student' | 'tutor' | 'admin' | string;
-  status: 'active' | 'inactive' | 'suspended';
+  phone: string | null;
+  role: "student" | "tutor" | "admin" | string;
+  status: boolean; // BIT: 1 = active, 0 = inactive
+  is_verified: boolean;
+  dateOfBirth: Date | null;
+  locationDetail: string | null;
+  address_id: string | null;
+  gender: boolean | null;
+  avatar_url: string | null;
+  avatar_id: string | null;
+  bio: string | null;
   created_at: Date;
-  updated_at: Date;
+  updated_at: Date | null;
 }
 
 export interface TutorProfile {
   tutor_profile_id: string;
   user_id: string;
   bio: string | null;
+  experience_years: number | null;
   subjects: string | null;
-  experience_years: number;
-  hourly_rate: number;
-  average_rating: number;
-  total_reviews: number;
-  is_verified: boolean;
-  created_at: Date;
-  updated_at: Date;
+  hourly_rate: number | null;
+  avg_rating: number | null;
+  total_reviews: number | null;
+  created_at: Date | null;
+  updated_at: Date | null;
 }
 
 export interface StudentProfile {
   student_profile_id: string;
   user_id: string;
-  grade_level: string | null;
-  school_name: string | null;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface ParentProfile {
-  parent_profile_id: string;
-  user_id: string;
-  occupation: string | null;
-  created_at: Date;
-  updated_at: Date;
+  gradeLevel: number | null;
+  school: string | null;
+  created_at: Date | null;
+  updated_at: Date | null;
 }
 
 // ==========================================
@@ -72,16 +70,16 @@ export const getUsers = async (params: {
   const limit = params.limit || 10;
   const offset = (page - 1) * limit;
 
-  let whereClause = 'WHERE 1=1';
+  let whereClause = "WHERE 1=1";
   const queryParams: any = { limit, offset };
 
   if (params.role) {
-    whereClause += ' AND role = @role';
+    whereClause += " AND role = @role";
     queryParams.role = params.role;
   }
 
   if (params.status) {
-    whereClause += ' AND status = @status';
+    whereClause += " AND status = @status";
     queryParams.status = params.status;
   }
 
@@ -105,7 +103,10 @@ export const getUsers = async (params: {
   if (params.role) countParams.role = params.role;
   if (params.status) countParams.status = params.status;
 
-  const countResult = await dbConnection.query<{ total: number }>(countQuery, countParams);
+  const countResult = await dbConnection.query<{ total: number }>(
+    countQuery,
+    countParams
+  );
 
   return {
     users: users.recordset,
@@ -116,7 +117,9 @@ export const getUsers = async (params: {
 /**
  * Get user by ID (excluding password)
  */
-export const getUserById = async (userId: string): Promise<UserAccount | null> => {
+export const getUserById = async (
+  userId: string
+): Promise<UserAccount | null> => {
   const query = `
     SELECT user_id, email, name, phone, role, status, created_at, updated_at
     FROM [UserAccount]
@@ -130,7 +133,9 @@ export const getUserById = async (userId: string): Promise<UserAccount | null> =
 /**
  * Get user by email (for authentication - includes password)
  */
-export const getUserByEmail = async (email: string): Promise<UserAccount | null> => {
+export const getUserByEmail = async (
+  email: string
+): Promise<UserAccount | null> => {
   const query = `
     SELECT * FROM [UserAccount] WHERE email = @email
   `;
@@ -147,18 +152,17 @@ export const createUser = async (userData: {
   email: string;
   password_hash: string;
   name: string;
-  phone: string;
+  phone?: string;
   role: string;
-  // avatar_url?: string;
 }): Promise<UserAccount> => {
   const query = `
-    INSERT INTO [User] (
-      user_id, email, password_hash, name, phone, role, status, created_at, updated_at
+    INSERT INTO [UserAccount] (
+      user_id, email, password_hash, name, phone, role, status, is_verified, created_at, updated_at
     )
     OUTPUT INSERTED.*
     VALUES (
       @user_id, @email, @password_hash, @name, @phone,
-       @role, 'active', GETDATE(), GETDATE()
+       @role, 1, 0, GETDATE(), GETDATE()
     )
   `;
 
@@ -184,43 +188,53 @@ export const updateUser = async (
     email?: string;
     name?: string;
     phone?: string;
-    // avatar_url?: string;
-    status?: 'active' | 'inactive' | 'suspended';
+    avatar_url?: string;
+    avatar_id?: string;
+    bio?: string;
+    status?: boolean; // BIT: 1 = active, 0 = inactive
   }
 ): Promise<UserAccount | null> => {
   const updateFields: string[] = [];
   const queryParams: any = { userId };
 
   if (updates.email !== undefined) {
-    updateFields.push('email = @email');
+    updateFields.push("email = @email");
     queryParams.email = updates.email;
   }
   if (updates.name !== undefined) {
-    updateFields.push('name = @name');
+    updateFields.push("name = @name");
     queryParams.name = updates.name;
   }
   if (updates.phone !== undefined) {
-    updateFields.push('phone = @phone');
+    updateFields.push("phone = @phone");
     queryParams.phone = updates.phone;
   }
-  // if (updates.avatar_url !== undefined) {
-  //   updateFields.push('avatar_url = @avatar_url');
-  //   queryParams.avatar_url = updates.avatar_url;
-  // }
+  if (updates.avatar_url !== undefined) {
+    updateFields.push("avatar_url = @avatar_url");
+    queryParams.avatar_url = updates.avatar_url;
+  }
+  if (updates.avatar_id !== undefined) {
+    updateFields.push("avatar_id = @avatar_id");
+    queryParams.avatar_id = updates.avatar_id;
+  }
+  if (updates.bio !== undefined) {
+    updateFields.push("bio = @bio");
+    queryParams.bio = updates.bio;
+  }
   if (updates.status !== undefined) {
-    updateFields.push('status = @status');
-    queryParams.status = updates.status;
+    updateFields.push("status = @status");
+    queryParams.status = updates.status ? 1 : 0;
   }
 
   if (updateFields.length === 0) {
     return await getUserById(userId);
   }
 
-  updateFields.push('updated_at = GETDATE()');
+  updateFields.push("updated_at = GETDATE()");
 
   const query = `
-    UPDATE [User]
-    SET ${updateFields.join(', ')}
+    UPDATE [UserAccount]
+    SET ${updateFields.join(", ")}
     OUTPUT INSERTED.*
     WHERE user_id = @userId
   `;
@@ -230,12 +244,12 @@ export const updateUser = async (
 };
 
 /**
- * Delete user (soft delete by setting status to inactive)
+ * Delete user (soft delete by setting status to 0)
  */
 export const deleteUser = async (userId: string): Promise<void> => {
   const query = `
     UPDATE [UserAccount]
-    SET status = 'inactive', updated_at = GETDATE()
+    SET status = 0, updated_at = GETDATE()
     WHERE user_id = @userId
   `;
 
@@ -260,7 +274,9 @@ export const getTutorProfile = async (userId: string): Promise<any | null> => {
 /**
  * Get student profile by user ID
  */
-export const getStudentProfile = async (userId: string): Promise<any | null> => {
+export const getStudentProfile = async (
+  userId: string
+): Promise<any | null> => {
   const query = `
     SELECT u.*, sp.*
     FROM [UserAccount] u
@@ -304,12 +320,12 @@ export const getAllTutors = async (params: {
   const queryParams: any = { limit, offset };
 
   if (params.subjects) {
-    whereClause += ' AND tp.subjects LIKE @subjects';
+    whereClause += " AND tp.subjects LIKE @subjects";
     queryParams.subjects = `%${params.subjects}%`;
   }
 
   if (params.minRating !== undefined) {
-    whereClause += ' AND tp.average_rating >= @minRating';
+    whereClause += " AND tp.average_rating >= @minRating";
     queryParams.minRating = params.minRating;
   }
 
@@ -333,7 +349,10 @@ export const getAllTutors = async (params: {
   if (params.subjects) countParams.subjects = queryParams.subjects;
   if (params.minRating !== undefined) countParams.minRating = params.minRating;
 
-  const countResult = await dbConnection.query<{ total: number }>(countQuery, countParams);
+  const countResult = await dbConnection.query<{ total: number }>(
+    countQuery,
+    countParams
+  );
 
   return {
     tutors: tutors.recordset,

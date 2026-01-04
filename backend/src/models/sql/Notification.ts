@@ -1,65 +1,53 @@
 // Notification Model - SQL Server
+// Updated to match schema.sql
 
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/sqlserver.js";
 
-export type NotificationType =
-  | "post_liked"
-  | "post_commented"
-  | "comment_replied"
-  | "comment_liked"
-  | "post_approved"
-  | "post_rejected"
-  | "new_message"
-  | "new_follower"
-  | "system";
+// Types matching schema CHECK constraint would be defined at DB level
+export type NotificationType = string;
 
 export interface NotificationAttributes {
   id: string;
-  recipientId: string;
+  receiverId: string; // Schema uses receiver_id
   senderId?: string | null;
   type: NotificationType;
-  title?: string | null;
-  message?: string | null;
-  postId?: string | null;
-  commentId?: string | null;
-  conversationId?: string | null;
+  title: string;
+  content?: string | null;
+  link?: string | null;
   isRead: boolean;
-  readAt?: Date | null;
+  metadata?: string | null; // JSON string
   createdAt: Date;
+  updatedAt?: Date | null;
 }
 
-export interface NotificationCreationAttributes
-  extends Optional<
-    NotificationAttributes,
-    | "id"
-    | "senderId"
-    | "title"
-    | "message"
-    | "postId"
-    | "commentId"
-    | "conversationId"
-    | "isRead"
-    | "readAt"
-    | "createdAt"
-  > {}
+export interface NotificationCreationAttributes extends Optional<
+  NotificationAttributes,
+  | "id"
+  | "senderId"
+  | "content"
+  | "link"
+  | "isRead"
+  | "metadata"
+  | "createdAt"
+  | "updatedAt"
+> {}
 
 class Notification
   extends Model<NotificationAttributes, NotificationCreationAttributes>
   implements NotificationAttributes
 {
   declare id: string;
-  declare recipientId: string;
+  declare receiverId: string;
   declare senderId: string | null;
   declare type: NotificationType;
-  declare title: string | null;
-  declare message: string | null;
-  declare postId: string | null;
-  declare commentId: string | null;
-  declare conversationId: string | null;
+  declare title: string;
+  declare content: string | null;
+  declare link: string | null;
   declare isRead: boolean;
-  declare readAt: Date | null;
+  declare metadata: string | null;
   declare createdAt: Date;
+  declare updatedAt: Date | null;
 }
 
 Notification.init(
@@ -68,16 +56,16 @@ Notification.init(
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+      field: "notification_id",
     },
-    recipientId: {
+    receiverId: {
       type: DataTypes.UUID,
       allowNull: false,
-      field: "recipient_id",
+      field: "receiver_id",
       references: {
         model: "UserAccount",
         key: "user_id",
       },
-      onDelete: "CASCADE",
     },
     senderId: {
       type: DataTypes.UUID,
@@ -87,91 +75,57 @@ Notification.init(
         model: "UserAccount",
         key: "user_id",
       },
-      onDelete: "SET NULL",
     },
     type: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      validate: {
-        isIn: [
-          [
-            "post_liked",
-            "post_commented",
-            "comment_replied",
-            "comment_liked",
-            "post_approved",
-            "post_rejected",
-            "new_message",
-            "new_follower",
-            "system",
-          ],
-        ],
-      },
     },
     title: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(200),
+      allowNull: false,
+    },
+    content: {
+      type: DataTypes.STRING(1000),
       allowNull: true,
     },
-    message: {
+    link: {
       type: DataTypes.STRING(500),
       allowNull: true,
     },
-    postId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      field: "post_id",
-      references: {
-        model: "PostHeaders",
-        key: "id",
-      },
-      onDelete: "SET NULL",
-    },
-    commentId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      field: "comment_id",
-      references: {
-        model: "PostComments",
-        key: "id",
-      },
-      onDelete: "SET NULL",
-    },
-    conversationId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      field: "conversation_id",
-      references: {
-        model: "Conversations",
-        key: "id",
-      },
-      onDelete: "SET NULL",
-    },
     isRead: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
+      allowNull: true,
       defaultValue: false,
       field: "is_read",
     },
-    readAt: {
-      type: DataTypes.DATE,
+    metadata: {
+      type: DataTypes.TEXT,
       allowNull: true,
-      field: "read_at",
     },
     createdAt: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
       defaultValue: DataTypes.NOW,
       field: "created_at",
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW,
+      field: "updated_at",
     },
   },
   {
     sequelize,
     tableName: "Notifications",
-    timestamps: false,
-    underscored: true,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
     indexes: [
-      { fields: ["recipient_id", "is_read", "created_at"] },
-      { fields: ["created_at"] },
+      { fields: ["receiver_id"] },
+      { fields: ["sender_id"] },
+      { fields: ["type"] },
+      { fields: ["is_read"] },
     ],
   }
 );

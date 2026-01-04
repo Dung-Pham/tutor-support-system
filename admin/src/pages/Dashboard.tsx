@@ -269,8 +269,8 @@ export function Dashboard() {
                   {range === "7"
                     ? "7 ngày"
                     : range === "30"
-                    ? "30 ngày"
-                    : "3 tháng"}
+                      ? "30 ngày"
+                      : "3 tháng"}
                 </Button>
               ))}
             </div>
@@ -480,11 +480,11 @@ export function Dashboard() {
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={post.author?.avatarUrl} />
                           <AvatarFallback className="text-xs">
-                            {post.author?.displayName?.charAt(0) || "?"}
+                            {post.author?.name?.charAt(0) || "?"}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm text-muted-foreground">
-                          {post.author?.displayName || "Unknown"}
+                          {post.author?.name || "Unknown"}
                         </span>
                       </div>
                     </TableCell>
