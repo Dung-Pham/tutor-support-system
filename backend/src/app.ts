@@ -205,7 +205,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   }
 
   // 5. Default: Internal Server Error
-  res.status(500).json({
+  return res.status(500).json({
     success: false,
     message: "Lỗi hệ thống, vui lòng thử lại sau",
   });
