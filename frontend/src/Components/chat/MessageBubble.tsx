@@ -73,8 +73,8 @@ export function MessageBubble({ message, showTime = false }: MessageBubbleProps)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // So sánh senderId với currentUser id (có thể là user_id hoặc id)
-  const currentUserId = currentUser?.user_id || currentUser?.id;
+  // So sánh senderId với currentUser id
+  const currentUserId = currentUser?.id;
   const isOwn = currentUserId && message.senderId.toUpperCase() === currentUserId.toUpperCase();
 
   // Tìm thông tin người gửi từ participants

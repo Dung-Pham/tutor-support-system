@@ -5,7 +5,7 @@ import { Conversation, Participant, User } from "../models/sql/index.js";
 import { Message } from "../models/mongo/index.js";
 import { emitToConversation, emitToUser } from "../config/socket.js";
 import { AuthRequest } from "../types/common.js";
-import { Op } from "sequelize";
+import { Op, fn, where, col } from "sequelize";
 
 interface FileAttachment {
   url: string;
@@ -131,16 +131,16 @@ export const sendDirectMessage = async (
     });
 
     // Update conversation's last message timestamp and preview
-    const messagePreview = content 
-      ? content.substring(0, 100) 
-      : imgUrls?.length 
-        ? '📷 Hình ảnh' 
-        : videoUrl 
-          ? '🎬 Video' 
-          : fileUrls?.length 
-            ? '📎 Tệp đính kèm' 
-            : '';
-    
+    const messagePreview = content
+      ? content.substring(0, 100)
+      : imgUrls?.length
+        ? "📷 Hình ảnh"
+        : videoUrl
+          ? "🎬 Video"
+          : fileUrls?.length
+            ? "📎 Tệp đính kèm"
+            : "";
+
     await conversation.update({
       lastMessageAt: new Date(),
       lastMessagePreview: messagePreview,
@@ -199,7 +199,10 @@ export const sendGroupMessage = async (
     }
 
     const isParticipant = await Participant.findOne({
-      where: { conversationId, userId: senderId },
+      where: {
+        conversationId,
+        [Op.and]: where(fn("UPPER", col("user_id")), senderId.toUpperCase()),
+      },
     });
 
     if (!isParticipant) {
@@ -235,12 +238,12 @@ export const sendGroupMessage = async (
     });
 
     // Update conversation's last message timestamp and preview
-    const messagePreview = content 
-      ? content.substring(0, 100) 
-      : imgUrls?.length 
-        ? '📷 Hình ảnh' 
-        : '';
-    
+    const messagePreview = content
+      ? content.substring(0, 100)
+      : imgUrls?.length
+        ? "📷 Hình ảnh"
+        : "";
+
     await conversation.update({
       lastMessageAt: new Date(),
       lastMessagePreview: messagePreview,
@@ -294,7 +297,10 @@ export const markMessageAsSeen = async (
 
     // Verify user is a participant of this conversation
     const isParticipant = await Participant.findOne({
-      where: { conversationId: message.conversationId, userId },
+      where: {
+        conversationId: message.conversationId,
+        [Op.and]: where(fn("UPPER", col("user_id")), userId.toUpperCase()),
+      },
     });
     if (!isParticipant) {
       return res
@@ -343,12 +349,10 @@ export const deleteMessage = async (
 
     // Only sender can delete their message
     if (message.senderId !== userId) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "You can only delete your own messages",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "You can only delete your own messages",
+      });
     }
 
     // Soft delete - mark as deleted instead of removing
