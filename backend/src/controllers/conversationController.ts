@@ -9,7 +9,7 @@ import { Op } from "sequelize";
 // Attribute mappings for UserAccount table (column_name -> alias)
 const USER_ATTRS_BASIC: [string, string][] = [
   ["user_id", "id"],
-  ["name", "displayName"],
+  ["name", "name"],
   ["avatar_url", "avatarUrl"],
 ];
 
@@ -138,17 +138,29 @@ export const createConversation = async (
     // Format response to match expected structure
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const convJson = (fullConversation as any)?.toJSON();
-    const formattedConversation = convJson ? {
-      ...convJson,
-      participants: convJson.participants?.map((p: { user?: { userId: string; name: string; avatarUrl?: string; role?: string }; joinedAt?: Date }) => ({
-        id: p.user?.userId,
-        displayName: p.user?.name,
-        avatarUrl: p.user?.avatarUrl ?? null,
-        role: p.user?.role,
-        isOnline: false,
-        joinAt: p.joinedAt,
-      })),
-    } : null;
+    const formattedConversation = convJson
+      ? {
+          ...convJson,
+          participants: convJson.participants?.map(
+            (p: {
+              user?: {
+                userId: string;
+                name: string;
+                avatarUrl?: string;
+                role?: string;
+              };
+              joinedAt?: Date;
+            }) => ({
+              id: p.user?.userId,
+              name: p.user?.name,
+              avatarUrl: p.user?.avatarUrl ?? null,
+              role: p.user?.role,
+              isOnline: false,
+              joinAt: p.joinedAt,
+            })
+          ),
+        }
+      : null;
 
     return res.status(201).json({
       success: true,
@@ -220,7 +232,7 @@ export const getConversations = async (
           }) => {
             return {
               id: p.user?.userId,
-              displayName: p.user?.name,
+              name: p.user?.name,
               avatarUrl: p.user?.avatarUrl ?? null,
               role: p.user?.role,
               isOnline: false, // Will be updated via Socket.IO
@@ -309,7 +321,9 @@ export const getMessages = async (
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const senderMap = new Map(senders.map((s: any) => [s.get('id'), s.toJSON()]));
+    const senderMap = new Map(
+      senders.map((s: any) => [s.get("id"), s.toJSON()])
+    );
 
     // Attach sender info to messages
     const messagesWithSender = messages.map((m) => ({

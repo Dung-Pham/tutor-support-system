@@ -11,6 +11,8 @@ export interface Participant {
   id: string; // User ID
   name: string;
   avatarUrl?: string | null;
+  role?: 'tutor' | 'student' | 'admin';
+  lastSeenAt?: string; // ISO date string
   joinAt?: string; // ISO date string
 }
 

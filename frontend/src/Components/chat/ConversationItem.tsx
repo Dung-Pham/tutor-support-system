@@ -29,7 +29,7 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
     (p) => p.id?.toUpperCase() !== currentUserId?.toUpperCase()
   );
   const otherParticipantId = otherParticipant?.id || '';
-  const conversationName = otherParticipant?.displayName || 'Unknown User';
+  const conversationName = otherParticipant?.name || 'Unknown User';
   const avatarUrl = otherParticipant?.avatarUrl;
   const otherParticipantRole = otherParticipant?.role;
 

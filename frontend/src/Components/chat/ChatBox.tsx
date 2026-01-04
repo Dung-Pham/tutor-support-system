@@ -15,7 +15,8 @@ interface ChatBoxProps {
 
 export function ChatBox({ conversation }: ChatBoxProps) {
   const dispatch = useDispatch();
-  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const currentUserId = currentUser?.user_id || currentUser?.id;
   const rawMessages = useSelector((state: RootState) => state.messages.messages[conversation.id]);
 
   // Memoize sorted messages để tránh re-render không cần thiết
@@ -90,8 +91,10 @@ export function ChatBox({ conversation }: ChatBoxProps) {
   };
 
   // Tìm người đang chat (không phải current user)
-  const otherParticipant = conversation.participants.find((p) => p.id !== currentUserId);
-  const chatPartnerName = otherParticipant?.displayName || 'Người dùng';
+  const otherParticipant = conversation.participants.find(
+    (p) => p.id?.toUpperCase() !== currentUserId?.toUpperCase()
+  );
+  const chatPartnerName = otherParticipant?.name || 'Người dùng';
   const chatPartnerAvatar = otherParticipant?.avatarUrl;
   const chatPartnerInitial = chatPartnerName.charAt(0).toUpperCase();
 
