@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { applicationAPI } from '../../services/api';
 import ApplicationTabs from '@/components/TutorApplication/ApplicationTabs'; // ✅ Sửa path nếu cần
@@ -110,6 +111,7 @@ const TAB_STATUS_MAP: Record<TabType, string[]> = {
 // ===============================
 
 const ManageApplicationsPage = ({ onTabChange }: ManageApplicationsPageProps) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('invited');
 
   const [expandedApplications, setExpandedApplications] = useState<Set<string>>(new Set());
@@ -121,12 +123,24 @@ const ManageApplicationsPage = ({ onTabChange }: ManageApplicationsPageProps) =>
   const [declineReason, setDeclineReason] = useState('');
 
   const queryClient = useQueryClient();
-  useSessionFilter('targetTab', (value: string) => {
-    if (['invited', 'applied', 'approved', 'withdrawn', 'rejected', 'cancelled'].includes(value)) {
-      console.log('🔄 Đặt activeTab:', value);
-      setActiveTab(value as TabType);
+
+  // ✅ Read tab from URL query params và sessionStorage
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab') as TabType | null;
+    const tabFromSession = sessionStorage.getItem('targetTab') as TabType | null;
+    
+    const newTab = tabFromUrl || tabFromSession || 'invited';
+    
+    if (['invited', 'applied', 'approved', 'withdrawn', 'rejected', 'cancelled'].includes(newTab)) {
+      console.log('🔄 Setting activeTab:', newTab, '(from URL:', !!tabFromUrl, 'or session:', !!tabFromSession, ')');
+      setActiveTab(newTab as TabType);
+      
+      // ✅ Clear sessionStorage sau khi dùng
+      if (tabFromSession) {
+        sessionStorage.removeItem('targetTab');
+      }
     }
-  });
+  }, [searchParams]);
 
   // Reset modal states khi đổi tab
   useEffect(() => {

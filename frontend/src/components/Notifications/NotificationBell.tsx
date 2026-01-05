@@ -5,23 +5,24 @@ import styles from './styles/notification.module.css';
 
 interface NotificationBellProps {
   className?: string;
-  onTabChange?: (tab: string) => void; // ✅ THÊM: callback
 }
 
 export const NotificationBell: React.FC<NotificationBellProps> = ({
   className = '',
-  onTabChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { notifications, unreadCount, fetchUnread, markAsRead, deleteNotification } =
     useNotifications();
+
   useEffect(() => {
-    console.log('🔔 NotificationBell mounted/updated:', {
-      onTabChangeExists: !!onTabChange,
-      onTabChangeType: typeof onTabChange,
+    console.log('🔔 NotificationBell rendered:', {
+      notificationsLength: notifications?.length,
+      unreadCount,
+      notifications,
     });
-  }, [onTabChange]);
+  }, [notifications, unreadCount]);
+
   // ✅ Load notifications on mount
   useEffect(() => {
     fetchUnread();
@@ -41,9 +42,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
-  const handleClosedropdown = () => {
-    setIsOpen(false);
-  };
+
   return (
     <div className={`${styles.notificationBell} ${className}`} ref={dropdownRef}>
       {/* ✅ Bell Button */}
@@ -81,7 +80,6 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
             console.log('📭 Closing dropdown');
             setIsOpen(false);
           }}
-          onTabChange={onTabChange} // ✅ Truyền callback xuống
         />
       )}
     </div>

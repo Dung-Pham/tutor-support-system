@@ -12,6 +12,7 @@ import app from './app.js';
 import connectMongoDB from './config/mongodb.js';
 import { connectSQLServer } from './config/sqlserver.js';
 import { initSocket } from './config/socket.js';
+import socketEmitter from './utils/socketEmitter.js';
 
 const PORT = process.env.PORT || 5000;
 
@@ -20,6 +21,9 @@ const server = http.createServer(app);
 
 // Initialize Socket.IO with authentication
 const io = initSocket(server);
+
+// Initialize SocketEmitter with IO instance
+socketEmitter.setIO(io);
 
 // Expose Socket.IO instance for routes to use
 app.set('io', io);

@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { verifyUserToken, selectIsAuthenticated, selectUser } from '../store/slices/authSlice-real';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppDispatch, RootState } from '../store';
-import { useNotificationListener } from '@/hooks/useNotificationListener';
 import socketService from '@/services/socketService';
 import {
   fetchAllNotifications,
@@ -22,8 +21,6 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const user = useSelector((state: RootState) => selectUser(state));
   const isAuthenticated = useSelector((state: RootState) => selectIsAuthenticated(state));
-
-  useNotificationListener();
 
   useEffect(() => {
     const token = localStorage.getItem('token');

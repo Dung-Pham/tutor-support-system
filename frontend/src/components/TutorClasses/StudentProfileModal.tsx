@@ -101,7 +101,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
   const age = calculateAge(student.dateOfBirth);
 
   const personalInfo = [
-    { label: 'Họ và tên', value: student.fullName ?? null, icon: User },
+    { label: 'Họ và tên', value: student.name ?? null, icon: User },
     { label: 'Email', value: student.email ?? null, icon: Mail },
     { label: 'Số điện thoại', value: student.phone ?? 'Chưa cập nhật', icon: Phone },
     {
@@ -134,18 +134,22 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
     title: string,
     infoList: Array<{ label: string; value: string | null; icon?: React.ElementType }>
   ) => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">{title}</CardTitle>
+    <Card className="bg-white shadow-md border-0 hover:shadow-lg transition-shadow">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+        <CardTitle className="flex items-center gap-2 text-blue-900 text-lg">
+          {title}
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="p-6 space-y-4">
         {infoList.map(
           (item, idx) =>
             item.value && (
-              <div key={idx} className="flex items-center gap-2">
-                {item.icon && <item.icon className="h-4 w-4 text-muted-foreground" />}
-                <span className="text-sm text-muted-foreground">{item.label}:</span>
-                <span className="font-semibold">{item.value}</span>
+              <div key={idx} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                {item.icon && <item.icon className="h-5 w-5 text-blue-600 flex-shrink-0" />}
+                <div className="flex-1">
+                  <span className="text-sm text-gray-600 block">{item.label}</span>
+                  <span className="font-semibold text-gray-900">{item.value}</span>
+                </div>
               </div>
             )
         )}
@@ -154,25 +158,59 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
   );
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">{student.name}</h1>
-          <p className="text-muted-foreground mt-1">Thông Tin Chi Tiết Học Viên</p>
+    <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Header with Back Button */}
+        <div className="flex items-center justify-between mb-8">
+          <Button 
+            onClick={onBack} 
+            variant="outline" 
+            size="lg"
+            className="rounded-full border-2 hover:bg-white hover:border-blue-400 transition-all"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Quay Lại
+          </Button>
         </div>
-        <Button onClick={onBack} variant="outline" size="lg">
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          Quay Lại
-        </Button>
-      </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+        {/* Profile Header Card */}
+        <Card className="bg-white shadow-lg border-0">
+          <CardContent className="p-8">
+            <div className="flex items-start gap-6">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                {student.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              </div>
+              <div className="flex-1">
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">{student.name}</h1>
+                <p className="text-lg text-gray-600 mb-4">Thông Tin Chi Tiết Học Viên</p>
+                <div className="flex flex-wrap gap-3">
+                  {student.email && (
+                    <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full text-sm text-blue-700">
+                      <Mail className="h-4 w-4" />
+                      {student.email}
+                    </div>
+                  )}
+                  {student.phone && (
+                    <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full text-sm text-green-700">
+                      <Phone className="h-4 w-4" />
+                      {student.phone}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Info Cards Grid */}
+        <div className="grid gap-6 md:grid-cols-2">
         {renderInfoCard('Thông Tin Cá Nhân', personalInfo)}
         {renderInfoCard('Thông Tin Học Tập', educationInfo)}
-      </div>
+        </div>
 
-      {renderInfoCard('Địa Chỉ', addressInfo)}
+        {/* Address Card */}
+        {renderInfoCard('Địa Chỉ', addressInfo)}
+      </div>
     </div>
   );
 };

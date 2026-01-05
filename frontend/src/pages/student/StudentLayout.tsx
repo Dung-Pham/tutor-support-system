@@ -8,11 +8,15 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 export function StudentLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentTab, setCurrentTab] = useState<string>('');
 
   return (
     <div className="flex flex-col h-screen">
       {/* Header - Trên cùng */}
-      <StudentHeader onMenuClick={() => setSidebarOpen(true)} />
+      <StudentHeader 
+        onMenuClick={() => setSidebarOpen(true)}
+        onTabChange={setCurrentTab}
+      />
 
       {/* Main content - Dưới header */}
       <div className="flex flex-1 overflow-hidden">

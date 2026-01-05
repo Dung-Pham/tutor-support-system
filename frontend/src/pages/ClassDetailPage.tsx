@@ -309,32 +309,40 @@ export const ClassDetailPage: React.FC<ClassDetailPageProps> = ({ onTabChange })
               <span className="text-sm">
                 {isTutor ? `Học sinh: ${classInfo.student_name || 'Chưa có'}` : `Gia sư: ${classInfo.tutor_name || 'Chưa có'}`}
               </span>
-              {isTutor && classInfo.student_id && (
-                <Button 
-                  variant="link" 
-                  size="sm" 
-                  className="text-blue-500 p-0 h-auto"
-                  onClick={() => navigate(`/tutor/view-student/${classInfo.student_id}`)}
-                >
-                  Xem hồ sơ
-                </Button>
-              )}
-              {!isTutor && classInfo.tutor_id && (
-                <Button 
-                  variant="link" 
-                  size="sm" 
-                  className="text-blue-500 p-0 h-auto"
-                  onClick={() => navigate(`/student/view-tutor/${classInfo.tutor_id}`)}
-                >
-                  Xem hồ sơ
-                </Button>
-              )}
             </div>
             <div className="flex items-center space-x-2">
               <Clock className="h-4 w-4 text-gray-400" />
               <span className="text-sm">{classInfo.sessions_per_week || 0} buổi/tuần</span>
             </div>
           </div>
+          
+          {/* Nút xem hồ sơ - tách riêng, đẹp hơn */}
+          {isTutor && classInfo.student_id && classId && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                onClick={() => navigate(`/tutor/view-student/${classId}`)}
+              >
+                <User className="h-4 w-4 mr-2" />
+                Xem hồ sơ học viên
+              </Button>
+            </div>
+          )}
+          {!isTutor && classInfo.tutor_id && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                onClick={() => navigate(`/student/view-tutor/${classInfo.tutor_id}`)}
+              >
+                <User className="h-4 w-4 mr-2" />
+                Xem hồ sơ gia sư
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

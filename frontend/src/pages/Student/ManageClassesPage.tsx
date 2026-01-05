@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useClass } from '../../hooks/useClass';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +18,6 @@ import {
 import { EditClassModal } from '../../components/Student/EditClassModal';
 import { CancelClassModal } from '../../components/Student/CancelClassModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import useSessionFilter from '@/hooks/useSessionFilter';
 
 type FilterStatus = 'recruiting' | 'has_tutor' | 'active' | 'completed' | 'cancelled';
 type ViewMode = 'list' | 'detail' | 'tutors';
@@ -38,6 +37,7 @@ interface ManageClassesPageProps {
 
 const ManageClassesPage: React.FC<ManageClassesPageProps> = ({ onTabChange }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filter, setFilter] = useState<FilterStatus>('recruiting');
   const [expandedClassId, setExpandedClassId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list'); // ✅ THÊM: viewMode
@@ -57,14 +57,29 @@ const ManageClassesPage: React.FC<ManageClassesPageProps> = ({ onTabChange }) =>
     name: string;
   } | null>(null);
 
-  // ✅ FIX: Bỏ dependency array rỗng để useEffect chạy mỗi khi component re-render
-  // Điều này đảm bảo khi click notification lần 2, sessionStorage được đọc lại
-  useSessionFilter('targetFilter', (value: string) => {
-    if (['recruiting', 'has_tutor', 'active', 'completed', 'cancelled'].includes(value)) {
-      console.log('🔄 Đặt filter:', value);
-      setFilter(value as FilterStatus);
+  // ✅ Read tab from URL query params and sessionStorage
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab') as FilterStatus | null;
+    const tabFromSession = sessionStorage.getItem('targetTab') as FilterStatus | null;
+    
+    const newTab = tabFromUrl || tabFromSession || 'recruiting';
+    
+    console.log('📊 ManageClassesPage URL changed:', {
+      tabFromUrl,
+      tabFromSession,
+      newTab,
+    });
+    
+    if (['recruiting', 'has_tutor', 'active', 'completed', 'cancelled'].includes(newTab)) {
+      console.log('🔄 Setting filter:', newTab, '(from URL:', !!tabFromUrl, 'or session:', !!tabFromSession, ')');
+      setFilter(newTab as FilterStatus);
+      
+      // ✅ Clear sessionStorage after using
+      if (tabFromSession) {
+        sessionStorage.removeItem('targetTab');
+      }
     }
-  });
+  }, [searchParams]);
 
   // ✅ THÊM: Xử lý expandClassId riêng vì cần logic scroll
   useEffect(() => {

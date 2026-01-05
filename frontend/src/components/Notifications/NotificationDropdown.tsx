@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import { Notification } from '../../types';
 import NotificationItem from './NotificationItem';
 import styles from './styles/notification.module.css';
@@ -11,7 +13,6 @@ interface NotificationDropdownProps {
   onMarkAsRead: (id: string) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
-  onTabChange?: (tab: string) => void;
 }
 
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
@@ -20,9 +21,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   onMarkAsRead,
   onDelete,
   onClose,
-  onTabChange,
 }) => {
   const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const userRole = user?.role || 'tutor';
 
   /**
    * Handle notification click
@@ -31,7 +33,6 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     console.log('📬 NotificationDropdown handleNotificationClick:', {
       type: notification.type,
       metadata: notification.metadata,
-      onTabChangeExists: !!onTabChange,
     });
 
     try {
@@ -64,16 +65,33 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           console.log('💾 Lưu targetFilter:', metadata.targetFilter);
         }
 
-        // ✅ FIX: Đóng dropdown TRƯỚC khi chuyển tab để tránh race condition
+        // ✅ FIX: Đóng dropdown TRƯỚC khi chuyển trang
         onClose();
 
-        // ✅ Chuyển tab
-        if (onTabChange) {
-          console.log('📍 Gọi onTabChange với tab:', metadata.targetPage);
-          onTabChange(metadata.targetPage);
+        // ✅ Always navigate directly (StudentLayout & TutorLayout use nested routes)
+        const prefix = userRole === 'student' ? '/student' : '/tutor';
+        let route = '';
+        
+        // ✅ Map targetPage to actual route
+        if (metadata.targetPage === 'applications') {
+          route = `${prefix}/applications`;
+        } else if (metadata.targetPage === 'classes' || metadata.targetPage === 'my-classes') {
+          route = `${prefix}/manage-classes`;
+        } else if (metadata.targetPage === 'notifications') {
+          route = `${prefix}/notifications`;
         } else {
-          console.warn('⚠️ onTabChange không có!');
+          route = prefix;
         }
+        
+        // ✅ Thêm tab query param + refresh timestamp
+        if (metadata.tab) {
+          route += `?tab=${metadata.tab}&refresh=${Date.now()}`;
+        } else {
+          route += `?refresh=${Date.now()}`;
+        }
+        
+        navigate(route);
+        console.log('🚀 Navigating to', route, 'for role:', userRole);
       } else {
         console.warn('⚠️ Không có targetPage trong metadata');
         onClose();
@@ -92,10 +110,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           href="#"
           onClick={(e) => {
             e.preventDefault();
-            // ✅ SỬA: Chuyển sang tab notifications thay vì navigate
-            if (onTabChange) {
-              onTabChange('notifications');
-            }
+            // ✅ Always navigate directly to notifications page
+            const prefix = userRole === 'student' ? '/student' : '/tutor';
+            navigate(`${prefix}/notifications?refresh=${Date.now()}`);
             onClose();
           }}
           className={styles.viewAll}
@@ -113,7 +130,6 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               notification={notification}
               onClick={() => handleNotificationClick(notification)}
               onDelete={() => onDelete(notification.notification_id)}
-              onTabChange={onTabChange}
             />
           ))}
         </div>
