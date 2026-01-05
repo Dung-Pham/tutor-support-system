@@ -4,12 +4,12 @@ import { Response } from "express";
 import { Conversation, Participant, User } from "../models/sql/index.js";
 import { Message } from "../models/mongo/index.js";
 import { AuthRequest } from "../types/common.js";
-import { Op } from "sequelize";
+import { Op, fn, where, col } from "sequelize";
 
 // Attribute mappings for UserAccount table (column_name -> alias)
 const USER_ATTRS_BASIC: [string, string][] = [
   ["user_id", "id"],
-  ["name", "displayName"],
+  ["name", "name"],
   ["avatar_url", "avatarUrl"],
 ];
 
@@ -138,17 +138,29 @@ export const createConversation = async (
     // Format response to match expected structure
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const convJson = (fullConversation as any)?.toJSON();
-    const formattedConversation = convJson ? {
-      ...convJson,
-      participants: convJson.participants?.map((p: { user?: { userId: string; name: string; avatarUrl?: string; role?: string }; joinedAt?: Date }) => ({
-        id: p.user?.userId,
-        displayName: p.user?.name,
-        avatarUrl: p.user?.avatarUrl ?? null,
-        role: p.user?.role,
-        isOnline: false,
-        joinAt: p.joinedAt,
-      })),
-    } : null;
+    const formattedConversation = convJson
+      ? {
+          ...convJson,
+          participants: convJson.participants?.map(
+            (p: {
+              user?: {
+                userId: string;
+                name: string;
+                avatarUrl?: string;
+                role?: string;
+              };
+              joinedAt?: Date;
+            }) => ({
+              id: p.user?.userId,
+              name: p.user?.name,
+              avatarUrl: p.user?.avatarUrl ?? null,
+              role: p.user?.role,
+              isOnline: false,
+              joinAt: p.joinedAt,
+            })
+          ),
+        }
+      : null;
 
     return res.status(201).json({
       success: true,
@@ -220,7 +232,7 @@ export const getConversations = async (
           }) => {
             return {
               id: p.user?.userId,
-              displayName: p.user?.name,
+              name: p.user?.name,
               avatarUrl: p.user?.avatarUrl ?? null,
               role: p.user?.role,
               isOnline: false, // Will be updated via Socket.IO
@@ -267,9 +279,12 @@ export const getMessages = async (
         .json({ success: false, message: "Conversation not found" });
     }
 
-    // Verify user is a participant
+    // Verify user is a participant (case-insensitive UUID comparison)
     const isParticipant = await Participant.findOne({
-      where: { conversationId, userId },
+      where: {
+        conversationId,
+        [Op.and]: where(fn("UPPER", col("user_id")), userId.toUpperCase()),
+      },
     });
     if (!isParticipant) {
       return res.status(403).json({
@@ -309,7 +324,9 @@ export const getMessages = async (
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const senderMap = new Map(senders.map((s: any) => [s.get('id'), s.toJSON()]));
+    const senderMap = new Map(
+      senders.map((s: any) => [s.get("id"), s.toJSON()])
+    );
 
     // Attach sender info to messages
     const messagesWithSender = messages.map((m) => ({
@@ -341,9 +358,12 @@ export const markConversationAsSeen = async (
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    // Verify user is a participant
+    // Verify user is a participant (case-insensitive UUID comparison)
     const participant = await Participant.findOne({
-      where: { conversationId, userId },
+      where: {
+        conversationId,
+        [Op.and]: where(fn("UPPER", col("user_id")), userId.toUpperCase()),
+      },
     });
 
     if (!participant) {
@@ -352,11 +372,8 @@ export const markConversationAsSeen = async (
         .json({ message: "You are not a member of this conversation" });
     }
 
-    // Reset unread count
-    await Participant.update(
-      { unreadCount: 0 },
-      { where: { conversationId, userId } }
-    );
+    // Reset unread count (using participant we already found)
+    await participant.update({ unreadCount: 0 });
 
     // Mark all messages in this conversation as read by this user
     await Message.updateMany(

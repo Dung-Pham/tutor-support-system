@@ -7,6 +7,21 @@ import { createSlug } from "../utils/slug.js";
 import { AuthRequest } from "../types/common.js";
 import { Op } from "sequelize";
 
+// Simple in-memory cache to prevent view count spam
+// Key: `${postId}:${userId || ip}`, Value: timestamp
+const viewedPosts = new Map<string, number>();
+const VIEW_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour cooldown
+
+// Cleanup old entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, timestamp] of viewedPosts.entries()) {
+    if (now - timestamp > VIEW_COOLDOWN_MS) {
+      viewedPosts.delete(key);
+    }
+  }
+}, 10 * 60 * 1000);
+
 // Attribute mappings for UserAccount table (column_name -> alias)
 const USER_ATTRS_FULL: [string, string][] | string[] = [
   ["user_id", "id"],
@@ -184,7 +199,7 @@ export const getApprovedPosts = async (
 
     return res.json({
       success: true,
-      message: "L?y danh s�ch b�i vi?t th�nh c�ng",
+      message: "Lấy danh sách bài viết thành công",
       data: posts,
       page,
       limit,
@@ -195,7 +210,7 @@ export const getApprovedPosts = async (
     console.error("Get approved posts error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i khi l?y danh s�ch b�i vi?t",
+      message: "Lỗi khi lấy danh sách bài viết",
     });
   }
 };
@@ -212,7 +227,7 @@ export const getPostsByStatus = async (
     if (!["pending", "rejected", "deleted"].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "Status kh�ng h?p l?",
+        message: "Status không hợp lệ",
       });
     }
 
@@ -220,7 +235,7 @@ export const getPostsByStatus = async (
     if (req.user?.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Ch? admin c� th? xem danh s�ch n�y",
+        message: "Chỉ admin có thể xem danh sách này",
       });
     }
 
@@ -299,9 +314,9 @@ export const getPostsByStatus = async (
 
     const totalPages = Math.ceil(total / limit);
     const messages: Record<string, string> = {
-      pending: "L?y danh s�ch b�i vi?t ch? duy?t",
-      rejected: "L?y danh s�ch b�i vi?t b? t? ch?i",
-      deleted: "L?y danh s�ch b�i vi?t �? x�a",
+      pending: "Lấy danh sách bài viết chờ duyệt",
+      rejected: "Lấy danh sách bài viết bị từ chối",
+      deleted: "Lấy danh sách bài viết đã xóa",
     };
 
     return res.json({
@@ -317,7 +332,7 @@ export const getPostsByStatus = async (
     console.error("Get posts by status error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i khi l?y danh s�ch b�i vi?t",
+      message: "Lỗi khi lấy danh sách bài viết",
     });
   }
 };
@@ -330,7 +345,7 @@ export const getPostDetail = async (
   try {
     const { id } = req.params;
 
-    // Update view count and get post
+    // Get post with author info
     const post = await PostHeader.findByPk(id, {
       include: [
         {
@@ -347,18 +362,26 @@ export const getPostDetail = async (
     });
 
     if (!post) {
-      return res.status(404).json(formatError("B�i vi?t kh�ng t?n t?i"));
+      return res.status(404).json(formatError("Bài viết không tồn tại"));
     }
 
-    // Increment view count
-    await post.increment("viewCount");
+    // Only increment view count once per user/IP within cooldown period
+    const viewerId = req.user?.id || req.ip || 'anonymous';
+    const viewKey = `${id}:${viewerId}`;
+    const lastViewed = viewedPosts.get(viewKey);
+    const now = Date.now();
+
+    if (!lastViewed || (now - lastViewed) > VIEW_COOLDOWN_MS) {
+      await post.increment("viewCount");
+      viewedPosts.set(viewKey, now);
+    }
 
     // Get content from MongoDB
     const postDetail = await PostDetail.findOne({ postHeaderId: id }).lean();
 
     return res.json({
       success: true,
-      message: "L?y chi ti?t b�i vi?t",
+      message: "Lấy chi tiết bài viết",
       data: {
         ...post.toJSON(),
         contentJson: postDetail?.contentJson || null,
@@ -369,7 +392,7 @@ export const getPostDetail = async (
     console.error("Get post detail error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i khi l?y chi ti?t b�i vi?t",
+      message: "Lỗi khi lấy chi tiết bài viết",
     });
   }
 };
@@ -408,7 +431,7 @@ export const getMyPosts = async (
 
     return res.json({
       success: true,
-      message: "L?y danh s�ch b�i vi?t c?a b?n",
+      message: "Lấy danh sách bài viết của bạn",
       data: posts,
       page,
       limit,
@@ -419,7 +442,7 @@ export const getMyPosts = async (
     console.error("Get my posts error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i khi l?y danh s�ch b�i vi?t",
+      message: "Lỗi khi lấy danh sách bài viết",
     });
   }
 };
@@ -447,7 +470,7 @@ export const updatePost = async (
     if (post.authorId !== userId) {
       return res.status(403).json({
         success: false,
-        message: "B?n kh�ng c� quy?n ch?nh s?a b�i vi?t n�y",
+        message: "Bạn không có quyền chỉnh sửa bài viết này",
       });
     }
 
@@ -456,8 +479,8 @@ export const updatePost = async (
         success: false,
         message:
           post.status === "approved"
-            ? "Kh�ng th? ch?nh s?a b�i vi?t �? ��?c duy?t"
-            : "Kh�ng th? ch?nh s?a b�i vi?t t? ch?i",
+            ? "Không thể chỉnh sửa bài viết đã được duyệt"
+            : "Không thể chỉnh sửa bài viết từ chối",
       });
     }
 
@@ -495,7 +518,7 @@ export const updatePost = async (
 
     return res.json({
       success: true,
-      message: "B�i vi?t �? ��?c c?p nh?t",
+      message: "Bài viết đã được cập nhật",
       data: {
         ...post.toJSON(),
         author,
@@ -506,12 +529,12 @@ export const updatePost = async (
     console.error("Update post error", error);
     return res.status(500).json({
       success: false,
-      message: "L?i c?p nh?t b�i vi?t",
+      message: "Lỗi cập nhật bài viết",
     });
   }
 };
 
-// Soft delete post (admin only) - chuy?n b�i vi?t v�o th�ng r�c �? c� th? kh�i ph?c
+// Soft delete post (admin only) - chuyển bài viết vào thùng rác để có thể khôi phục
 export const softDeletePost = async (
   req: AuthRequest & { params: PostParams; body: DeletePostBody },
   res: Response

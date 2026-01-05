@@ -71,16 +71,21 @@ app.use(
 app.use(compression());
 
 // CORS Configuration - MUST be before static files
+const corsOrigins = process.env.CORS_ORIGIN?.split(',') || [];
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5173',
+  ...corsOrigins,
+  undefined,
+];
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = [
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://127.0.0.1:5173',
-        undefined,
-      ];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
