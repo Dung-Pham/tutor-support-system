@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, Lock, Settings, LogOut } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 
 export function UserProfileDropdown() {
   const dispatch = useDispatch();
@@ -80,27 +80,14 @@ export function UserProfileDropdown() {
           </DropdownMenuLabel>
 
           <DropdownMenuItem
-            onClick={() => handleNavigate('/student/profile')}
+            onClick={() => {
+              const profilePath = user?.role === 'tutor' ? '/tutor/profile' : '/student/profile';
+              handleNavigate(profilePath);
+            }}
             className="cursor-pointer gap-2"
           >
             <User className="w-4 h-4" />
             <span>Thông tin cá nhân</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => handleNavigate('/student/change-password')}
-            className="cursor-pointer gap-2"
-          >
-            <Lock className="w-4 h-4" />
-            <span>Đổi mật khẩu</span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => handleNavigate('/student/settings')}
-            className="cursor-pointer gap-2"
-          >
-            <Settings className="w-4 h-4" />
-            <span>Cài đặt</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
 

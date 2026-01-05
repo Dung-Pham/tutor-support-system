@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft, Users, Clock, Mail, Phone } from 'lucide-react';
+import { Loader2, ArrowLeft, Users, Clock, Mail, Phone, Eye } from 'lucide-react';
 import { ClassDetail } from '@/types';
 import { searchAPI } from '@/services/api';
 import dayjs from 'dayjs';
@@ -60,15 +60,21 @@ export default function ClassDetailPage({ onTabChange }: ClassDetailPageProps) {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const user = useSelector((state: RootState) => state.auth.user);
 
+  console.log('🔍 ClassDetailPage mounted, classId:', classId);
+
   // ======= Fetch Class Detail =======
-  const { data: classDetail, isLoading } = useQuery<ClassDetail>({
+  const { data: classDetail, isLoading, error } = useQuery<ClassDetail>({
     queryKey: ['classDetail', classId],
-    queryFn: () => {
-      console.log('🚀 Gọi API getClassDetail với classId:', classId); // ✅ THÊM
-      return searchAPI.getClassDetail(classId!);
+    queryFn: async () => {
+      console.log('🚀 Gọi API getClassDetail với classId:', classId);
+      const result = await searchAPI.getClassDetail(classId!);
+      console.log('📦 API Response:', result);
+      return result;
     },
     enabled: Boolean(classId),
   });
+
+  console.log('📊 Query state:', { classDetail, isLoading, error });
   const getApplicationStatus = (): string | null => {
     const searchData: any = queryClient.getQueryData(['searchClasses']);
     if (!searchData) return null;
@@ -109,6 +115,9 @@ export default function ClassDetailPage({ onTabChange }: ClassDetailPageProps) {
         if (onTabChange) {
           console.log('📍 Quay lại tab search');
           onTabChange('search');
+        } else {
+          console.log('📍 Navigate to /tutor/search');
+          navigate('/tutor/search');
         }
       }, 1000); // ✅ 1 giây đủ cho refetch
     },
@@ -140,6 +149,17 @@ export default function ClassDetailPage({ onTabChange }: ClassDetailPageProps) {
   // Loading & Not found
   // ===============================
 
+  if (!classId) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-500 mb-4">⚠️ Không tìm thấy ID lớp học</p>
+        <Button onClick={() => onTabChange?.('search')} variant="outline">
+          Quay lại tìm lớp
+        </Button>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -149,7 +169,14 @@ export default function ClassDetailPage({ onTabChange }: ClassDetailPageProps) {
   }
 
   if (!classDetail) {
-    return <div className="text-center py-12">Lớp không tồn tại</div>;
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500 mb-4">Lớp không tồn tại hoặc đã bị xóa</p>
+        <Button onClick={() => onTabChange?.('search')} variant="outline">
+          Quay lại tìm lớp
+        </Button>
+      </div>
+    );
   }
 
   // ===============================
@@ -162,7 +189,11 @@ export default function ClassDetailPage({ onTabChange }: ClassDetailPageProps) {
         <button
           onClick={() => {
             sessionStorage.removeItem('currentClassId');
-            onTabChange?.('search');
+            if (onTabChange) {
+              onTabChange('search');
+            } else {
+              navigate('/tutor/search');
+            }
           }}
           className="flex items-center text-blue-600 hover:text-blue-800 mb-6 font-semibold"
         >
@@ -219,10 +250,23 @@ export default function ClassDetailPage({ onTabChange }: ClassDetailPageProps) {
 
         {/* Student Info */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
-          <h2 className="text-2xl font-bold mb-6 flex items-center">
-            <Users className="w-6 h-6 mr-2 text-blue-600" />
-            Thông tin học viên
-          </h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold flex items-center">
+              <Users className="w-6 h-6 mr-2 text-blue-600" />
+              Thông tin học viên
+            </h2>
+            {classDetail.student_id && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/tutor/view-student/${classDetail.student_id}`)}
+                className="flex items-center gap-2"
+              >
+                <Eye className="h-4 w-4" />
+                Xem hồ sơ
+              </Button>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

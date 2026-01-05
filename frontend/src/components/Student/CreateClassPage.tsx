@@ -145,7 +145,7 @@ const CreateClassPage: React.FC = () => {
       console.log('\n=== 🚀 STEP 2: INVITE TUTORS ===');
       console.log(`Inviting ${selectedTutors.length} tutor(s) to class ${classId}`);
 
-      // ✅ Mời gia sư từng cái
+      // ✅ Mời gia sư từng cái (nếu có)
       let successCount = 0;
       for (const tutorId of selectedTutors) {
         try {
@@ -157,15 +157,20 @@ const CreateClassPage: React.FC = () => {
         }
       }
 
-      alert(`✅ Hoàn thành! Đã mời ${successCount}/${selectedTutors.length} gia sư`);
+      // ✅ Thông báo phù hợp
+      if (selectedTutors.length === 0) {
+        alert('✅ Tạo lớp thành công! Lớp sẽ ở trạng thái "Đang tìm gia sư"');
+      } else {
+        alert(`✅ Hoàn thành! Đã mời ${successCount}/${selectedTutors.length} gia sư`);
+      }
 
       // ✅ Reset
       dispatch(resetFormData());
       dispatch(clearSelectedTutors());
       setClassId(null);
 
-      // ✅ Chuyển hướng về trang quản lý lớp học (tab recruiting)
-      navigate('/?tab=my-classes');
+      // ✅ Chuyển hướng về trang quản lý lớp học
+      navigate('/student/manage-classes');
     } catch (error: any) {
       console.error('❌ Lỗi khi mời gia sư:', error);
       const errorMsg = error?.response?.data?.message || error?.message || 'Lỗi khi mời gia sư';

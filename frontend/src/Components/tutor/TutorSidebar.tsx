@@ -5,13 +5,11 @@ import {
   Users,
   Clock,
   TrendingUp,
-  Settings,
   MessageCircle,
   CheckCircle2,
   GraduationCap,
   Search,
   Briefcase,
-  FolderKanban,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -24,7 +22,7 @@ const navItems = [
   { label: 'Bài viết', icon: FileText, to: '/tutor/posts' },
   { label: 'Tạo bài viết', icon: BookMarked, to: '/tutor/create-post' },
   { label: 'Bài viết của tôi', icon: CheckCircle2, to: '/tutor/my-posts' },
-  { label: 'Lớp học', icon: Users, to: '/tutor/classes' },
+  { label: 'Lớp học của tôi', icon: Users, to: '/tutor/classes' },
   { label: 'Tìm lớp học', icon: Search, to: '/tutor/search' },
   { label: 'Đơn ứng tuyển', icon: Briefcase, to: '/tutor/applications' },
   { label: 'Lịch dạy', icon: Clock, to: '/tutor/schedule' },

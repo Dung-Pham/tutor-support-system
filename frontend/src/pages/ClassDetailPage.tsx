@@ -53,10 +53,17 @@ interface ClassStats {
   completed_homework: number;
 }
 
-export const ClassDetailPage: React.FC = () => {
-  const { classId } = useParams<{ classId: string }>();
+interface ClassDetailPageProps {
+  onTabChange?: (tab: string) => void;
+}
+
+export const ClassDetailPage: React.FC<ClassDetailPageProps> = ({ onTabChange }) => {
+  const { classId: routeClassId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
+  
+  // ✅ Lấy classId từ route params hoặc sessionStorage
+  const classId = routeClassId || sessionStorage.getItem('currentClassId');
   
   // Get base route based on user role
   const baseRoute = user?.role?.toLowerCase() === 'tutor' ? '/tutor' : '/student';
@@ -74,6 +81,17 @@ export const ClassDetailPage: React.FC = () => {
   const [newLesson, setNewLesson] = useState({ topic: '', description: '', session_date: '' });
 
   const isTutor = user?.role?.toLowerCase() === 'tutor';
+
+  // ✅ Hàm quay lại
+  const handleBack = () => {
+    sessionStorage.removeItem('currentClassId');
+    if (onTabChange) {
+      // Quay lại trang tìm lớp nếu là gia sư
+      onTabChange(isTutor ? 'search' : 'my-classes');
+    } else {
+      navigate(`${baseRoute}/classes`);
+    }
+  };
 
   useEffect(() => {
     if (classId) {
@@ -243,7 +261,7 @@ export const ClassDetailPage: React.FC = () => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="text-red-500 mb-4">⚠️ {error || 'Không tìm thấy lớp học'}</div>
-          <Button onClick={() => navigate(`${baseRoute}/classes`)} variant="outline">
+          <Button onClick={() => handleBack()} variant="outline">
             Quay lại
           </Button>
         </div>
@@ -255,7 +273,7 @@ export const ClassDetailPage: React.FC = () => {
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" onClick={() => navigate(`${baseRoute}/classes`)}>
+        <Button variant="ghost" onClick={() => handleBack()}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Quay lại
         </Button>
@@ -291,6 +309,26 @@ export const ClassDetailPage: React.FC = () => {
               <span className="text-sm">
                 {isTutor ? `Học sinh: ${classInfo.student_name || 'Chưa có'}` : `Gia sư: ${classInfo.tutor_name || 'Chưa có'}`}
               </span>
+              {isTutor && classInfo.student_id && (
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="text-blue-500 p-0 h-auto"
+                  onClick={() => navigate(`/tutor/view-student/${classInfo.student_id}`)}
+                >
+                  Xem hồ sơ
+                </Button>
+              )}
+              {!isTutor && classInfo.tutor_id && (
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="text-blue-500 p-0 h-auto"
+                  onClick={() => navigate(`/student/view-tutor/${classInfo.tutor_id}`)}
+                >
+                  Xem hồ sơ
+                </Button>
+              )}
             </div>
             <div className="flex items-center space-x-2">
               <Clock className="h-4 w-4 text-gray-400" />

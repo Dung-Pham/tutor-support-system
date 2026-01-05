@@ -8,6 +8,19 @@
 import { sequelize } from "../../config/sqlserver";
 import { QueryTypes } from "sequelize";
 
+// --- Helper function ---
+function safeJsonParse<T>(jsonString: string | null | undefined, defaultValue: T): T {
+  if (!jsonString || jsonString === 'NULL' || jsonString === 'null') {
+    return defaultValue;
+  }
+  try {
+    return JSON.parse(jsonString);
+  } catch (e) {
+    console.warn('⚠️ JSON parse failed:', e);
+    return defaultValue;
+  }
+}
+
 // --- Interfaces ---
 
 // ✅ Khớp với View_StudentClassList
@@ -455,6 +468,7 @@ class ClassModel {
               tp.experience_years,
               tp.avg_rating,
               tp.total_reviews,
+              tp.subjects,
               w.name as ward_name,
               d.name as district_name,
               p.name as province_name,
@@ -475,6 +489,8 @@ class ClassModel {
                 ua.is_verified = 1
                 and ua.status = 1
                 and ua.role = 'tutor'
+                and tp.subjects IS NOT NULL
+                and ISJSON(tp.subjects) = 1
                 and exists (
                   select 1 from OPENJSON(tp.subjects)
                   where value = cast(ci.subject_id as nvarchar(50))
@@ -493,7 +509,7 @@ class ClassModel {
       // Parse JSON subjects string thành mảng thật cho Frontend dùng
       const parsedTutors: SuggestedTutor[] = tutors.map((tutor) => ({
         ...tutor,
-        subjects: tutor.subjects ? JSON.parse(tutor.subjects) : [],
+        subjects: tutor.subjects ? safeJsonParse(tutor.subjects, []) : [],
       }));
       return parsedTutors;
     } catch (error) {

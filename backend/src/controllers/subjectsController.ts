@@ -22,15 +22,21 @@ const getSubjects = async (req: Request, res: Response): Promise<void> => {
 
     // 1. check redis cache
     const cacheKey = "all_subjects";
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      console.log("⚡ [getSubjects] Returning from Redis Cache");
-      res.status(200).json({
-        success: true,
-        data: JSON.parse(cachedData) as Subject[],
-        message: "Lấy danh sách môn học thành công (từ cache)",
-      });
-      return;
+    if (redisClient) {
+      try {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ [getSubjects] Returning from Redis Cache");
+          res.status(200).json({
+            success: true,
+            data: JSON.parse(cachedData) as Subject[],
+            message: "Lấy danh sách môn học thành công (từ cache)",
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn('⚠️ Redis cache read failed:', err);
+      }
     }
 
     // 2. nếu không có trong cache thì query database
@@ -45,10 +51,14 @@ const getSubjects = async (req: Request, res: Response): Promise<void> => {
       type: QueryTypes.SELECT,
     });
     // 3. lưu kết quả vào redis cache với TTL 24 giờ
-    if (subjects.length > 0) {
-      await redisClient.set(cacheKey, JSON.stringify(subjects), {
-        EX: 86400, // 24 hours
-      });
+    if (subjects.length > 0 && redisClient) {
+      try {
+        await redisClient.set(cacheKey, JSON.stringify(subjects), {
+          EX: 86400, // 24 hours
+        });
+      } catch (err) {
+        console.warn('⚠️ Redis cache write failed:', err);
+      }
     }
     console.log(`✅ [getSubjects] Found ${subjects.length} subjects`);
     console.log("📋 Subjects data:", subjects); // ✅ Thêm dòng này để debug

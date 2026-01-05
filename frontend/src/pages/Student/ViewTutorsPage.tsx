@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Calendar, Loader } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Calendar, Loader, ArrowLeft } from 'lucide-react';
 import { useApplications, Application, TutorDetailForApproval } from '@/hooks/useApplications';
 import ApplicationTutorCard from '@/components/Student/ApplicationTutorCard';
 import TutorDetailModal from '@/components/Student/TutorDetailModal';
@@ -9,6 +9,7 @@ interface ViewTutorsPageProps {
   onTabChange?: (tab: string) => void; // ✅ THÊM
 }
 const ViewTutorsPage: React.FC<ViewTutorsPageProps> = ({ onTabChange }) => {
+  const navigate = useNavigate();
   const classId = sessionStorage.getItem('currentClassId');
 
   const [applications, setApplications] = useState<Application[]>([]);
@@ -52,6 +53,8 @@ const ViewTutorsPage: React.FC<ViewTutorsPageProps> = ({ onTabChange }) => {
     sessionStorage.removeItem('currentClassId');
     if (onTabChange) {
       onTabChange('my-classes');
+    } else {
+      navigate('/student/manage-classes');
     }
   };
   // ✅ Lọc lịch trùng
@@ -169,6 +172,7 @@ const ViewTutorsPage: React.FC<ViewTutorsPageProps> = ({ onTabChange }) => {
             onClick={handleBackToClasses}
             className="text-blue-600 hover:text-blue-800 mb-2 flex items-center gap-1 text-sm font-medium"
           >
+            <ArrowLeft className="w-4 h-4" />
             Quay lại
           </button>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">👨‍🏫 Danh sách gia sư ứng tuyển</h1>

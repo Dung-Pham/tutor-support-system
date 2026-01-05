@@ -36,24 +36,36 @@ const cacheResponse = async (
   data: any,
   ttl: number = 86400
 ): Promise<void> => {
-  await redisClient.set(key, JSON.stringify(data), {
-    EX: ttl,
-  });
+  if (redisClient) {
+    try {
+      await redisClient.set(key, JSON.stringify(data), {
+        EX: ttl,
+      });
+    } catch (err) {
+      console.warn('⚠️ Redis cache write failed:', err);
+    }
+  }
 };
 const getProvinces = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log("📍 [getProvinces] Request received");
     // 1. check redis cache
     const cacheKey = "location:provinces";
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      console.log("⚡ [getProvinces] Returning from Redis Cache");
-      res.status(200).json({
-        success: true,
-        data: JSON.parse(cachedData) as Province[],
-        message: "Lấy danh sách tỉnh/thành phố thành công (từ cache)",
-      });
-      return;
+    if (redisClient) {
+      try {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ [getProvinces] Returning from Redis Cache");
+          res.status(200).json({
+            success: true,
+            data: JSON.parse(cachedData) as Province[],
+            message: "Lấy danh sách tỉnh/thành phố thành công (từ cache)",
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn('⚠️ Redis cache read failed:', err);
+      }
     }
 
     // 2. nếu không có trong cache thì query database
@@ -82,9 +94,6 @@ const getProvinces = async (req: Request, res: Response): Promise<void> => {
 const getDistricts = async (req: Request, res: Response): Promise<void> => {
   const { provinceId } = req.params;
   try {
-    // 1. check redis cache
-    const cacheKey = `location:districts:${provinceId}`;
-    const cachedData = await redisClient.get(cacheKey);
     if (!provinceId) {
       res.status(400).json({
         success: false,
@@ -92,14 +101,23 @@ const getDistricts = async (req: Request, res: Response): Promise<void> => {
       });
       return;
     }
-    if (cachedData) {
-      console.log("⚡ [getDistricts] Returning from Redis Cache");
-      res.status(200).json({
-        success: true,
-        data: JSON.parse(cachedData) as District[],
-        message: `Lấy danh sách quận huyện của tỉnh có id ${provinceId} thành công (từ cache)`,
-      });
-      return;
+    // 1. check redis cache
+    const cacheKey = `location:districts:${provinceId}`;
+    if (redisClient) {
+      try {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ [getDistricts] Returning from Redis Cache");
+          res.status(200).json({
+            success: true,
+            data: JSON.parse(cachedData) as District[],
+            message: `Lấy danh sách quận huyện của tỉnh có id ${provinceId} thành công (từ cache)`,
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn('⚠️ Redis cache read failed:', err);
+      }
     }
     // 2. nếu không có trong cache thì query database
     console.log("🐢 [getDistricts] Fetching from DB...");
@@ -137,15 +155,21 @@ const getWards = async (req: Request, res: Response): Promise<void> => {
 
     // 1. check redis cache
     const cacheKey = `location:wards:${districtId}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      console.log("⚡ [getWards] Returning from Redis Cache");
-      res.status(200).json({
-        success: true,
-        data: JSON.parse(cachedData) as Ward[],
-        message: `Lấy danh sách phường/xã của quận/huyện có id ${districtId} thành công (từ cache)`,
-      });
-      return;
+    if (redisClient) {
+      try {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+          console.log("⚡ [getWards] Returning from Redis Cache");
+          res.status(200).json({
+            success: true,
+            data: JSON.parse(cachedData) as Ward[],
+            message: `Lấy danh sách phường/xã của quận/huyện có id ${districtId} thành công (từ cache)`,
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn('⚠️ Redis cache read failed:', err);
+      }
     }
     // 2. nếu không có trong cache thì query database
     console.log("🐢 [getWards] Fetching from DB...");

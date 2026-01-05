@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, Clock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
@@ -21,6 +22,7 @@ interface SearchPageProps {
 }
 
 export default function SearchPage({ onTabChange }: SearchPageProps) {
+  const navigate = useNavigate();
   // React Query - provinces & subjects
   const { data: provinces = [], isLoading: provincesLoading } = useProvinces(true);
   const { data: subjects = [], isLoading: subjectsLoading } = useSubjects(true);
@@ -82,15 +84,18 @@ export default function SearchPage({ onTabChange }: SearchPageProps) {
   const handleClassClick = useCallback(
     (class_id: string | number) => {
       console.log('🖱️ Click Xem chi tiết, classId:', class_id);
-      // ✅ SỬA: Lưu vào sessionStorage + gọi onTabChange
+      // ✅ SỬA: Lưu vào sessionStorage + gọi onTabChange hoặc navigate
       sessionStorage.setItem('currentClassId', class_id.toString());
 
       if (onTabChange) {
         console.log('📍 Chuyển sang tab class-detail');
         onTabChange('class-detail'); // ✅ Ở trong HomePage
+      } else {
+        console.log('📍 Navigate to /tutor/class-detail');
+        navigate('/tutor/class-detail');
       }
     },
-    [onTabChange]
+    [onTabChange, navigate]
   );
 
   // const handleApplyClass = useCallback((classId: string | number) => {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useClass } from '../../hooks/useClass';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,11 +23,21 @@ import useSessionFilter from '@/hooks/useSessionFilter';
 type FilterStatus = 'recruiting' | 'has_tutor' | 'active' | 'completed' | 'cancelled';
 type ViewMode = 'list' | 'detail' | 'tutors';
 
+interface Applicant {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  rating?: number;
+  description?: string;
+}
+
 interface ManageClassesPageProps {
   onTabChange?: (tab: string) => void;
 }
 
 const ManageClassesPage: React.FC<ManageClassesPageProps> = ({ onTabChange }) => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<FilterStatus>('recruiting');
   const [expandedClassId, setExpandedClassId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list'); // ✅ THÊM: viewMode
@@ -171,9 +182,21 @@ const ManageClassesPage: React.FC<ManageClassesPageProps> = ({ onTabChange }) =>
     console.log('📍 Saving classId to sessionStorage:', classId);
     sessionStorage.setItem('currentClassId', classId);
     setSelectedClassId(classId);
-    setViewMode('tutors');
     if (onTabChange) {
+      setViewMode('tutors');
       onTabChange('view-tutors');
+    } else {
+      // Điều hướng đến trang xem ứng tuyển
+      navigate('/student/view-tutors');
+    }
+  };
+
+  // ✅ THÊM: Tạo lớp mới
+  const handleCreateClass = () => {
+    if (onTabChange) {
+      onTabChange('create-class');
+    } else {
+      navigate('/student/create-class');
     }
   };
 
@@ -457,7 +480,7 @@ const ManageClassesPage: React.FC<ManageClassesPageProps> = ({ onTabChange }) =>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {applicants.map((tutor) => (
+            {applicants.map((tutor: Applicant) => (
               <Card key={tutor.id}>
                 <CardContent className="pt-6">
                   <div className="space-y-4">
@@ -509,11 +532,7 @@ const ManageClassesPage: React.FC<ManageClassesPageProps> = ({ onTabChange }) =>
             <p className="text-gray-500 mb-4">Không có lớp học nào</p>
             {filter === 'recruiting' && (
               <Button
-                onClick={() => {
-                  if (onTabChange) {
-                    onTabChange('create-class');
-                  }
-                }}
+                onClick={handleCreateClass}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 ➕ Tạo Lớp Mới
@@ -583,10 +602,10 @@ const ManageClassesPage: React.FC<ManageClassesPageProps> = ({ onTabChange }) =>
                       <h4 className="font-semibold text-green-900 mb-3">📋 Gia Sư</h4>
                       <p className="text-sm">{classItem.tutor_name}</p>
                     </div>
-                  ) : classItem.class_status !== 'cancelled' ? (
+                  ) : classItem.class_status === 'recruiting' ? (
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                       <p className="text-blue-800 text-sm">
-                        ℹ️ <strong>Chưa có gia sư</strong>
+                        ℹ️ <strong>Đang tìm gia sư</strong> - Hãy mời hoặc chờ gia sư ứng tuyển
                       </p>
                     </div>
                   ) : null}
@@ -607,15 +626,16 @@ const ManageClassesPage: React.FC<ManageClassesPageProps> = ({ onTabChange }) =>
                           Sửa
                         </Button>
 
-                        {classItem.applied_tutors_count > 0 && (
-                          <Button
-                            className="gap-2 bg-green-600 hover:bg-green-700"
-                            onClick={() => handleViewTutors(classItem.class_id)}
-                          >
-                            <Users className="w-4 h-4" />
-                            Ứng Tuyển ({classItem.applied_tutors_count})
-                          </Button>
-                        )}
+                        {/* Nút xem danh sách ứng tuyển (luôn hiển thị khi đang recruiting) */}
+                        <Button
+                          className="gap-2 bg-green-600 hover:bg-green-700"
+                          onClick={() => handleViewTutors(classItem.class_id)}
+                        >
+                          <Users className="w-4 h-4" />
+                          {classItem.applied_tutors_count > 0 
+                            ? `Xem Ứng Tuyển (${classItem.applied_tutors_count})`
+                            : 'Tìm gia sư'}
+                        </Button>
 
                         <Button
                           variant="destructive"
@@ -647,11 +667,7 @@ const ManageClassesPage: React.FC<ManageClassesPageProps> = ({ onTabChange }) =>
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900">Quản Lý Lớp Học</h1>
             <Button
-              onClick={() => {
-                if (onTabChange) {
-                  onTabChange('create-class');
-                }
-              }}
+              onClick={handleCreateClass}
               className="gap-2 bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4" />

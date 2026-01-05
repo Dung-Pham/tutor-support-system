@@ -355,19 +355,25 @@ class ClassController {
         return;
       }
       const cacheKey = `class:detail:${class_id}`;
-      // 1. Kiểm tra redis
-      const cachedData = await redisClient.get(cacheKey);
-      if (cachedData) {
-        console.log("⚡ [getClassDetails] Returning from Redis Cache");
-        res
-          .status(200)
-          .json(
-            responseFormatter(
-              JSON.parse(cachedData),
-              "Chi tiết lớp học (cache)"
-            )
-          );
-        return;
+      // 1. Kiểm tra redis (chỉ khi redisClient tồn tại)
+      if (redisClient) {
+        try {
+          const cachedData = await redisClient.get(cacheKey);
+          if (cachedData) {
+            console.log("⚡ [getClassDetails] Returning from Redis Cache");
+            res
+              .status(200)
+              .json(
+                responseFormatter(
+                  JSON.parse(cachedData),
+                  "Chi tiết lớp học (cache)"
+                )
+              );
+            return;
+          }
+        } catch (redisError) {
+          console.warn("Redis cache read failed, continuing to DB:", redisError);
+        }
       }
       //2. Nếu không có trong cache thì query database
       // ✅ Call model
@@ -380,9 +386,13 @@ class ClassController {
         "dữ liệu backend chi tiết lớp lấy được từ database",
         classData
       );
-      //3. Lưu vào redis trong 10 phút
-      if (classData) {
-        await redisClient.set(cacheKey, JSON.stringify(classData), { EX: 600 }); //10 minutes
+      //3. Lưu vào redis trong 10 phút (chỉ khi redisClient tồn tại)
+      if (classData && redisClient) {
+        try {
+          await redisClient.set(cacheKey, JSON.stringify(classData), { EX: 600 }); //10 minutes
+        } catch (redisError) {
+          console.warn("Redis cache write failed:", redisError);
+        }
       }
       res.status(200).json(responseFormatter(classData, "Chi tiết lớp học"));
     } catch (error: any) {
@@ -423,23 +433,33 @@ class ClassController {
         return;
       }
       const cacheKey = `suggested_tutors:${class_id}`;
-      // 1. Kiểm tra redis
-      const cachedData = await redisClient.get(cacheKey);
-      if (cachedData) {
-        res
-          .status(200)
-          .json(
-            responseFormatter(JSON.parse(cachedData), "Danh sách gợi ý (Cache)")
-          );
-        return;
+      // 1. Kiểm tra redis (chỉ khi redisClient tồn tại)
+      if (redisClient) {
+        try {
+          const cachedData = await redisClient.get(cacheKey);
+          if (cachedData) {
+            res
+              .status(200)
+              .json(
+                responseFormatter(JSON.parse(cachedData), "Danh sách gợi ý (Cache)")
+              );
+            return;
+          }
+        } catch (redisError) {
+          console.warn("Redis cache read failed, continuing to DB:", redisError);
+        }
       }
       // 2. Nếu không có trong cache thì query database
       // ✅ Call model
       console.log("🐢 [getSuggestedTutors] Fetching from DB...");
       const tutors = await ClassModel.getSuggestedTutors(class_id);
-      // 3. Lưu vào redis trong 5 phút
-      if (tutors.length > 0) {
-        await redisClient.set(cacheKey, JSON.stringify(tutors), { EX: 300 }); //10 minutes
+      // 3. Lưu vào redis trong 5 phút (chỉ khi redisClient tồn tại)
+      if (tutors.length > 0 && redisClient) {
+        try {
+          await redisClient.set(cacheKey, JSON.stringify(tutors), { EX: 300 }); //5 minutes
+        } catch (redisError) {
+          console.warn("Redis cache write failed:", redisError);
+        }
       }
       res
         .status(200)
@@ -495,9 +515,15 @@ class ClassController {
           classLevel: Math.floor(classLevel),
         }
       );
-      // xóa cache cũ để user thấy dữ liệu mới ngay
-      await redisClient.del(`class:detail:${class_id}`);
-      console.log(`🗑️ Cleared cache for class ${class_id}`);
+      // xóa cache cũ để user thấy dữ liệu mới ngay (chỉ khi redisClient tồn tại)
+      if (redisClient) {
+        try {
+          await redisClient.del(`class:detail:${class_id}`);
+          console.log(`🗑️ Cleared cache for class ${class_id}`);
+        } catch (redisError) {
+          console.warn("Redis cache delete failed:", redisError);
+        }
+      }
 
       res
         .status(200)
@@ -539,8 +565,14 @@ class ClassController {
         cancellation_reason
       );
 
-      // xóa cache cũ để user thấy dữ liệu mới ngay
-      await redisClient.del(`class:detail:${class_id}`);
+      // xóa cache cũ để user thấy dữ liệu mới ngay (chỉ khi redisClient tồn tại)
+      if (redisClient) {
+        try {
+          await redisClient.del(`class:detail:${class_id}`);
+        } catch (redisError) {
+          console.warn("Redis cache delete failed:", redisError);
+        }
+      }
       console.log(`✅ [cancelClass] Class cancelled: ${class_id}`);
 
       res.status(200).json(responseFormatter(result, "Hủy lớp học thành công"));

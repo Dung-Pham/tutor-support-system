@@ -27,6 +27,7 @@ import {
   Users,
   GraduationCap,
   Loader2,
+  Eye,
 } from 'lucide-react';
 import * as conversationService from '../services/conversationService';
 
@@ -444,21 +445,34 @@ export const StudentsPage: React.FC = () => {
                     <Badge variant="secondary">Đã kết thúc</Badge>
                   )}
                   
-                  {/* Message Button */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleMessage(student.student_id)}
-                    className="text-gray-500 hover:text-blue-600 hover:bg-blue-50"
-                    title="Nhắn tin"
-                    disabled={messagingStudentId === student.student_id}
-                  >
-                    {messagingStudentId === student.student_id ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <MessageCircle className="h-5 w-5" />
-                    )}
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    {/* View Profile Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/tutor/view-student/${student.student_id}`)}
+                      className="text-gray-500 hover:text-green-600 hover:bg-green-50"
+                      title="Xem hồ sơ"
+                    >
+                      <Eye className="h-5 w-5" />
+                    </Button>
+                    
+                    {/* Message Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleMessage(student.student_id)}
+                      className="text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                      title="Nhắn tin"
+                      disabled={messagingStudentId === student.student_id}
+                    >
+                      {messagingStudentId === student.student_id ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <MessageCircle className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}

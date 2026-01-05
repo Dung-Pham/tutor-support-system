@@ -13,6 +13,7 @@ import {
   DollarSign,
   BookOpen,
   Loader2,
+  Eye,
 } from 'lucide-react';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -22,6 +23,7 @@ interface ClassDetailPageProps {
 }
 const StudentClassDetailPage: React.FC<ClassDetailPageProps> = ({ onTabChange }) => {
   const { getClassDetails, loading } = useClass();
+  const navigate = useNavigate();
   const [classData, setClassData] = useState<any>(null);
 
   useEffect(() => {
@@ -180,7 +182,18 @@ const StudentClassDetailPage: React.FC<ClassDetailPageProps> = ({ onTabChange })
         {classDetail.tutor_id ? (
           <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 mb-6">
             <CardHeader>
-              <CardTitle className="text-green-900">👨‍🏫 Gia Sư Hướng Dẫn</CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-green-900">👨‍🏫 Gia Sư Hướng Dẫn</CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/student/view-tutor/${classDetail.tutor_id}`)}
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  Xem hồ sơ
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

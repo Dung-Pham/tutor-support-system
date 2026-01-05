@@ -15,7 +15,6 @@ import {
   FileText,
   BookOpen,
   BarChart3,
-  Settings,
   Users
 } from 'lucide-react';
 
@@ -62,12 +61,6 @@ const menuItems: MenuItem[] = [
     path: '/students',
     icon: Users,
     roles: ['tutor'],
-  },
-  {
-    name: 'Cài đặt',
-    path: '/settings',
-    icon: Settings,
-    roles: ['student', 'tutor'],
   },
 ];
 

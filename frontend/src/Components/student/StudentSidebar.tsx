@@ -10,7 +10,6 @@ import {
   Users,
   Heart,
   FolderKanban,
-  Search,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -27,7 +26,6 @@ const navItems = [
   { label: 'Bài viết chung', icon: BookOpen, to: '/student/posts' },
   { label: 'Tài liệu', icon: BookOpen, to: '/student/documents' },
   { label: 'Danh sách gia sư', icon: Users, to: '/student/tutors' },
-  { label: 'Tìm gia sư', icon: Search, to: '/student/view-tutors' },
   { label: 'Gia sư yêu thích', icon: Heart, to: '/student/favorites' },
   { label: 'Nhắn tin', icon: MessageCircle, to: '/student/messages' },
 ];
