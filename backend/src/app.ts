@@ -8,9 +8,10 @@ import swaggerUi from 'swagger-ui-express';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import cloudinaryUploadRoute from "./routes/uploadRoute.js";
 
 // Import Error Handler
-import { errorHandler } from './middlewares/errorHandler.js';
+import errorHandler from './middlewares/errorHandler.js';
 // Import Protected Route middleware from dang
 import { protectedRoute } from './middlewares/userMiddleware.js';
 
@@ -142,6 +143,7 @@ app.use('/api/classes', classRoutes);
 app.use('/api/lesson-plans', lessonPlanRoutes);
 app.use('/api/homework', homeworkRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/upload-cloudinary', cloudinaryUploadRoute);
 app.use('/api/documents', documentRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/tutors', tutorRoutes);
@@ -186,40 +188,45 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       LIMIT_FILE_COUNT: 'So luong file vuot qua gioi han (toi da 10 files)',
       LIMIT_UNEXPECTED_FILE: 'Truong file khong hop le',
     };
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       message: multerMessages[err.code] || 'Loi upload file',
     });
+    return;
   }
 
   if (err.message === 'Only image files are allowed') {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       message: 'Chi chap nhan file anh (jpg, png, gif, webp)',
     });
+    return;
   }
 
   if (err.name === 'SequelizeUniqueConstraintError') {
     const fields = Object.keys(err.fields || {});
     const fieldName = fields[0] || 'field';
-    return res.status(409).json({
+    res.status(409).json({
       success: false,
       message: fieldName + ' da ton tai trong he thong',
     });
+    return;
   }
 
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue || {})[0] || 'field';
-    return res.status(409).json({
+    res.status(409).json({
       success: false,
       message: field + ' da ton tai',
     });
+    return;
   }
 
   res.status(500).json({
     success: false,
     message: 'Loi he thong, vui long thu lai sau',
   });
+  return;
 });
 
 export default app;
