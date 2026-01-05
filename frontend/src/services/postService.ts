@@ -62,7 +62,7 @@ export async function uploadImage(file: File) {
   const formData = new FormData();
   formData.append('images', file);
 
-  const response = await apiClient.post('/upload/images?type=post', formData, {
+  const response = await apiClient.post('/upload-cloudinary/images?type=post', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data;

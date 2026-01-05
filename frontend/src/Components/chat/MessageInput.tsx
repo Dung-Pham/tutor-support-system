@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '@/store';
-import type { Conversation, FileAttachment } from '@/types';
 import { addMessage } from '@/store/slices/messagesSlice';
+import type { Conversation } from '@/types/conversation';
+import type { FileAttachment } from '@/types/message';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Image as ImageIcon, X, Video, Paperclip } from 'lucide-react';
@@ -218,7 +219,7 @@ export function MessageInput({ conversation }: MessageInputProps) {
     const currentUserId = currentUser?.id;
 
     // Tìm participant khác với current user
-    const otherParticipant = conversation.participants.find((p) => p.id !== currentUserId);
+    const otherParticipant = conversation.participants.find((p: { id: string }) => p.id !== currentUserId);
 
     if (!otherParticipant) {
       console.error('Cannot find other participant', { conversation, currentUserId });
@@ -265,7 +266,7 @@ export function MessageInput({ conversation }: MessageInputProps) {
 
           // Upload video qua backend
           const uploadResponse = await axios.post(
-            `${import.meta.env.VITE_API_URL}/api/upload/video?type=chat`,
+            `${import.meta.env.VITE_API_URL}/api/upload-cloudinary/video?type=chat`,
             formData,
             {
               headers: {
@@ -311,7 +312,7 @@ export function MessageInput({ conversation }: MessageInputProps) {
 
           // Step 1: Get signature from backend
           const signResponse = await axios.post(
-            `${import.meta.env.VITE_API_URL}/api/upload/signature`,
+            `${import.meta.env.VITE_API_URL}/api/upload-cloudinary/signature`,
             { type: 'chat' },
             {
               headers: {

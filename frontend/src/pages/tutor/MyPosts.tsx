@@ -47,6 +47,14 @@ export function MyPosts() {
     const state = location.state as { tab?: string; message?: string } | null;
     if (state?.tab && ['draft', 'pending', 'approved', 'rejected'].includes(state.tab)) {
       dispatch(setCurrentStatus(state.tab as PostStatus));
+      // Force refresh posts khi navigate từ trang tạo bài viết
+      dispatch(
+        getMyPostsAsync({
+          status: state.tab as PostStatus,
+          page: 1,
+          limit,
+        })
+      );
       // Clear state để không bị lặp lại khi refresh
       window.history.replaceState({}, document.title);
     }

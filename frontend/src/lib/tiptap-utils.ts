@@ -379,7 +379,7 @@ export const handleImageUpload = async (
   const formData = new FormData();
   formData.append('images', file);
 
-  const response = await apiClient.post('/upload/images', formData, {
+  const response = await apiClient.post('/upload-cloudinary/images', formData, {
     params: { type: 'post' },
     headers: { 'Content-Type': 'multipart/form-data' },
     signal: abortSignal,

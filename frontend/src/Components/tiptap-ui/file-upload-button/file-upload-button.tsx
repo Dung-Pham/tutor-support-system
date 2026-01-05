@@ -89,7 +89,7 @@ export const FileUploadButton = forwardRef<HTMLButtonElement, FileUploadButtonPr
           });
 
           const response = await axios.post(
-            `${import.meta.env.VITE_API_URL}/api/upload/files?type=post`,
+            `${import.meta.env.VITE_API_URL}/api/upload-cloudinary/files?type=post`,
             formData,
             {
               headers: {

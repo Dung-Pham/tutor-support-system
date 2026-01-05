@@ -64,7 +64,7 @@ export const VideoUploadButton = forwardRef<HTMLButtonElement, VideoUploadButton
           formData.append('video', file);
 
           const response = await axios.post(
-            `${import.meta.env.VITE_API_URL}/api/upload/video?type=post`,
+            `${import.meta.env.VITE_API_URL}/api/upload-cloudinary/video?type=post`,
             formData,
             {
               headers: {

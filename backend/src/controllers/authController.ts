@@ -268,14 +268,12 @@ export const registerStudent = async (
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
 
     await User.create({
       email,
-      hashedPassword,
-      firstName,
-      lastName,
-      displayName: `${firstName} ${lastName}`,
+      passwordHash,
+      name: `${firstName} ${lastName}`,
       role: 'student',
     });
 
@@ -318,14 +316,12 @@ export const registerTutor = async (
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
 
     await User.create({
       email,
-      hashedPassword,
-      firstName,
-      lastName,
-      displayName: `${firstName} ${lastName}`,
+      passwordHash,
+      name: `${firstName} ${lastName}`,
       role: 'tutor',
     });
 
