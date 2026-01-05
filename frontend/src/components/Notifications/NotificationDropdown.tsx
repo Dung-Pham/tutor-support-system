@@ -1,7 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
 import { Notification } from '../../types';
 import NotificationItem from './NotificationItem';
 import styles from './styles/notification.module.css';
@@ -25,13 +23,6 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   onTabChange,
 }) => {
   const navigate = useNavigate();
-  const user = useSelector((state: RootState) => state.auth.user);
-  
-  // Get base route based on user role
-  const getBaseRoute = () => {
-    const role = user?.role?.toLowerCase();
-    return role === 'tutor' ? '/tutor' : '/student';
-  };
 
   /**
    * Handle notification click
@@ -101,9 +92,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           href="#"
           onClick={(e) => {
             e.preventDefault();
-            // ✅ Navigate đến trang notifications
-            const baseRoute = getBaseRoute();
-            navigate(`${baseRoute}/notifications`);
+            // ✅ SỬA: Chuyển sang tab notifications thay vì navigate
+            if (onTabChange) {
+              onTabChange('notifications');
+            }
             onClose();
           }}
           className={styles.viewAll}
@@ -121,6 +113,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               notification={notification}
               onClick={() => handleNotificationClick(notification)}
               onDelete={() => onDelete(notification.notification_id)}
+              onTabChange={onTabChange}
             />
           ))}
         </div>

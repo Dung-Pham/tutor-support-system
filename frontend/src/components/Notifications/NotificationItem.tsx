@@ -1,8 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { Notification } from '../../types';
-import { RootState } from '../../store';
 import styles from './styles/notification.module.css';
 
 interface NotificationItemProps {
@@ -17,15 +14,9 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
   notification,
   onClick,
   onDelete,
+  onTabChange,
+  onNavigate,
 }) => {
-  const navigate = useNavigate();
-  const user = useSelector((state: RootState) => state.auth.user);
-  
-  // Get base route based on user role
-  const getBaseRoute = () => {
-    const role = user?.role?.toLowerCase();
-    return role === 'tutor' ? '/tutor' : '/student';
-  };
   /**
    * Get icon based on type
    */
@@ -76,7 +67,6 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
       }
 
       console.log('🔍 Metadata:', metadata);
-      
       // ✅ Kiểm tra metadata có targetPage không
       if (metadata?.tab) {
         sessionStorage.setItem('targetTab', String(metadata.tab));
@@ -89,38 +79,31 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
         console.log('💾 Lưu targetFilter:', metadata.targetFilter);
       }
 
-      // ✅ Navigate đến trang tương ứng dựa trên targetPage
+      // ✅ Kiểm tra metadata có targetPage không
       if (metadata?.targetPage) {
-        const baseRoute = getBaseRoute();
-        let targetPath = '';
-        
-        // Map targetPage to actual route
-        switch (metadata.targetPage) {
-          case 'classes':
-          case 'my-classes':
-            targetPath = `${baseRoute}/classes`;
-            break;
-          case 'applications':
-            targetPath = `${baseRoute}/applications`;
-            break;
-          case 'search':
-            targetPath = `${baseRoute}/search`;
-            break;
-          case 'manage-classes':
-            targetPath = `${baseRoute}/manage-classes`;
-            break;
-          case 'notifications':
-            targetPath = `${baseRoute}/notifications`;
-            break;
-          default:
-            targetPath = `${baseRoute}/${metadata.targetPage}`;
+        console.log('🎯 targetPage:', metadata.targetPage);
+
+        const fullPath = `?tab=${metadata.targetPage}`;
+
+        console.log('🎯 targetPage:', metadata.targetPage);
+        console.log('📊 filter (metadata.tab):', metadata.tab);
+        console.log('🚀 fullPath:', fullPath);
+
+        // ✅ Ưu tiên onNavigate
+        if (onNavigate) {
+          console.log('📍 Gọi onNavigate:', fullPath);
+          onNavigate(fullPath);
         }
-        
-        console.log('🚀 Navigate to:', targetPath);
-        navigate(targetPath);
+        // ✅ Chuyển tab
+        else if (onTabChange) {
+          console.log('📍 Chuyển sang tab:', metadata.targetPage);
+          onTabChange(metadata.targetPage);
+        } else {
+          console.warn('⚠️ Không có targetPage trong metadata');
+        }
       }
 
-      // ✅ Gọi onClick callback nếu có (để mark as read, close dropdown, etc.)
+      // ✅ Gọi onClick callback nếu có
       onClick?.();
     } catch (error) {
       console.error('❌ Lỗi khi xử lý notification:', error);
