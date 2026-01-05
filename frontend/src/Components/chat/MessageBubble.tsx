@@ -1,4 +1,4 @@
-import type { Message, User } from '@/types';
+import type { Message, UserAccount } from '@/types';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@/store';
 import { Download, Trash2, MoreVertical } from 'lucide-react';
@@ -67,14 +67,14 @@ const formatFileSize = (bytes: number) => {
 
 export function MessageBubble({ message, showTime = false }: MessageBubbleProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const currentUser = useSelector((state: RootState) => state.auth.user) as User | null;
+  const currentUser = useSelector((state: RootState) => state.auth.user) as UserAccount | null;
   const activeConversation = useSelector((state: RootState) => state.messages.activeConversation);
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // So sánh senderId với currentUser id (có thể là user_id hoặc id)
-  const currentUserId = currentUser?.user_id || currentUser?.id;
+  // So sánh senderId với currentUser id
+  const currentUserId = currentUser?.user_id;
   const isOwn = currentUserId && message.senderId.toUpperCase() === currentUserId.toUpperCase();
 
   // Tìm thông tin người gửi từ participants

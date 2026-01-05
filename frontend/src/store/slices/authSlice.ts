@@ -1,26 +1,17 @@
 ﻿// Auth Slice - Merged from HEAD and dang branches
+// Uses UserAccount from types.ts as the standard User interface
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiClient } from '@/services/api';
 import socketService from '@/services/socketService';
+import type { UserAccount } from '@/types';
+import type { RootState } from '@/store';
 
-interface User {
-  user_id: string;
-  id?: string; // Alias for user_id
-  email: string;
-  firstName: string;
-  lastName: string;
-  displayName?: string;
-  avatarUrl?: string | null;
-  role: string;
-  phone: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
+// Re-export UserAccount for backward compatibility
+export type { UserAccount };
 
-interface AuthState {
-  user: User | null;
+export interface AuthState {
+  user: UserAccount | null;
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
@@ -91,19 +82,20 @@ export const signIn = createAsyncThunk(
         return rejectWithValue('Invalid response: missing token or user');
       }
 
-      // Map API response to User interface
-      const user = {
-        user_id: apiUser.id,
+      // Map API response to UserAccount interface
+      const user: UserAccount = {
+        user_id: apiUser.user_id || apiUser.id,
         email: apiUser.email,
-        firstName: apiUser.firstName || '',
-        lastName: apiUser.lastName || '',
-        displayName: apiUser.displayName || apiUser.firstName + ' ' + apiUser.lastName,
-        avatarUrl: apiUser.avatarUrl,
-        role: apiUser.role.toLowerCase(), // Normalize role to lowercase
+        name: apiUser.name || `${apiUser.firstName || ''} ${apiUser.lastName || ''}`.trim(),
+        role: apiUser.role?.toLowerCase() || 'student',
         phone: apiUser.phone || '',
-        status: apiUser.status || 'active',
-        created_at: apiUser.createdAt || new Date().toISOString(),
-        updated_at: apiUser.updatedAt || new Date().toISOString(),
+        status: typeof apiUser.status === 'boolean' ? apiUser.status : true,
+        is_verified: apiUser.is_verified || false,
+        created_at: apiUser.created_at || apiUser.createdAt || new Date().toISOString(),
+        updated_at: apiUser.updated_at || apiUser.updatedAt || new Date().toISOString(),
+        dateOfBirth: apiUser.dateOfBirth,
+        locationDetail: apiUser.locationDetail,
+        address_id: apiUser.address_id,
       };
 
       localStorage.setItem('token', token);
@@ -148,7 +140,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     // Set credentials when login succeeds
-    setCredentials: (state, action: PayloadAction<{ user: User; token: string }>) => {
+    setCredentials: (state, action: PayloadAction<{ user: UserAccount; token: string }>) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
@@ -232,4 +224,16 @@ const authSlice = createSlice({
 });
 
 export const { setCredentials, logout, clearError } = authSlice.actions;
+
+// Selectors
+export const selectAuth = (state: RootState) => state.auth;
+export const selectUser = (state: RootState) => state.auth.user;
+export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
+export const selectAuthLoading = (state: RootState) => state.auth.loading;
+export const selectAuthError = (state: RootState) => state.auth.error;
+export const selectToken = (state: RootState) => state.auth.token;
+
+// Aliases for backward compatibility
+export const loginUser = login;
+
 export default authSlice.reducer;

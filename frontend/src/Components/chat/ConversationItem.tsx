@@ -2,14 +2,20 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { setActiveConversation } from '@/store/slices/messagesSlice';
 import type { RootState } from '@/store';
-import type { Conversation } from '@/types';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import type { Conversation, UserRole } from '@/types';
 import { OnlineStatus } from './OnlineStatus';
 import { cn } from '@/lib/utils';
 
 interface ConversationItemProps {
   conversation: Conversation;
 }
+
+// Role badge configuration
+const ROLE_BADGES: Record<UserRole, { label: string; className: string }> = {
+  tutor: { label: 'Gia sư', className: 'bg-blue-100 text-blue-700' },
+  student: { label: 'Học sinh', className: 'bg-green-100 text-green-700' },
+  admin: { label: 'Admin', className: 'bg-purple-100 text-purple-700' },
+};
 
 export function ConversationItem({ conversation }: ConversationItemProps) {
   const dispatch = useDispatch();
@@ -24,7 +30,7 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
   const isActive = activeConversation?.id === conversation.id;
 
   // Lấy thông tin người chat (participant còn lại, không phải current user)
-  const currentUserId = currentUser?.user_id || currentUser?.id;
+  const currentUserId = currentUser?.user_id;
   const otherParticipant = conversation.participants.find(
     (p) => p.id?.toUpperCase() !== currentUserId?.toUpperCase()
   );
@@ -34,11 +40,7 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
   const otherParticipantRole = otherParticipant?.role;
 
   // Badge config cho role
-  const roleBadge =
-    {
-      tutor: { label: 'Gia sư', className: 'bg-blue-100 text-blue-700' },
-      student: { label: 'Học sinh', className: 'bg-green-100 text-green-700' },
-    }[otherParticipantRole || ''] || null;
+  const roleBadge = otherParticipantRole ? ROLE_BADGES[otherParticipantRole] : null;
 
   // Màu gradient cho avatar dựa trên chữ cái đầu
   const getAvatarGradient = (name: string) => {

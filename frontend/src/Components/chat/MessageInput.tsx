@@ -216,7 +216,7 @@ export function MessageInput({ conversation }: MessageInputProps) {
       return;
 
     // Lấy recipientId từ conversation participants (người còn lại không phải current user)
-    const currentUserId = currentUser?.id;
+    const currentUserId = currentUser?.user_id;
 
     // Tìm participant khác với current user
     const otherParticipant = conversation.participants.find((p: { id: string }) => p.id !== currentUserId);

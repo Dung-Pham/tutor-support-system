@@ -15,7 +15,7 @@ interface ChatBoxProps {
 
 export function ChatBox({ conversation }: ChatBoxProps) {
   const dispatch = useDispatch();
-  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.user_id);
   const rawMessages = useSelector((state: RootState) => state.messages.messages[conversation.id]);
 
   // Memoize sorted messages để tránh re-render không cần thiết

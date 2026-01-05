@@ -380,3 +380,8 @@ export interface UnreadCountResponse {
     count: number;
   };
 }
+
+// Re-export chat types from types/ folder
+export * from './types/conversation';
+export * from './types/message';
+export type { User, UserRole, UserInfo, UserProfile, UpdateUserRequest, ChangePasswordRequest } from './types/user';

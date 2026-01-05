@@ -1,4 +1,4 @@
-import type { UserInfo } from './user';
+import type { UserInfo, UserRole } from './user';
 import type { MessageResponse } from './message';
 
 export type ConversationType = 'direct' | 'group';
@@ -12,6 +12,8 @@ export interface Participant {
   displayName: string;
   avatarUrl?: string | null;
   joinAt?: string; // ISO date string
+  role?: UserRole;
+  lastSeenAt?: string;
 }
 
 export interface ParticipantWithUser extends Participant {
