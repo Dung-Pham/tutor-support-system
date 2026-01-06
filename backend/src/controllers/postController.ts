@@ -25,13 +25,13 @@ setInterval(() => {
 // Attribute mappings for UserAccount table (column_name -> alias)
 const USER_ATTRS_FULL: [string, string][] | string[] = [
   ["user_id", "id"],
-  ["name", "displayName"],
+  "name",
   ["avatar_url", "avatarUrl"],
   "role",
 ];
-const USER_ATTRS_BASIC: [string, string][] = [
+const USER_ATTRS_BASIC: [string, string][] | string[] = [
   ["user_id", "id"],
-  ["name", "displayName"],
+  "name",
 ];
 
 type PostStatus = "draft" | "pending" | "approved" | "rejected" | "deleted";

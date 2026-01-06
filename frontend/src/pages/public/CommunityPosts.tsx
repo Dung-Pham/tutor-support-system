@@ -41,7 +41,7 @@ export function CommunityPosts() {
       (post) =>
         post.title.toLowerCase().includes(query) ||
         post.contentPlain?.toLowerCase().includes(query) ||
-        post.author.displayName.toLowerCase().includes(query)
+        (post.author.name || post.author.displayName || '').toLowerCase().includes(query)
     );
   }, [posts, debouncedSearch]);
 

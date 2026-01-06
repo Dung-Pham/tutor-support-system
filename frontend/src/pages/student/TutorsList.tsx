@@ -69,7 +69,7 @@ export function TutorsList() {
 
   const filteredTutors = tutors.filter(
     (tutor) =>
-      tutor.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (tutor.name || tutor.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       tutor.bio?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -113,13 +113,13 @@ export function TutorsList() {
               <CardContent className="p-4">
                 <div className="flex flex-col items-center text-center">
                   <Avatar className="h-16 w-16 mb-3">
-                    <AvatarImage src={tutor.avatarUrl || undefined} alt={tutor.displayName} />
+                    <AvatarImage src={tutor.avatarUrl || undefined} alt={tutor.name || tutor.displayName} />
                     <AvatarFallback className="text-lg">
-                      {getInitials(tutor.displayName || 'TT')}
+                      {getInitials(tutor.name || tutor.displayName || 'TT')}
                     </AvatarFallback>
                   </Avatar>
 
-                  <h3 className="font-semibold text-lg">{tutor.displayName}</h3>
+                  <h3 className="font-semibold text-lg">{tutor.name || tutor.displayName}</h3>
 
                   {tutor.bio && (
                     <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{tutor.bio}</p>

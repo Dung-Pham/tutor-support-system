@@ -84,13 +84,13 @@ export function PostCard({
                 post.author.avatarUrl ||
                 `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.id}`
               }
-              alt={post.author.displayName}
+              alt={post.author.name || post.author.displayName || 'Author'}
               className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex-shrink-0 ring-2 ring-gray-100 group-hover:ring-blue-100 transition-all"
             />
             {/* Author Info */}
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm sm:text-base text-gray-900 truncate">
-                {post.author.displayName}
+                {post.author.name || post.author.displayName}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 truncate">
                 {formatMessageTime(new Date(post.createdAt))}

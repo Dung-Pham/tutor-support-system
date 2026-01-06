@@ -74,12 +74,12 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
                 post.author?.avatarUrl ||
                 `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author?.id}`
               }
-              alt={post.author?.displayName}
+              alt={post.author?.name || post.author?.displayName}
               className="w-10 h-10 rounded-full"
             />
             <div>
               <p className="font-semibold text-gray-900 dark:text-gray-50">
-                {post.author?.displayName}
+                {post.author?.name || post.author?.displayName}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {formatMessageTime(new Date(post.createdAt))}

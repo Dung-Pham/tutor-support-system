@@ -29,9 +29,10 @@ export interface UserProfile extends User {
 
 export interface UserInfo {
   id: string;
-  displayName: string;
+  displayName?: string;
+  name?: string; // Backend trả về name từ DB
   avatarUrl?: string;
-  role: UserRole;
+  role?: UserRole;
 }
 
 export interface UpdateUserRequest {

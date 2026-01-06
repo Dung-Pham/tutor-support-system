@@ -12,7 +12,7 @@ import { AuthRequest } from "../types/common.js";
 // Attribute mappings for UserAccount table (column_name -> alias)
 const USER_ATTRS_FULL: ([string, string] | string)[] = [
   ["user_id", "id"],
-  ["name", "displayName"],
+  "name",
   ["avatar_url", "avatarUrl"],
   "role",
 ];

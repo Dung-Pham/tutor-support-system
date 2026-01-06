@@ -112,11 +112,11 @@ export default function PostDetailPage() {
                   post.author.avatarUrl ||
                   `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.id}`
                 }
-                alt={post.author.displayName}
+                alt={post.author.name || post.author.displayName}
                 className="w-12 h-12 rounded-full ring-2 ring-blue-100 shadow-sm"
               />
               <div className="flex flex-col">
-                <span className="font-bold text-gray-900 text-base">{post.author.displayName}</span>
+                <span className="font-bold text-gray-900 text-base">{post.author.name || post.author.displayName}</span>
                 <span className="text-sm text-gray-500">
                   {formatMessageTime(new Date(post.createdAt))}
                 </span>

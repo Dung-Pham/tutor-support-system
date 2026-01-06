@@ -142,7 +142,7 @@ export function CommentItem({ comment, postId, postAuthorId }: CommentItemProps)
             comment.user?.avatarUrl ||
             `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.userId}`
           }
-          alt={comment.user?.displayName || 'User'}
+          alt={comment.user?.name || comment.user?.displayName || 'User'}
           className="w-9 h-9 rounded-full flex-shrink-0"
         />
 
@@ -151,7 +151,7 @@ export function CommentItem({ comment, postId, postAuthorId }: CommentItemProps)
           <div className="bg-gray-100 rounded-xl px-4 py-2.5">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="font-semibold text-sm text-gray-900">
-                {comment.user?.displayName || 'Unknown User'}
+                {comment.user?.name || comment.user?.displayName || 'Unknown User'}
               </span>
               {isPostAuthor && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-orange-100 text-orange-700">
@@ -259,8 +259,8 @@ export function CommentItem({ comment, postId, postAuthorId }: CommentItemProps)
                 onSubmit={handleReplySubmit}
                 placeholder={
                   replyingTo
-                    ? `Trả lời @${replyingTo.displayName}...`
-                    : `Trả lời ${comment.user?.displayName || 'User'}...`
+                    ? `Trả lời @${replyingTo.name || replyingTo.displayName}...`
+                    : `Trả lời ${comment.user?.name || comment.user?.displayName || 'User'}...`
                 }
                 buttonText="Trả lời"
                 autoFocus
@@ -353,7 +353,7 @@ function ReplyItem({ reply, commentId, currentUserId, postAuthorId, onReply }: R
         <div className="bg-gray-100 rounded-xl px-3 py-2">
           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
             <span className="font-semibold text-xs text-gray-900">
-              {reply.user?.displayName || 'Unknown User'}
+              {reply.user?.name || reply.user?.displayName || 'Unknown User'}
             </span>
             {isPostAuthor && (
               <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-orange-100 text-orange-700">
@@ -362,7 +362,7 @@ function ReplyItem({ reply, commentId, currentUserId, postAuthorId, onReply }: R
             )}
             <RoleBadge role={reply.user?.role} />
             {reply.mentionedUser && (
-              <span className="text-xs text-blue-600">@{reply.mentionedUser.displayName}</span>
+              <span className="text-xs text-blue-600">@{reply.mentionedUser?.name || reply.mentionedUser?.displayName}</span>
             )}
             <span className="text-xs text-gray-500">
               {formatMessageTime(new Date(reply.createdAt))}

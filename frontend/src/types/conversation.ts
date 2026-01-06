@@ -9,7 +9,8 @@ export type ConversationType = 'direct' | 'group';
  */
 export interface Participant {
   id: string; // User ID
-  displayName: string;
+  displayName?: string;
+  name?: string; // Backend trả về name từ DB
   avatarUrl?: string | null;
   joinAt?: string; // ISO date string
   role?: UserRole;
