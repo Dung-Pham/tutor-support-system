@@ -69,7 +69,7 @@ export function CommunityPosts() {
       (post) =>
         post.title.toLowerCase().includes(query) ||
         post.contentPlain?.toLowerCase().includes(query) ||
-        post.author?.displayName?.toLowerCase().includes(query)
+        (post.author?.name || post.author?.displayName || '').toLowerCase().includes(query)
     );
   }, [posts, debouncedSearch]);
 
@@ -200,13 +200,13 @@ export function CommunityPosts() {
                       post.author?.avatarUrl ||
                       `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author?.id}`
                     }
-                    alt={post.author?.displayName}
+                    alt={post.author?.name || post.author?.displayName}
                     className="w-8 h-8 rounded-full"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-sm truncate">
-                        {post.author?.displayName || "Unknown"}
+                        {post.author?.name || post.author?.displayName || "Unknown"}
                       </p>
                       {post.approvedAt && (
                         <span className="text-xs text-muted-foreground">

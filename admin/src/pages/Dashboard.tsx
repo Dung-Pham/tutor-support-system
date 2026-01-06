@@ -480,11 +480,11 @@ export function Dashboard() {
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={post.author?.avatarUrl} />
                           <AvatarFallback className="text-xs">
-                            {post.author?.displayName?.charAt(0) || "?"}
+                            {(post.author?.name || post.author?.displayName)?.charAt(0) || "?"}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm text-muted-foreground">
-                          {post.author?.displayName || "Unknown"}
+                          {post.author?.name || post.author?.displayName || "Unknown"}
                         </span>
                       </div>
                     </TableCell>

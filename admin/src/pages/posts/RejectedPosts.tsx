@@ -97,7 +97,7 @@ export function RejectedPosts() {
                   <TableCell className="py-4">
                     <div className="flex items-center gap-2">
                       <span className="text-base">
-                        {post.author?.displayName || "Unknown"}
+                        {post.author?.name || post.author?.displayName || "Unknown"}
                       </span>
                       <Badge variant="outline">{post.author?.role}</Badge>
                     </div>

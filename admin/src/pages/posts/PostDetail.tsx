@@ -435,13 +435,13 @@ export function PostDetail() {
               <Avatar className="h-8 w-8">
                 <AvatarImage src={post.author?.avatarUrl} />
                 <AvatarFallback>
-                  {post.author?.displayName?.charAt(0) || "?"}
+                  {(post.author?.name || post.author?.displayName)?.charAt(0) || "?"}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm">
-                    {post.author?.displayName || "Ẩn danh"}
+                    {post.author?.name || post.author?.displayName || "Ẩn danh"}
                   </span>
                   {post.author?.role && getRoleBadge(post.author.role)}
                 </div>
@@ -512,14 +512,14 @@ export function PostDetail() {
                       <Avatar className="h-8 w-8 flex-shrink-0">
                         <AvatarImage src={comment.user?.avatarUrl} />
                         <AvatarFallback>
-                          {comment.user?.displayName?.charAt(0) || "?"}
+                          {(comment.user?.name || comment.user?.displayName)?.charAt(0) || "?"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-sm">
-                              {comment.user?.displayName || "Ẩn danh"}
+                              {comment.user?.name || comment.user?.displayName || "Ẩn danh"}
                             </span>
                             {comment.user?.role &&
                               getRoleBadge(comment.user.role)}
@@ -587,14 +587,14 @@ export function PostDetail() {
                               <Avatar className="h-6 w-6 flex-shrink-0">
                                 <AvatarImage src={reply.user?.avatarUrl} />
                                 <AvatarFallback>
-                                  {reply.user?.displayName?.charAt(0) || "?"}
+                                  {(reply.user?.name || reply.user?.displayName)?.charAt(0) || "?"}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="flex items-center gap-2">
                                     <span className="font-medium text-sm">
-                                      {reply.user?.displayName || "Ẩn danh"}
+                                      {reply.user?.name || reply.user?.displayName || "Ẩn danh"}
                                     </span>
                                     {reply.user?.role &&
                                       getRoleBadge(reply.user.role)}
@@ -614,7 +614,7 @@ export function PostDetail() {
                                 <p className="text-sm mt-1">
                                   {reply.mentionedUser && (
                                     <span className="text-primary font-medium">
-                                      @{reply.mentionedUser.displayName}{" "}
+                                      @{reply.mentionedUser.name || reply.mentionedUser.displayName}{" "}
                                     </span>
                                   )}
                                   {reply.content}

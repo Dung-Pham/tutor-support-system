@@ -133,7 +133,7 @@ export function ApprovedPosts() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <span>{post.author?.displayName || "Unknown"}</span>
+                      <span>{post.author?.name || post.author?.displayName || "Unknown"}</span>
                       <Badge variant="outline">{post.author?.role}</Badge>
                     </div>
                   </TableCell>
@@ -211,7 +211,7 @@ export function ApprovedPosts() {
           <DialogHeader>
             <DialogTitle>{selectedPost?.title}</DialogTitle>
             <DialogDescription>
-              Đăng bởi {selectedPost?.author?.displayName} •{" "}
+              Đăng bởi {selectedPost?.author?.name || selectedPost?.author?.displayName} •{" "}
               {selectedPost && formatDate(selectedPost.createdAt)}
             </DialogDescription>
           </DialogHeader>

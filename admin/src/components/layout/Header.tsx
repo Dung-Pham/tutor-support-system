@@ -52,13 +52,13 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.avatarUrl} alt={user?.displayName} />
+                <AvatarImage src={user?.avatarUrl} alt={user?.name || user?.displayName} />
                 <AvatarFallback>
-                  {user?.displayName ? getInitials(user.displayName) : "AD"}
+                  {(user?.name || user?.displayName) ? getInitials(user.name || user.displayName || '') : "AD"}
                 </AvatarFallback>
               </Avatar>
               <span className="hidden md:inline-block">
-                {user?.displayName}
+                {user?.name || user?.displayName}
               </span>
             </Button>
           </DropdownMenuTrigger>

@@ -154,7 +154,7 @@ export function PendingPosts() {
                   </TableCell>
                   <TableCell className="py-4">
                     <span className="text-base">
-                      {post.author?.displayName || "Unknown"}
+                      {post.author?.name || post.author?.displayName || "Unknown"}
                     </span>
                   </TableCell>
                   <TableCell className="py-4 text-base">

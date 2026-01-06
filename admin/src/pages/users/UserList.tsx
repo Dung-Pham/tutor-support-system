@@ -204,11 +204,11 @@ export function UserList() {
                       <Avatar>
                         <AvatarImage src={user.avatarUrl} />
                         <AvatarFallback>
-                          {getInitials(user.displayName)}
+                          {getInitials(user.name || user.displayName || "")}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">{user.displayName}</p>
+                        <p className="font-medium">{user.name || user.displayName}</p>
                         <p className="text-sm text-muted-foreground">
                           {user.firstName} {user.lastName}
                         </p>
@@ -286,8 +286,8 @@ export function UserList() {
             </DialogTitle>
             <DialogDescription>
               {selectedUser?.isActive
-                ? `Bạn có chắc muốn khóa tài khoản của ${selectedUser?.displayName}?`
-                : `Bạn có chắc muốn mở khóa tài khoản của ${selectedUser?.displayName}?`}
+                ? `Bạn có chắc muốn khóa tài khoản của ${selectedUser?.name || selectedUser?.displayName}?`
+                : `Bạn có chắc muốn mở khóa tài khoản của ${selectedUser?.name || selectedUser?.displayName}?`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
