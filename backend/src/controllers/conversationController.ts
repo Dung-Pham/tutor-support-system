@@ -152,7 +152,7 @@ export const createConversation = async (
               joinedAt?: Date;
             }) => ({
               id: p.user?.userId,
-              name: p.user?.name,
+              displayName: p.user?.name,
               avatarUrl: p.user?.avatarUrl ?? null,
               role: p.user?.role,
               isOnline: false,
@@ -232,7 +232,7 @@ export const getConversations = async (
           }) => {
             return {
               id: p.user?.userId,
-              name: p.user?.name,
+              displayName: p.user?.name,
               avatarUrl: p.user?.avatarUrl ?? null,
               role: p.user?.role,
               isOnline: false, // Will be updated via Socket.IO

@@ -38,7 +38,7 @@ export function UserProfileDropdown() {
         <button className="relative focus:outline-none hover:opacity-80 transition-opacity">
           <Avatar className="w-11 h-11 border-2 border-primary/20 cursor-pointer">
             <AvatarFallback className="bg-primary/10 text-primary font-semibold text-base">
-              {user?.firstName?.[0]?.toUpperCase() || user?.lastName?.[0]?.toUpperCase() || 'S'}
+              {user?.name?.[0]?.toUpperCase() || 'S'}
             </AvatarFallback>
           </Avatar>
         </button>
@@ -57,12 +57,12 @@ export function UserProfileDropdown() {
               className="font-semibold text-white text-lg"
               style={{ backgroundColor: 'hsl(var(--teal) / 0.8)' }}
             >
-              {user?.firstName?.[0]?.toUpperCase() || user?.lastName?.[0]?.toUpperCase() || 'S'}
+              {user?.name?.[0]?.toUpperCase() || 'S'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-base truncate">
-              {user ? `${user.firstName} ${user.lastName}` : 'Học sinh'}
+              {user?.name || 'Học sinh'}
             </p>
             <p className="text-sm truncate" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
               {user?.email || 'student@example.com'}
