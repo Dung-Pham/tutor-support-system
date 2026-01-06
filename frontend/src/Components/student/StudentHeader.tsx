@@ -1,15 +1,15 @@
 // src/components/student/StudentHeader.tsx
 import { Button } from '@/components/ui/button';
-import { Menu, Bell, Settings } from 'lucide-react';
+import { Menu, Settings } from 'lucide-react';
 import { UserProfileDropdown } from './UserProfileDropdown';
-import { useState } from 'react';
+import { NotificationBell } from '@/Components/Notifications/NotificationBell';
 
 interface StudentHeaderProps {
   onMenuClick?: () => void;
+  onTabChange?: (tab: string) => void;
 }
 
-export function StudentHeader({ onMenuClick }: StudentHeaderProps) {
-  const [unreadNotifications] = useState(3); // TODO: Get from Redux/API
+export function StudentHeader({ onMenuClick, onTabChange }: StudentHeaderProps) {
 
   return (
     <header
@@ -58,24 +58,11 @@ export function StudentHeader({ onMenuClick }: StudentHeaderProps) {
 
       {/* Right: Notifications + Settings + User */}
       <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
-        {/* Notification Bell */}
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative h-9 w-9 md:h-12 md:w-12 touch-manipulation"
-          >
-            <Bell className="w-5 h-5 md:w-7 md:h-7" />
-            {unreadNotifications > 0 && (
-              <span
-                className="absolute top-0 right-0 w-5 h-5 md:w-6 md:h-6 text-white text-xs md:text-sm rounded-full flex items-center justify-center font-semibold"
-                style={{ backgroundColor: 'hsl(var(--destructive))' }}
-              >
-                {unreadNotifications > 9 ? '9+' : unreadNotifications}
-              </span>
-            )}
-          </Button>
-        </div>
+        {/* ✅ Use NotificationBell component */}
+        <NotificationBell 
+          className="h-9 w-9 md:h-10 md:w-10"
+          onTabChange={onTabChange}
+        />
 
         {/* Settings */}
         <Button

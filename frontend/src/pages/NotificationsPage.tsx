@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { useNotifications } from '../hooks/useNotifications';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -6,6 +9,9 @@ import NotificationItem from '@/components/Notifications/NotificationItem';
 dayjs.extend(utc);
 
 export const NotificationsPage: React.FC = () => {
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const userRole = user?.role || 'tutor';
   const {
     notifications,
     unreadCount,
@@ -134,6 +140,52 @@ export const NotificationsPage: React.FC = () => {
                     onClick={() => {
                       console.log('✅ Mark as read:', notification.notification_id);
                       markAsRead(notification.notification_id);
+
+                      // ✅ Xử lý navigation từ metadata
+                      try {
+                        let metadata = notification.metadata;
+                        if (typeof metadata === 'string') {
+                          metadata = JSON.parse(metadata);
+                        }
+
+                        console.log('🔍 Metadata for navigation:', metadata);
+
+                        if (metadata?.targetPage) {
+                          // ✅ Lưu session data
+                          if (metadata.tab) {
+                            sessionStorage.setItem('targetTab', String(metadata.tab));
+                            console.log('💾 Saved targetTab:', metadata.tab);
+                          }
+                          if (metadata.targetFilter) {
+                            sessionStorage.setItem('targetFilter', String(metadata.targetFilter));
+                            console.log('💾 Saved targetFilter:', metadata.targetFilter);
+                          }
+
+                          // ✅ Map targetPage tới route tương ứng dựa trên role
+                          const prefix = userRole === 'student' ? '/student' : '/tutor';
+                          
+                          const routeMap: { [key: string]: string } = {
+                            applications: `${prefix}/applications`,
+                            classes: `${prefix}/manage-classes`,
+                            'my-classes': `${prefix}/manage-classes`,
+                            notifications: `${prefix}/notifications`,
+                          };
+
+                          let route = routeMap[metadata.targetPage] || prefix;
+                          
+                          // ✅ Thêm tab query param nếu có + refresh timestamp
+                          if (metadata.tab) {
+                            route += `?tab=${metadata.tab}&refresh=${Date.now()}`;
+                          } else {
+                            route += `?refresh=${Date.now()}`;
+                          }
+
+                          navigate(route);
+                          console.log('🚀 Navigating to', route, 'for role:', userRole);
+                        }
+                      } catch (error) {
+                        console.error('❌ Error parsing metadata:', error);
+                      }
                     }}
                     onDelete={() => {
                       console.log('🗑️ Delete notification:', notification.notification_id);

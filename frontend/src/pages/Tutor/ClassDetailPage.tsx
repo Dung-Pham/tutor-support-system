@@ -255,11 +255,11 @@ export default function ClassDetailPage({ onTabChange }: ClassDetailPageProps) {
               <Users className="w-6 h-6 mr-2 text-blue-600" />
               Thông tin học viên
             </h2>
-            {classDetail.student_id && (
+            {classDetail.student_id && classId && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate(`/tutor/view-student/${classDetail.student_id}`)}
+                onClick={() => navigate(`/tutor/view-student/${classId}`)}
                 className="flex items-center gap-2"
               >
                 <Eye className="h-4 w-4" />

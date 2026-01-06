@@ -6,7 +6,6 @@ interface NotificationItemProps {
   notification: Notification;
   onClick: () => void;
   onDelete: () => void;
-  onTabChange?: (tab: string) => void;
   onNavigate?: (path: string) => void;
 }
 
@@ -14,7 +13,6 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
   notification,
   onClick,
   onDelete,
-  onTabChange,
   onNavigate,
 }) => {
   /**
@@ -54,62 +52,10 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
     return notifDate.toLocaleDateString('vi-VN');
   };
   const handleClick = () => {
-    console.log('📬 Click notification:', {
-      type: notification.type,
-      metadata: notification.metadata,
-    });
-
-    try {
-      let metadata = notification.metadata;
-      if (typeof metadata === 'string') {
-        metadata = JSON.parse(metadata);
-        console.log('📝 Parsed metadata:', metadata);
-      }
-
-      console.log('🔍 Metadata:', metadata);
-      // ✅ Kiểm tra metadata có targetPage không
-      if (metadata?.tab) {
-        sessionStorage.setItem('targetTab', String(metadata.tab));
-        console.log('💾 Lưu targetTab:', metadata.tab);
-      }
-
-      // ✅ THÊM: Lưu targetFilter (cho ManageClassesPage)
-      if (metadata?.targetFilter) {
-        sessionStorage.setItem('targetFilter', String(metadata.targetFilter));
-        console.log('💾 Lưu targetFilter:', metadata.targetFilter);
-      }
-
-      // ✅ Kiểm tra metadata có targetPage không
-      if (metadata?.targetPage) {
-        console.log('🎯 targetPage:', metadata.targetPage);
-
-        const fullPath = `?tab=${metadata.targetPage}`;
-
-        console.log('🎯 targetPage:', metadata.targetPage);
-        console.log('📊 filter (metadata.tab):', metadata.tab);
-        console.log('🚀 fullPath:', fullPath);
-
-        // ✅ Ưu tiên onNavigate
-        if (onNavigate) {
-          console.log('📍 Gọi onNavigate:', fullPath);
-          onNavigate(fullPath);
-        }
-        // ✅ Chuyển tab
-        else if (onTabChange) {
-          console.log('📍 Chuyển sang tab:', metadata.targetPage);
-          onTabChange(metadata.targetPage);
-        } else {
-          console.warn('⚠️ Không có targetPage trong metadata');
-        }
-      }
-
-      // ✅ Gọi onClick callback nếu có
-      onClick?.();
-    } catch (error) {
-      console.error('❌ Lỗi khi xử lý notification:', error);
-      onClick?.();
-    }
+    console.log('📬 Click notification - delegating to parent onClick');
+    onClick?.();
   };
+
   return (
     <div
       className={`${styles.notificationItem} ${!notification.is_read ? styles.unread : ''}`}

@@ -1,14 +1,14 @@
-import { Bell, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserProfileDropdown } from '../student/UserProfileDropdown';
-import { useState } from 'react';
+import { NotificationBell } from '@/Components/Notifications/NotificationBell';
 
 interface TutorHeaderProps {
   onMenuClick?: () => void;
+  onTabChange?: (tab: string) => void; // ✅ THÊM
 }
 
-export function TutorHeader({ onMenuClick }: TutorHeaderProps) {
-  const [notificationCount] = useState(3); // Mock notification count
+export function TutorHeader({ onMenuClick, onTabChange }: TutorHeaderProps) {
 
   return (
     <header
@@ -46,22 +46,11 @@ export function TutorHeader({ onMenuClick }: TutorHeaderProps) {
 
       {/* Right: Notifications + User */}
       <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
-        {/* Notification bell */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative h-9 w-9 md:h-10 md:w-10 touch-manipulation"
-        >
-          <Bell className="w-5 h-5" style={{ color: 'hsl(var(--foreground))' }} />
-          {notificationCount > 0 && (
-            <span
-              className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs font-bold text-white rounded-full"
-              style={{ backgroundColor: 'hsl(var(--primary))' }}
-            >
-              {notificationCount > 9 ? '9+' : notificationCount}
-            </span>
-          )}
-        </Button>
+        {/* ✅ Use NotificationBell component instead of mock */}
+        <NotificationBell 
+          className="h-9 w-9 md:h-10 md:w-10"
+          onTabChange={onTabChange}
+        />
 
         {/* User profile dropdown */}
         <UserProfileDropdown />

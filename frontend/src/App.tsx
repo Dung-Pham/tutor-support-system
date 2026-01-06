@@ -46,6 +46,11 @@ function AuthInitializer() {
         if (socket) {
           socket.emit('authenticate', user.user_id);
           console.log('Socket authenticated for user:', user.user_id);
+          
+          // ✅ THÊM: Join user room để nhận notifications
+          const userRoom = `user_${user.user_id}`;
+          socket.emit('join_room', userRoom);
+          console.log('🔔 Joined room:', userRoom);
         }
       })
       .catch((error) => {

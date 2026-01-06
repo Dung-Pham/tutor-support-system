@@ -30,7 +30,9 @@ export const useNotifications = () => {
    * Fetch unread notifications
    */
   const fetchUnread = useCallback(() => {
-    dispatch(fetchUnreadNotifications());
+    console.log('📥 [Hook] fetchUnread called');
+    const result = dispatch(fetchUnreadNotifications());
+    console.log('📥 [Hook] fetchUnread dispatched:', result);
   }, [dispatch]);
 
   /**

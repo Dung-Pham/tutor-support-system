@@ -107,8 +107,17 @@ export const fetchUnreadNotifications = createAsyncThunk(
 
       console.log('✅ [Redux] Service response:', response);
 
-      // ✅ FIX: Extract data array
-      const notifications = Array.isArray(response?.data) ? response.data : [];
+      // ✅ FIX: Extract data array - API trả về Array trực tiếp hoặc { data: Array }
+      let notifications = [];
+      if (Array.isArray(response)) {
+        notifications = response;
+        console.log('✅ [Redux] Response is direct array');
+      } else if (Array.isArray(response?.data)) {
+        notifications = response.data;
+        console.log('✅ [Redux] Response has data property');
+      } else {
+        console.warn('⚠️ [Redux] Response structure unexpected:', response);
+      }
 
       console.log('✅ [Redux] Extracted unread notifications:', notifications);
 
@@ -255,11 +264,21 @@ const notificationSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchUnreadNotifications.fulfilled, (state, action) => {
+        console.log('📊 [Redux] fetchUnreadNotifications fulfilled:', {
+          payloadLength: action.payload?.length,
+          payload: action.payload,
+        });
         // ✅ Enrich tất cả unread notifications
         const enrichedNotifications = action.payload.map(enrichNotification);
 
+        console.log('📊 [Redux] Enriched notifications:', enrichedNotifications);
+
         state.notifications = enrichedNotifications;
         state.unreadCount = enrichedNotifications.filter((n: Notification) => !n.is_read).length;
+        console.log('📊 [Redux] Updated state:', {
+          notificationsCount: state.notifications.length,
+          unreadCount: state.unreadCount,
+        });
         state.isLoading = false;
       })
       .addCase(fetchUnreadNotifications.rejected, (state, action) => {

@@ -58,11 +58,23 @@ const ViewUserProfile: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Try to get user profile from users endpoint
-        const response = await apiClient.get(`/users/${userId}`);
+        let response;
+        
+        if (isViewingTutor) {
+          // Student xem profile gia sư - gọi API tutors
+          response = await apiClient.get(`/tutors/my-tutors/${userId}`);
+        } else if (isViewingStudent) {
+          // Tutor xem profile học viên - gọi API students
+          response = await apiClient.get(`/students/${userId}`);
+        } else {
+          // Fallback - thử users endpoint
+          response = await apiClient.get(`/users/${userId}`);
+        }
         
         if (response.data) {
-          setProfile(response.data);
+          // Map response data to profile format
+          const data = response.data.data || response.data;
+          setProfile(data);
         }
       } catch (err: any) {
         console.error('Error fetching profile:', err);
@@ -73,7 +85,7 @@ const ViewUserProfile: React.FC = () => {
     };
 
     fetchProfile();
-  }, [userId]);
+  }, [userId, isViewingTutor, isViewingStudent]);
 
   const handleBack = () => {
     navigate(-1);

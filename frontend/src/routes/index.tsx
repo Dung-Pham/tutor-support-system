@@ -48,6 +48,7 @@ const CreateClassPage = lazy(() => import('@/components/Student/CreateClassPage'
 const TutorProfileManager = lazy(() => import('@/components/TutorProfile/TutorProfileManager'));
 const StudentProfileManager = lazy(() => import('@/components/StudentProfile/StudentProfileManager'));
 const ViewUserProfile = lazy(() => import('@/pages/ViewUserProfile'));
+const ViewStudentProfilePage = lazy(() => import('@/pages/Tutor/ViewStudentProfilePage'));
 
 // Notifications page
 const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
@@ -342,12 +343,12 @@ export const AppRoutes = () => {
               }
             />
             
-            {/* View Student Profile */}
+            {/* View Student Profile by classId */}
             <Route
-              path="view-student/:userId"
+              path="view-student/:classId"
               element={
                 <Suspense fallback={<PageLoader />}>
-                  <ViewUserProfile />
+                  <ViewStudentProfilePage />
                 </Suspense>
               }
             />

@@ -59,6 +59,12 @@ export function initSocket(server: HttpServer): Server {
 
     socket.broadcast.emit("user_online", { userId });
 
+    // ✅ THÊM: Handler cho join_room event
+    socket.on("join_room", (room: string) => {
+      socket.join(room);
+      console.log(`✅ User ${userId} joined room: ${room}`);
+    });
+
     socket.on("join_conversation", (conversationId: string) => {
       socket.join(conversationId);
       console.log(`👤 User ${userId} joined conversation: ${conversationId}`);

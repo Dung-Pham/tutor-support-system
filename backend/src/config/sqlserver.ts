@@ -12,7 +12,7 @@ function env(key: string): string | undefined {
 const instanceName = env('MSSQL_INSTANCE');
 
 const sequelize = new Sequelize(
-  env('MSSQL_DATABASE') || 'tutorsupportdb1',
+  env('MSSQL_DATABASE') || 'tutorsupportdb2',
   env('MSSQL_USER') || 'sa',
   env('MSSQL_PASSWORD') || '12345',
   {

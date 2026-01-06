@@ -445,17 +445,20 @@ export const StudentsPage: React.FC = () => {
                     <Badge variant="secondary">Đã kết thúc</Badge>
                   )}
                   
-                  <div className="flex items-center gap-1">
-                    {/* View Profile Button */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(`/tutor/view-student/${student.student_id}`)}
-                      className="text-gray-500 hover:text-green-600 hover:bg-green-50"
-                      title="Xem hồ sơ"
-                    >
-                      <Eye className="h-5 w-5" />
-                    </Button>
+                  <div className="flex items-center gap-2">
+                    {/* View Profile Button - chỉ hiện khi student có class */}
+                    {student.classes.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/tutor/view-student/${student.classes[0].class_id}`)}
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 gap-1 transition-all"
+                        title="Xem hồ sơ"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span className="hidden sm:inline">Xem hồ sơ</span>
+                      </Button>
+                    )}
                     
                     {/* Message Button */}
                     <Button

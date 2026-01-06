@@ -1,0 +1,49 @@
+[33mfed0a76[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmerge2[m[33m, [m[1;31morigin/merge2[m[33m)[m Fix TypeScript errors in backend app.ts
+[33m1b6f65a[m restore components
+[33m1e74c45[m merge quynh
+[33m383eddf[m merge branch quynh + fix some bugs
+[33mae1e651[m Merge branch quynh: Add Student/Tutor management, Applications, Search, Favorites, Notifications modules
+[33m2e1506d[m merge dung + dang
+[33m1159b26[m merge dung + dang
+[33ma576359[m Merge branch 'dang' into merge - Combined teaching module (HEAD) with social features (dang)
+[33mb9e375a[m[33m ([m[1;31morigin/dung[m[33m)[m remove trash
+[33m026de13[m build statistic func
+[33m9d868f1[m feat: Enhance community and post detail pages with responsive design and improved loading states
+[33mb260314[m[33m ([m[1;31morigin/quynh[m[33m)[m Quynh: migrate backend from JS to TypeScript
+[33mdf4cac7[m feat: implement post approval, rejection, removal, restoration, and hard delete functionalities in PostDetail component
+[33m36b3337[m fix: update default time range in Dashboard component from 30 to 7 days
+[33mea61b34[m feat: remove PostList component and add PostDetail component with comments functionality
+[33mb04f274[m feat: add top posts feature to dashboard, enhance post retrieval with content from MongoDB, and implement checkbox component
+[33maa35709[m Remove unused admin HTML and SVG files from the distribution directory
+[33m28a6111[m Refactor: Update controller and model comments for clarity and consistency
+[33m72f3dcf[m feat: implement collapsible sidebar menus, unify post retrieval by status, and update post display details
+[33m5cae726[m feat: enhance error handling in Express app, implement hard delete functionality for posts, and update UI prompts for permanent deletion
+[33m32af53b[m feat: add custom hooks for component lifecycle and window size management, implement socket connection handling, and user data fetching
+[33m334afda[m feat: update post and comment handling to use 'id' instead of '_id'; add TutorsList component for student sidebar - Refactor CommentSection, PostCard, PostDetailModal, PostList, CommunityPosts, HomePage, PostDetail to use 'id' for post and comment references. - Introduce TutorsList component for students to view and message tutors. - Enhance conversation and message services to support new tutor features. - Update user and post types to reflect changes in data structure. - Improve UI for image handling in Tiptap editor.
+[33m493679d[m feat: Implement Redux store and authentication slice
+[33m88ff904[m feat: Add Sequelize models for ReplyCommentLike, Session, and User with associations
+[33mfa9f853[m lưu dữ liệu vào redis, sửa phần recommend gia sư bằng sql, sửa phần hiển thị thông tin theo quyền
+[33mc7f15d8[m feat: Implement Public Layout for Community Posts and enhance Hybrid Database Controller
+[33m6e683d9[m Quynh: update backend + frontend features
+[33mfd5e3da[m feat: add comment and reply functionality with like support
+[33m1affc64[m build students func
+[33m00080a4[m fix documents func + display file
+[33m9c54ee1[m fix classes func
+[33m634b532[m fix homework func
+[33m333df30[m build homework func
+[33ma75d2df[m fix schedule + add classes + detail class
+[33m8d0bce4[m merge db + fix source code login+ schedule + attendance
+[33m79eefd5[m feat: Implement comment and reply functionality with like feature
+[33m3404421[m feat: add PostDetail page to display community post details
+[33m5a14762[m feat: Add TutorStudents page for viewing student list
+[33m8058d2f[m hoàn thành hầu hết các chức năng trong module, còn 1 số chức năng như gia sư yêu thích, thông báo, comment,...
+[33m81453e1[m feat: add GlobalHeader component for desktop navigation
+[33mb68d542[m Cập nhật và hoàn thiện chức năng nhắn tin: thêm gửi tin nhắn trực tiếp và nhóm, kiểm tra tình trạng bạn bè, cập nhật metadata cuộc trò chuyện, và cấu hình Swagger cho API.
+[33m279eaa1[m Chỉnh sửa backend về friend và message
+[33m4591aa0[m Hoàn thiện phần đăng nhập + 1 tí backend về đăng bài
+[33m7cfce21[m Thay đổi một số thứ, UI, UX, backend
+[33mcefd26e[m Implement complete document management system
+[33m2707b58[m Thêm file SQL vào thư mục database
+[33mb6fee66[m đẩy code lần 1
+[33m0b94537[m thiết kế một số model backend cơ bản
+[33m5541f0d[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m init project tutor-support-system
