@@ -13,9 +13,9 @@ import {
 import { AuthRequest } from "../types/common.js";
 
 // Attribute mappings for UserAccount table (column_name -> alias)
-const USER_ATTRS_BASIC: [string, string][] = [
+const USER_ATTRS_BASIC: ([string, string] | string)[] = [
   ["user_id", "id"],
-  ["name", "displayName"],
+  "name",
   ["avatar_url", "avatarUrl"],
 ];
 

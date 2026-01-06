@@ -139,7 +139,7 @@ export const createPost = async (
 
     // Get author info
     const author = await User.findByPk(userId, {
-      attributes: [["user_id", "id"], ["name", "displayName"], ["avatar_url", "avatarUrl"], "role"],
+      attributes: [["user_id", "id"], "name", ["avatar_url", "avatarUrl"], "role"],
     });
 
     return res.status(201).json({
@@ -187,7 +187,7 @@ export const getApprovedPosts = async (
         {
           model: User,
           as: "author",
-          attributes: [["user_id", "id"], ["name", "displayName"], ["avatar_url", "avatarUrl"], "role"],
+          attributes: [["user_id", "id"], "name", ["avatar_url", "avatarUrl"], "role"],
         },
       ],
       order: [["createdAt", "DESC"]],
