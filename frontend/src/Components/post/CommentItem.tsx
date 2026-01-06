@@ -66,11 +66,11 @@ export function CommentItem({ comment, postId, postAuthorId }: CommentItemProps)
   const [showReplies, setShowReplies] = useState(false);
   const [localLiked, setLocalLiked] = useState(false);
   const [localLikeCount, setLocalLikeCount] = useState(comment.likeCount || 0);
-  const [replyingTo, setReplyingTo] = useState<{ userId: string; displayName: string } | null>(
+  const [replyingTo, setReplyingTo] = useState<{ userId: string; name: string } | null>(
     null
   );
 
-  const isAuthor = user?.id === comment.userId;
+  const isAuthor = user?.user_id === comment.userId;
   const isPostAuthor = postAuthorId && comment.userId === postAuthorId;
   const replies = repliesByComment[comment.id] || [];
   const hasReplies = comment.replyCount > 0;
@@ -114,8 +114,8 @@ export function CommentItem({ comment, postId, postAuthorId }: CommentItemProps)
     setShowReplies(true);
   };
 
-  const handleReplyToReply = (userId: string, displayName: string) => {
-    setReplyingTo({ userId, displayName });
+  const handleReplyToReply = (userId: string, name: string) => {
+    setReplyingTo({ userId, name });
     setShowReplyForm(true);
     setShowReplies(true);
   };
@@ -246,7 +246,7 @@ export function CommentItem({ comment, postId, postAuthorId }: CommentItemProps)
               {replyingTo && (
                 <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                   Đang trả lời{' '}
-                  <span className="font-semibold text-gray-700">@{replyingTo.displayName}</span>
+                  <span className="font-semibold text-gray-700">@{replyingTo.name}</span>
                   <button
                     onClick={() => setReplyingTo(null)}
                     className="text-gray-400 hover:text-gray-600 ml-1"
@@ -259,7 +259,7 @@ export function CommentItem({ comment, postId, postAuthorId }: CommentItemProps)
                 onSubmit={handleReplySubmit}
                 placeholder={
                   replyingTo
-                    ? `Trả lời @${replyingTo.name || replyingTo.displayName}...`
+                    ? `Trả lời @${replyingTo.name}...`
                     : `Trả lời ${comment.user?.name || comment.user?.displayName || 'User'}...`
                 }
                 buttonText="Trả lời"
@@ -281,7 +281,7 @@ export function CommentItem({ comment, postId, postAuthorId }: CommentItemProps)
                     key={reply.id}
                     reply={reply}
                     commentId={comment.id}
-                    currentUserId={user?.id}
+                    currentUserId={user?.user_id}
                     postAuthorId={postAuthorId}
                     onReply={handleReplyToReply}
                   />
@@ -301,7 +301,7 @@ interface ReplyItemProps {
   commentId: string;
   currentUserId?: string;
   postAuthorId?: string;
-  onReply: (userId: string, displayName: string) => void;
+  onReply: (userId: string, name: string) => void;
 }
 
 function ReplyItem({ reply, commentId, currentUserId, postAuthorId, onReply }: ReplyItemProps) {
@@ -336,7 +336,7 @@ function ReplyItem({ reply, commentId, currentUserId, postAuthorId, onReply }: R
   };
 
   const handleReply = () => {
-    onReply(reply.userId, reply.user?.displayName || 'User');
+    onReply(reply.userId, reply.user?.name || reply.user?.displayName || 'User');
   };
 
   return (
@@ -345,7 +345,7 @@ function ReplyItem({ reply, commentId, currentUserId, postAuthorId, onReply }: R
         src={
           reply.user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${reply.userId}`
         }
-        alt={reply.user?.displayName || 'User'}
+        alt={reply.user?.name || reply.user?.displayName || 'User'}
         className="w-7 h-7 rounded-full flex-shrink-0"
       />
 
