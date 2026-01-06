@@ -91,7 +91,7 @@ export function ChatBox({ conversation }: ChatBoxProps) {
 
   // Tìm người đang chat (không phải current user)
   const otherParticipant = conversation.participants.find((p) => p.id !== currentUserId);
-  const chatPartnerName = otherParticipant?.displayName || 'Người dùng';
+  const chatPartnerName = otherParticipant?.name || otherParticipant?.displayName || 'Người dùng';
   const chatPartnerAvatar = otherParticipant?.avatarUrl;
   const chatPartnerInitial = chatPartnerName.charAt(0).toUpperCase();
 

@@ -19,7 +19,7 @@ export function ChatSidebar({ conversations, loading }: ChatSidebarProps) {
     .filter((conv) => {
       if (!searchQuery.trim()) return true;
       // Tìm theo tên participant
-      const participantNames = conv.participants.map((p) => p.displayName?.toLowerCase() || '');
+      const participantNames = conv.participants.map((p) => p.name?.toLowerCase() || p.displayName?.toLowerCase() || '');
       return participantNames.some((name) => name.includes(searchQuery.toLowerCase()));
     })
     .sort((a, b) => {

@@ -79,7 +79,7 @@ export function MessageBubble({ message, showTime = false }: MessageBubbleProps)
 
   // Tìm thông tin người gửi từ participants
   const sender = activeConversation?.participants.find((p) => p.id === message.senderId);
-  const senderName = sender?.displayName || 'Người dùng';
+  const senderName = sender?.name || sender?.displayName || 'Người dùng';
   const senderInitial = senderName.charAt(0).toUpperCase();
   const senderAvatar = sender?.avatarUrl;
 
