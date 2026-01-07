@@ -2,6 +2,13 @@
 
 Hệ thống hỗ trợ gia sư toàn diện được xây dựng với công nghệ hiện đại, bao gồm backend API và frontend web application.
 
+## 🚀 Quick Links
+
+- 📖 **[Quick Start Guide](./QUICK_START.md)** - Bắt đầu trong 3 phút
+- 🎬 **[Demo Scenarios](./DEMO_SCENARIO.md)** - Kịch bản demo chi tiết từng chức năng
+- 🔧 **[Backend Documentation](./backend/README.md)**
+- 💻 **[Frontend Documentation](./frontend/README.md)**
+
 ## 📋 Tổng quan
 
 Dự án bao gồm 2 phần chính:
