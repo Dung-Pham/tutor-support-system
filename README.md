@@ -2,6 +2,12 @@
 
 Hệ thống hỗ trợ gia sư toàn diện được xây dựng với công nghệ hiện đại, bao gồm backend API và frontend web application.
 
+## 🎬 Demo Hệ Thống
+
+Để demo hệ thống này, vui lòng tham khảo:
+- **[DEMO_SCRIPT.md](./DEMO_SCRIPT.md)** - Kịch bản demo chi tiết đầy đủ (20-30 phút)
+- **[DEMO_QUICK_REFERENCE.md](./DEMO_QUICK_REFERENCE.md)** - Cheat sheet tham khảo nhanh
+
 ## 📋 Tổng quan
 
 Dự án bao gồm 2 phần chính:
