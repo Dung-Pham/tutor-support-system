@@ -14,6 +14,9 @@
 const Application = require('../models/Application');
 const Class = require('../models/Class');
 
+// MongoDB error codes
+const DUPLICATE_KEY_ERROR = 11000;
+
 /**
  * @desc    Get all applications (with optional filters)
  * @route   GET /api/applications
@@ -127,7 +130,7 @@ const createApplication = async (req, res) => {
     });
   } catch (error) {
     // Xử lý lỗi duplicate key (gia sư đã ứng tuyển vào lớp này rồi)
-    if (error.code === 11000) {
+    if (error.code === DUPLICATE_KEY_ERROR) {
       return res.status(400).json({
         success: false,
         message: 'You have already applied to this class',
