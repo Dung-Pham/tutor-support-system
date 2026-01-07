@@ -158,7 +158,22 @@ http://localhost:5000/api-docs
 - `PUT /api/users/:id` - Cập nhật user
 - `DELETE /api/users/:id` - Xóa user
 
-#### Sessions (SQL Server)
+#### Classes (MongoDB) - Lớp học được tạo bởi phụ huynh
+- `GET /api/classes` - Lấy danh sách lớp học (có filter theo status, subject, parentId)
+- `GET /api/classes/:id` - Lấy thông tin lớp học
+- `POST /api/classes` - Tạo lớp học mới (phụ huynh)
+- `PUT /api/classes/:id` - Cập nhật lớp học
+- `DELETE /api/classes/:id` - Xóa lớp học
+- `GET /api/classes/:id/applications` - Lấy danh sách đơn ứng tuyển của một lớp
+
+#### Applications (MongoDB) - Đơn ứng tuyển của gia sư
+- `GET /api/applications` - Lấy danh sách đơn ứng tuyển (có filter theo status, classId, tutorId)
+- `GET /api/applications/:id` - Lấy thông tin đơn ứng tuyển
+- `POST /api/applications` - Tạo đơn ứng tuyển mới (gia sư)
+- `PUT /api/applications/:id` - Cập nhật đơn ứng tuyển (chấp nhận/từ chối)
+- `DELETE /api/applications/:id` - Xóa/rút đơn ứng tuyển
+
+#### Sessions (SQL Server) - Buổi học sau khi đã chọn gia sư
 - `GET /api/sessions` - Lấy danh sách sessions
 - `GET /api/sessions/:id` - Lấy thông tin session
 - `POST /api/sessions` - Tạo session mới
@@ -261,10 +276,21 @@ docker-compose restart frontend
 ## 📁 Cấu trúc Database
 
 ### MongoDB Collections
-- **users**: Lưu thông tin người dùng (students, tutors, admins)
+- **users**: Lưu thông tin người dùng (students, tutors, parents, admins)
+- **classes**: Lưu thông tin lớp học được tạo bởi phụ huynh
+- **applications**: Lưu thông tin đơn ứng tuyển của gia sư vào lớp học
 
 ### SQL Server Tables
-- **sessions**: Lưu thông tin buổi học
+- **sessions**: Lưu thông tin buổi học (được tạo sau khi phụ huynh chấp nhận gia sư)
+
+## 📊 Luồng hoạt động (Flow)
+
+1. **Phụ huynh tạo lớp học**: Phụ huynh đăng bài tìm gia sư bằng cách tạo Class với thông tin môn học, lịch, ngân sách, yêu cầu...
+2. **Gia sư tìm kiếm lớp**: Gia sư xem danh sách các lớp đang mở (status = 'open')
+3. **Gia sư ứng tuyển**: Gia sư tạo Application với thư giới thiệu, mức phí đề xuất, kinh nghiệm...
+4. **Phụ huynh xem xét**: Phụ huynh xem danh sách các đơn ứng tuyển cho lớp của mình
+5. **Phụ huynh chọn gia sư**: Phụ huynh chấp nhận một Application → Class.selectedTutorId được cập nhật, các Application khác bị reject
+6. **Tạo buổi học**: Sau khi có gia sư, hệ thống tạo các Session để quản lý lịch học cụ thể
 
 ## 🔐 Environment Variables
 
