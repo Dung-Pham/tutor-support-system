@@ -300,6 +300,22 @@ cd frontend
 npm test
 ```
 
+## 🎬 Demo Scenarios
+
+Để xem các kịch bản demo chi tiết từng chức năng của hệ thống, vui lòng tham khảo:
+
+**📖 [DEMO_SCENARIO.md](./DEMO_SCENARIO.md)**
+
+Document này bao gồm:
+- ✅ Hướng dẫn setup và chuẩn bị
+- ✅ Demo CRUD operations cho Users (MongoDB)
+- ✅ Demo CRUD operations cho Sessions (SQL Server)
+- ✅ Demo Realtime Communication với Socket.IO
+- ✅ Demo API Documentation với Swagger
+- ✅ Kịch bản End-to-End hoàn chỉnh
+- ✅ Demo Frontend Integration
+- ✅ Troubleshooting và tips
+
 ## 📝 TODO / Roadmap
 
 - [ ] Thêm authentication & authorization
