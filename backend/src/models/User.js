@@ -3,7 +3,7 @@
  * Mục đích: Model User cho MongoDB
  * Vai trò:
  *   - Định nghĩa schema và validation cho collection users
- *   - Lưu trữ thông tin người dùng (student, tutor, admin)
+ *   - Lưu trữ thông tin người dùng (student, tutor, parent, admin)
  * Lưu ý:
  *   - Password được select: false (không trả về mặc định)
  *   - Email phải unique và lowercase
@@ -38,7 +38,7 @@ const mongoose = require('mongoose');
  *           description: User name
  *         role:
  *           type: string
- *           enum: [student, tutor, admin]
+ *           enum: [student, tutor, parent, admin]
  *           description: User role
  *         createdAt:
  *           type: string
@@ -70,7 +70,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['student', 'tutor', 'admin'],
+      enum: ['student', 'tutor', 'parent', 'admin'],
       default: 'student',
     },
     avatar: {

@@ -163,7 +163,24 @@ docker run -p 5000:5000 --env-file .env tutor-backend
 - `PUT /api/users/:id` - Cập nhật user
 - `DELETE /api/users/:id` - Xóa user
 
-### Sessions (SQL Server)
+### Classes (MongoDB) - Lớp học được tạo bởi phụ huynh
+
+- `GET /api/classes` - Lấy danh sách lớp học (có filter)
+- `GET /api/classes/:id` - Lấy thông tin lớp học
+- `POST /api/classes` - Tạo lớp học mới (phụ huynh)
+- `PUT /api/classes/:id` - Cập nhật lớp học
+- `DELETE /api/classes/:id` - Xóa lớp học
+- `GET /api/classes/:id/applications` - Lấy danh sách đơn ứng tuyển
+
+### Applications (MongoDB) - Đơn ứng tuyển của gia sư
+
+- `GET /api/applications` - Lấy danh sách đơn ứng tuyển (có filter)
+- `GET /api/applications/:id` - Lấy thông tin đơn ứng tuyển
+- `POST /api/applications` - Tạo đơn ứng tuyển mới (gia sư)
+- `PUT /api/applications/:id` - Cập nhật đơn ứng tuyển
+- `DELETE /api/applications/:id` - Xóa/rút đơn ứng tuyển
+
+### Sessions (SQL Server) - Buổi học sau khi đã chọn gia sư
 
 - `GET /api/sessions` - Lấy danh sách sessions
 - `GET /api/sessions/:id` - Lấy thông tin session
