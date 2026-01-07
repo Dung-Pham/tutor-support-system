@@ -1,14 +1,43 @@
-.tiptap-video {
+.tiptap-video-wrapper {
+  position: relative;
   width: 100%;
-  max-width: 100%;
-  height: auto;
-  max-height: 500px;
+  max-width: 800px;
+  margin: 1rem auto;
   border-radius: 8px;
-  margin: 1rem 0;
+  overflow: hidden;
+  background: #000;
+
+  // Responsive container với aspect ratio 16:9
+  &::before {
+    content: '';
+    display: block;
+    padding-top: 56.25%; // 16:9 aspect ratio
+  }
+}
+
+.tiptap-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: contain;
   background: #000;
 
   &:focus {
     outline: 2px solid hsl(var(--primary));
     outline-offset: 2px;
   }
+}
+
+// Fallback cho video không có wrapper
+.tiptap.ProseMirror > video.tiptap-video {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  margin: 1rem auto;
+  display: block;
 }
