@@ -82,9 +82,20 @@ const getApplicationById = async (req, res) => {
  * @desc    Create new application
  * @route   POST /api/applications
  * @access  Public (should be restricted to tutors only)
+ * @todo    Add authentication middleware to verify user is logged in
+ * @todo    Add authorization middleware to verify user has 'tutor' role
+ * @todo    Auto-populate tutorId from authenticated user's session
  */
 const createApplication = async (req, res) => {
   try {
+    // TODO: Add role validation
+    // if (req.user.role !== 'tutor') {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: 'Only tutors can create applications',
+    //   });
+    // }
+
     const { classId } = req.body;
 
     // Kiểm tra xem lớp có tồn tại và đang mở không
@@ -149,13 +160,26 @@ const updateApplication = async (req, res) => {
 
     // Nếu application đang được accept, cập nhật selectedTutorId trong Class
     if (req.body.status === 'accepted' && application.status !== 'accepted') {
-      await Class.findByIdAndUpdate(
-        application.classId,
-        { 
-          selectedTutorId: application.tutorId,
-          status: 'in-progress'
-        }
-      );
+      // Kiểm tra xem class có tồn tại và đang mở không
+      const classItem = await Class.findById(application.classId);
+      if (!classItem) {
+        return res.status(404).json({
+          success: false,
+          message: 'Class not found',
+        });
+      }
+
+      if (classItem.status === 'closed') {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot accept application for a closed class',
+        });
+      }
+
+      // Cập nhật class
+      classItem.selectedTutorId = application.tutorId;
+      classItem.status = 'in-progress';
+      await classItem.save();
 
       // Reject tất cả các application khác đang pending
       await Application.updateMany(

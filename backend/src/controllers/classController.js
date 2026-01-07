@@ -82,9 +82,20 @@ const getClassById = async (req, res) => {
  * @desc    Create new class
  * @route   POST /api/classes
  * @access  Public (should be restricted to parents only)
+ * @todo    Add authentication middleware to verify user is logged in
+ * @todo    Add authorization middleware to verify user has 'parent' role
+ * @todo    Auto-populate parentId from authenticated user's session
  */
 const createClass = async (req, res) => {
   try {
+    // TODO: Add role validation
+    // if (req.user.role !== 'parent') {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: 'Only parents can create classes',
+    //   });
+    // }
+
     const classItem = await Class.create(req.body);
 
     const populatedClass = await Class.findById(classItem._id)
@@ -107,6 +118,8 @@ const createClass = async (req, res) => {
  * @desc    Update class
  * @route   PUT /api/classes/:id
  * @access  Public (should be restricted to class owner)
+ * @todo    Add authentication middleware
+ * @todo    Add ownership validation: req.user._id === classItem.parentId
  */
 const updateClass = async (req, res) => {
   try {
@@ -119,13 +132,33 @@ const updateClass = async (req, res) => {
       });
     }
 
+    // TODO: Add ownership check
+    // if (req.user._id.toString() !== classItem.parentId.toString()) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: 'You can only update your own classes',
+    //   });
+    // }
+
     // Nếu đang cập nhật selectedTutorId, cần cập nhật status của application tương ứng
     if (req.body.selectedTutorId && req.body.selectedTutorId !== classItem.selectedTutorId?.toString()) {
+      // Kiểm tra xem application có tồn tại không
+      const selectedApplication = await Application.findOne({
+        classId: classItem._id,
+        tutorId: req.body.selectedTutorId,
+        status: 'pending'
+      });
+
+      if (!selectedApplication) {
+        return res.status(400).json({
+          success: false,
+          message: 'No pending application found for the selected tutor',
+        });
+      }
+
       // Accept the selected tutor's application
-      await Application.findOneAndUpdate(
-        { classId: classItem._id, tutorId: req.body.selectedTutorId },
-        { status: 'accepted' }
-      );
+      selectedApplication.status = 'accepted';
+      await selectedApplication.save();
 
       // Reject all other pending applications
       await Application.updateMany(
