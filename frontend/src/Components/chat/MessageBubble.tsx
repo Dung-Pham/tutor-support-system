@@ -203,7 +203,7 @@ export function MessageBubble({ message, showTime = false }: MessageBubbleProps)
 
           {/* Display file attachments if present */}
           {message.fileUrls && message.fileUrls.length > 0 && (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 max-w-[280px]">
               {message.fileUrls.map((file, index) => (
                 <button
                   key={index}
@@ -212,10 +212,11 @@ export function MessageBubble({ message, showTime = false }: MessageBubbleProps)
                     isOwn ? 'bg-primary/90' : 'bg-muted'
                   }`}
                 >
-                  <span className="text-lg">{getFileIcon(file.mimeType)}</span>
-                  <div className="flex-1 min-w-0 text-left">
+                  <span className="text-lg flex-shrink-0">{getFileIcon(file.mimeType)}</span>
+                  <div className="flex-1 min-w-0 text-left overflow-hidden">
                     <p
                       className={`text-sm font-medium truncate ${isOwn ? 'text-primary-foreground' : ''}`}
+                      title={file.fileName}
                     >
                       {file.fileName}
                     </p>
@@ -226,7 +227,7 @@ export function MessageBubble({ message, showTime = false }: MessageBubbleProps)
                     </p>
                   </div>
                   <Download
-                    className={`w-4 h-4 ${isOwn ? 'text-primary-foreground' : 'text-muted-foreground'}`}
+                    className={`w-4 h-4 flex-shrink-0 ${isOwn ? 'text-primary-foreground' : 'text-muted-foreground'}`}
                   />
                 </button>
               ))}

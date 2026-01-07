@@ -4,7 +4,7 @@
  */
 
 import { Router, Response } from 'express';
-import { uploadHomework, uploadSubmission, uploadDocument } from '../middlewares/upload';
+import { uploadHomework, uploadSubmission, uploadDocument, uploadGeneric } from '../middlewares/upload';
 import { authenticate } from '../middlewares/auth';
 import { AuthenticatedRequest } from '../types';
 
@@ -88,6 +88,42 @@ router.post('/document', uploadDocument.single('attachment'), (req: Authenticate
         type: req.file.mimetype,
         size: req.file.size,
       },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: 'Upload failed', error: error.message });
+  }
+});
+
+/**
+ * Upload generic files (for chat, etc.)
+ * POST /api/upload/files
+ */
+router.post('/files', uploadGeneric.array('files', 5), (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
+      return res.status(400).json({ success: false, message: 'No files uploaded' });
+    }
+
+    const files = req.files as Express.Multer.File[];
+    const uploadedFiles = files.map(file => {
+      // Decode filename from latin1 to utf8 to fix Vietnamese characters
+      const decodedName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+      return {
+        url: `/uploads/general/${file.filename}`,
+        fileName: decodedName,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        // Keep these for backwards compatibility
+        name: decodedName,
+        type: file.mimetype,
+        size: file.size,
+      };
+    });
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Files uploaded successfully',
+      data: uploadedFiles,
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: 'Upload failed', error: error.message });

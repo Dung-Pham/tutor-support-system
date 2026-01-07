@@ -91,6 +91,10 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onClick, isTo
       <CardContent className="space-y-2">
         {/* Day of week or specific date */}
         <div className="flex items-center text-sm text-gray-600">
+          <User className="mr-2 h-4 w-4" />
+          <span className="font-medium">{tutorName}</span>
+        </div>
+        <div className="flex items-center text-sm text-gray-600">
           <Calendar className="mr-2 h-4 w-4" />
           <span>{getSessionDate() || getDayName()}</span>
         </div>
@@ -100,10 +104,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session, onClick, isTo
           <span>{formatTimeRange()}</span>
         </div>
         {/* Tutor */}
-        <div className="flex items-center text-sm text-gray-600">
-          <User className="mr-2 h-4 w-4" />
-          <span className="font-medium">{tutorName}</span>
-        </div>
+        
         {/* Status indicator for inactive schedules */}
         {session.is_active === false && (
           <div className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">

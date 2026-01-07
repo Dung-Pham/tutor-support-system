@@ -292,13 +292,14 @@ export const WeekTimelineView: React.FC<WeekTimelineViewProps> = ({
                             }}
                             onClick={() => onSessionClick(session)}
                           >
+                            <div className="text-xs opacity-90 truncate">
+                              {session.tutor_name || 'Gia sư chưa xác định'}
+                            </div>
                             <div className="text-xs font-semibold truncate">
                               {session.class_name || 'Lớp chưa xác định'}
                               {isCompleted && ' (Tạm dừng)'}
                             </div>
-                            <div className="text-xs opacity-90 truncate">
-                              {session.tutor_name || 'Gia sư chưa xác định'}
-                            </div>
+                            
                             <div className="text-xs opacity-75 truncate">
                               {formatTimeRange(session)}
                             </div>

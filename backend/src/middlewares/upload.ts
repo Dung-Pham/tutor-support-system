@@ -17,8 +17,9 @@ const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
 const documentsDir = path.join(uploadsDir, 'documents');
 const homeworkDir = path.join(uploadsDir, 'homework');
 const submissionsDir = path.join(uploadsDir, 'submissions');
+const generalDir = path.join(uploadsDir, 'general');
 
-[uploadsDir, documentsDir, homeworkDir, submissionsDir].forEach(dir => {
+[uploadsDir, documentsDir, homeworkDir, submissionsDir, generalDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -36,7 +37,10 @@ const createStorage = (subFolder: string) => multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueId = randomUUID();
     const ext = path.extname(file.originalname);
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    // Decode filename from latin1 to utf8 to fix Vietnamese characters
+    const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    // Only replace characters that are invalid for filenames (keep Unicode letters)
+    const safeName = originalName.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_');
     cb(null, `${uniqueId}-${safeName}`);
   },
 });
