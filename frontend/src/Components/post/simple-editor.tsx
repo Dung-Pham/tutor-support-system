@@ -179,6 +179,8 @@ export function SimpleEditor({ content, onChange, onEditorReady }: SimpleEditorP
   const { height } = useWindowSize();
   const [mobileView, setMobileView] = useState<'main' | 'highlighter' | 'link'>('main');
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const isInternalUpdate = useRef(false);
+  const initialContentSet = useRef(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -219,14 +221,17 @@ export function SimpleEditor({ content, onChange, onEditorReady }: SimpleEditorP
     ],
     content: emptyContent,
     onUpdate: ({ editor }) => {
+      isInternalUpdate.current = true;
       onChange?.(editor.getJSON());
     },
   });
 
-  // Sync content prop với editor khi load bài viết để edit
+  // Sync content prop với editor khi load bài viết để edit (chỉ lần đầu)
   useEffect(() => {
-    if (editor && content) {
+    if (editor && content && !initialContentSet.current) {
+      // Chỉ set content lần đầu khi có content từ props
       editor.commands.setContent(content);
+      initialContentSet.current = true;
     }
   }, [editor, content]);
 
