@@ -150,8 +150,11 @@ export function toggleList(editor: Editor | null, type: ListType): boolean {
     let state = view.state
     let tr = state.tr
 
-    // No selection, find the the cursor position
-    if (state.selection.empty || state.selection instanceof TextSelection) {
+    // Lưu lại selection gốc để giữ nguyên khi có TextSelection (bôi đen nhiều dòng)
+    const originalSelection = state.selection
+
+    // Chỉ chuyển sang NodeSelection khi selection rỗng (không bôi đen)
+    if (state.selection.empty) {
       const pos = findNodePosition({
         editor,
         node: state.selection.$anchor.node(1),
@@ -167,7 +170,7 @@ export function toggleList(editor: Editor | null, type: ListType): boolean {
 
     let chain = editor.chain().focus()
 
-    // Handle NodeSelection
+    // Handle NodeSelection (cho trường hợp selection rỗng)
     if (selection instanceof NodeSelection) {
       const firstChild = selection.node.firstChild?.firstChild
       const lastChild = selection.node.lastChild?.lastChild
@@ -186,6 +189,9 @@ export function toggleList(editor: Editor | null, type: ListType): boolean {
       chain = chain
         .setTextSelection(TextSelection.between(resolvedFrom, resolvedTo))
         .clearNodes()
+    } else if (originalSelection instanceof TextSelection && !originalSelection.empty) {
+      // Giữ nguyên TextSelection gốc để xử lý nhiều dòng cùng lúc
+      chain = chain.clearNodes()
     }
 
     if (editor.isActive(type)) {

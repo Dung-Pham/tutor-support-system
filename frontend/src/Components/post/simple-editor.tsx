@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { EditorContent, EditorContext, useEditor, type Editor } from '@tiptap/react';
+import { NodeSelection } from '@tiptap/pm/state';
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from '@tiptap/starter-kit';
@@ -191,6 +192,76 @@ export function SimpleEditor({ content, onChange, onEditorReady }: SimpleEditorP
         autocapitalize: 'off',
         'aria-label': 'Main content area, start typing to enter text.',
         class: 'simple-editor',
+      },
+      handlePaste: (view, event) => {
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+
+        for (const item of items) {
+          if (item.type.startsWith('image/')) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            if (file) {
+              // Upload ảnh và chèn vào editor
+              handleImageUpload(file).then((url) => {
+                if (url && view.state.selection) {
+                  const { tr } = view.state;
+                  const node = view.state.schema.nodes.image.create({ src: url });
+                  const transaction = tr.replaceSelectionWith(node);
+                  view.dispatch(transaction);
+                }
+              }).catch((error) => {
+                console.error('Paste image upload failed:', error);
+              });
+            }
+            return true;
+          }
+        }
+        return false;
+      },
+      handleClick: (view, pos, event) => {
+        // Xử lý click vào ảnh để chọn nó
+        const target = event.target as HTMLElement;
+        if (target.nodeName === 'IMG') {
+          const nodePos = view.posAtDOM(target, 0);
+          if (nodePos >= 0) {
+            const node = view.state.doc.nodeAt(nodePos);
+            if (node && node.type.name === 'image') {
+              const tr = view.state.tr.setSelection(NodeSelection.create(view.state.doc, nodePos));
+              view.dispatch(tr);
+              return true;
+            }
+          }
+        }
+        return false;
+      },
+      handleDrop: (view, event, _slice, moved) => {
+        if (moved) return false;
+        
+        const files = event.dataTransfer?.files;
+        if (!files || files.length === 0) return false;
+
+        for (const file of files) {
+          if (file.type.startsWith('image/')) {
+            event.preventDefault();
+            // Upload ảnh và chèn vào editor
+            handleImageUpload(file).then((url) => {
+              if (url) {
+                const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
+                if (coordinates) {
+                  const { tr } = view.state;
+                  const node = view.state.schema.nodes.image.create({ src: url });
+                  const transaction = tr.insert(coordinates.pos, node);
+                  view.dispatch(transaction);
+                }
+              }
+            }).catch((error) => {
+              console.error('Drop image upload failed:', error);
+            });
+            return true;
+          }
+        }
+        return false;
       },
     },
     extensions: [
