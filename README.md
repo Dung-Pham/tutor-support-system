@@ -2,6 +2,13 @@
 
 Hệ thống hỗ trợ gia sư toàn diện được xây dựng với công nghệ hiện đại, bao gồm backend API và frontend web application.
 
+## 🚀 Quick Links
+
+- 📖 **[Quick Start Guide](./QUICK_START.md)** - Bắt đầu trong 3 phút
+- 🎬 **[Demo Scenarios](./DEMO_SCENARIO.md)** - Kịch bản demo chi tiết từng chức năng
+- 🔧 **[Backend Documentation](./backend/README.md)**
+- 💻 **[Frontend Documentation](./frontend/README.md)**
+
 ## 📋 Tổng quan
 
 Dự án bao gồm 2 phần chính:
@@ -299,6 +306,22 @@ npm test
 cd frontend
 npm test
 ```
+
+## 🎬 Demo Scenarios
+
+Để xem các kịch bản demo chi tiết từng chức năng của hệ thống, vui lòng tham khảo:
+
+**📖 [DEMO_SCENARIO.md](./DEMO_SCENARIO.md)**
+
+Document này bao gồm:
+- ✅ Hướng dẫn setup và chuẩn bị
+- ✅ Demo CRUD operations cho Users (MongoDB)
+- ✅ Demo CRUD operations cho Sessions (SQL Server)
+- ✅ Demo Realtime Communication với Socket.IO
+- ✅ Demo API Documentation với Swagger
+- ✅ Kịch bản End-to-End hoàn chỉnh
+- ✅ Demo Frontend Integration
+- ✅ Troubleshooting và tips
 
 ## 📝 TODO / Roadmap
 
