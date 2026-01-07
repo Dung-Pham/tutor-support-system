@@ -4,9 +4,11 @@
  * Vai trò:
  *   - Định nghĩa schema cho table sessions
  *   - Quản lý thông tin buổi học giữa tutor và student
+ *   - Được tạo sau khi phụ huynh chấp nhận đơn ứng tuyển của gia sư
  * Lưu ý:
  *   - Sử dụng Sequelize ORM
  *   - tutorId và studentId là reference đến User (chưa setup foreign key)
+ *   - classId và applicationId reference đến MongoDB collections
  *   - Status enum phải match với logic ở frontend
  *   - Duration tính bằng phút
  */
@@ -21,6 +23,16 @@ const Session = sequelize.define(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
+    },
+    classId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'Reference to Class ID from MongoDB',
+    },
+    applicationId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'Reference to Application ID from MongoDB',
     },
     tutorId: {
       type: DataTypes.STRING,

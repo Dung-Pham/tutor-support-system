@@ -38,7 +38,7 @@ const mongoose = require('mongoose');
  *           description: User name
  *         role:
  *           type: string
- *           enum: [student, tutor, admin]
+ *           enum: [student, tutor, parent, admin]
  *           description: User role
  *         createdAt:
  *           type: string
@@ -70,7 +70,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['student', 'tutor', 'admin'],
+      enum: ['student', 'tutor', 'parent', 'admin'],
       default: 'student',
     },
     avatar: {

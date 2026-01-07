@@ -24,6 +24,8 @@ const errorHandler = require('./middlewares/errorHandler');
 // Import routes
 const userRoutes = require('./routes/users');
 const sessionRoutes = require('./routes/sessions');
+const classRoutes = require('./routes/classes');
+const applicationRoutes = require('./routes/applications');
 
 const app = express();
 
@@ -53,6 +55,8 @@ app.get('/health', (req, res) => {
 // API Routes - Tất cả routes đều có prefix /api
 app.use('/api/users', userRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/classes', classRoutes);
+app.use('/api/applications', applicationRoutes);
 
 // 404 Handler - Route không tồn tại
 app.use((req, res) => {
