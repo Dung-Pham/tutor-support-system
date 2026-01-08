@@ -10,6 +10,7 @@ import {
   GraduationCap,
   Search,
   Briefcase,
+  FolderOpen,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ const navItems = [
   { label: 'Đơn ứng tuyển', icon: Briefcase, to: '/tutor/applications' },
   { label: 'Lịch dạy', icon: Clock, to: '/tutor/schedule' },
   { label: 'Bài tập', icon: FileText, to: '/tutor/homework' },
+  { label: 'Tài liệu', icon: FolderOpen, to: '/tutor/documents' },
   { label: 'Quản lý học sinh', icon: GraduationCap, to: '/tutor/students' },
   { label: 'Thống kê', icon: TrendingUp, to: '/tutor/statistics' },
   { label: 'Nhắn tin', icon: MessageCircle, to: '/tutor/messages' },
