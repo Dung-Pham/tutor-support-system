@@ -10,6 +10,7 @@ import { Superscript } from "@tiptap/extension-superscript";
 import { Typography } from "@tiptap/extension-typography";
 import { HorizontalRule } from "./horizontal-rule-extension";
 import { ImageUploadReadonly } from "./image-upload-readonly";
+import { Video } from "./video-extension";
 import type { JSONContent } from "@tiptap/core";
 
 // Import styles
@@ -20,6 +21,7 @@ import "./styles/list-node.scss";
 import "./styles/image-node.scss";
 import "./styles/heading-node.scss";
 import "./styles/paragraph-node.scss";
+import "./styles/video-node.scss";
 
 interface TiptapRendererProps {
   content: JSONContent | string | null | undefined;
@@ -47,6 +49,7 @@ export function TiptapRenderer({
           class: "tiptap-image",
         },
       }),
+      Video, // Video extension
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),

@@ -1,0 +1,17 @@
+.tiptap-video {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  margin: 1rem auto;
+  display: block;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #000;
+
+  &:focus {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+}
