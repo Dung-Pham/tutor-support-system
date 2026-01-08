@@ -22,16 +22,22 @@ export function StudentMessages() {
 
   // Auto-select conversation from URL when conversations are loaded
   useEffect(() => {
-    if (conversationId && conversations.length > 0 && !activeConversation) {
-      const conversation = conversations.find((c) => c.id === conversationId);
+    if (conversationId && conversations.length > 0) {
+      // Always try to select conversation from URL (case-insensitive match)
+      const conversation = conversations.find(
+        (c) => c.id.toLowerCase() === conversationId.toLowerCase()
+      );
       if (conversation) {
-        dispatch(setActiveConversation(conversation));
+        // Only update if different from current active
+        if (!activeConversation || activeConversation.id !== conversation.id) {
+          dispatch(setActiveConversation(conversation));
+        }
       } else {
         // Conversation not found, redirect to messages
         navigate('/student/messages', { replace: true });
       }
     }
-  }, [conversationId, conversations, activeConversation, dispatch, navigate]);
+  }, [conversationId, conversations, dispatch, navigate]);
 
   const fetchConversations = async () => {
     try {
