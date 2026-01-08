@@ -14,8 +14,8 @@ export function TutorLayout() {
 
       {/* Main content - Dưới header */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Desktop Sidebar - Ẩn trên mobile */}
-        <div className="hidden md:block">
+        {/* Desktop Sidebar - Ẩn trên mobile và tablet */}
+        <div className="hidden lg:block">
           <TutorSidebar />
         </div>
 

@@ -19,12 +19,12 @@ export function TutorHeader({ onMenuClick, onTabChange }: TutorHeaderProps) {
       }}
     >
       {/* Left: Mobile Menu + Logo/Brand */}
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex items-center gap-2 lg:gap-3">
         {/* Mobile menu button */}
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden h-9 w-9 touch-manipulation"
+          className="lg:hidden h-9 w-9 touch-manipulation"
           onClick={onMenuClick}
         >
           <Menu className="w-5 h-5" style={{ color: 'hsl(var(--foreground))' }} />

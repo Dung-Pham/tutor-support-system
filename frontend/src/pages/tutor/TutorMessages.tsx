@@ -54,16 +54,16 @@ export function TutorMessages() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] md:h-full gap-0 md:gap-4">
-      {/* Sidebar: Chat Sidebar - Ẩn khi có active conversation trên mobile */}
+      {/* Sidebar: Chat Sidebar - thu hẹp khi màn hình nhỏ */}
       <div
-        className={`w-full md:w-80 lg:w-96 border-r ${activeConversation ? 'hidden md:block' : 'block'}`}
+        className={`w-full md:w-52 lg:w-64 xl:w-80 md:min-w-[180px] border-r md:flex-shrink ${activeConversation ? 'hidden md:block' : 'block'}`}
         style={{ borderColor: 'hsl(var(--border))' }}
       >
         <ChatSidebar conversations={conversations} loading={loading} />
       </div>
 
-      {/* Main: Chat Box - Full screen trên mobile */}
-      <div className={`flex-1 min-w-0 w-full ${!activeConversation ? 'hidden md:block' : 'block'}`}>
+      {/* Main: Chat Box - ưu tiên giữ kích thước */}
+      <div className={`flex-1 min-w-0 md:min-w-[350px] md:flex-shrink-0 w-full ${!activeConversation ? 'hidden md:block' : 'block'}`}>
         {activeConversation ? (
           <ChatBox conversation={activeConversation} />
         ) : (

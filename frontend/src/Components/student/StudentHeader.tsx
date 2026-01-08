@@ -17,12 +17,12 @@ export function StudentHeader({ onMenuClick, onTabChange }: StudentHeaderProps) 
       style={{ backgroundColor: 'hsl(var(--background))' }}
     >
       {/* Left: Mobile menu + Brand */}
-      <div className="flex items-center gap-2 md:gap-4 min-w-max">
+      <div className="flex items-center gap-2 lg:gap-4 min-w-max">
         {/* Mobile Menu Button */}
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden h-10 w-10 touch-manipulation"
+          className="lg:hidden h-10 w-10 touch-manipulation"
           onClick={onMenuClick}
         >
           <Menu className="w-6 h-6" />

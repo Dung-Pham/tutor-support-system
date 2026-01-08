@@ -125,15 +125,15 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
             <p className="font-semibold text-sm text-foreground truncate">{conversationName}</p>
             {roleBadge && (
               <span
-                className={`flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded font-medium ${roleBadge.className}`}
+                className={`hidden lg:inline-flex flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded font-medium ${roleBadge.className}`}
               >
                 {roleBadge.label}
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground flex-shrink-0 ml-2">{lastMessageTime}</p>
+          <p className="hidden lg:block text-xs text-muted-foreground flex-shrink-0 ml-2">{lastMessageTime}</p>
         </div>
-        <p className="text-sm truncate text-muted-foreground">{lastMessage}</p>
+        <p className="hidden lg:block text-sm truncate text-muted-foreground">{lastMessage}</p>
       </div>
 
       {/* Unread badge */}

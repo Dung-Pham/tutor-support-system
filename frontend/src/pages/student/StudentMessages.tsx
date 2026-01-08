@@ -53,15 +53,15 @@ export function StudentMessages() {
 
   return (
     <div className="flex h-full gap-0 md:gap-3">
-      {/* Sidebar: Chat Sidebar - nhỏ gọn để ưu tiên ChatBox */}
+      {/* Sidebar: Chat Sidebar - thu hẹp khi màn hình nhỏ */}
       <div
-        className={`w-full md:w-64 lg:w-72 border-r flex-shrink-0 ${activeConversation ? 'hidden md:block' : 'block'}`}
+        className={`w-full md:w-52 lg:w-64 xl:w-72 md:min-w-[180px] border-r md:flex-shrink ${activeConversation ? 'hidden md:block' : 'block'}`}
       >
         <ChatSidebar conversations={conversations} loading={loading} />
       </div>
 
-      {/* Main: Chat Box - chiếm toàn bộ không gian còn lại */}
-      <div className={`flex-1 min-w-0 ${!activeConversation ? 'hidden md:flex' : 'flex'}`}>
+      {/* Main: Chat Box - ưu tiên giữ kích thước */}
+      <div className={`flex-1 min-w-0 md:min-w-[350px] md:flex-shrink-0 ${!activeConversation ? 'hidden md:flex' : 'flex'}`}>
         {activeConversation ? (
           <ChatBox conversation={activeConversation} />
         ) : (

@@ -6,8 +6,14 @@ import type { Conversation } from '@/types/conversation';
 import type { FileAttachment } from '@/types/message';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Image as ImageIcon, X, Video, Paperclip } from 'lucide-react';
+import { Send, Image as ImageIcon, X, Video, Paperclip, Plus } from 'lucide-react';
 import * as messageService from '@/services/messageService';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { EmojiPicker } from './EmojiPicker';
 import socketService from '@/services/socketService';
 import axios from 'axios';
@@ -558,49 +564,89 @@ export function MessageInput({ conversation }: MessageInputProps) {
           disabled={sending || uploading}
         />
 
-        {/* Emoji Picker */}
-        <EmojiPicker
-          onEmojiSelect={(emoji) => setMessage(message + emoji)}
-          disabled={sending || uploading}
-        />
+        {/* Emoji Picker - ẩn trên màn hình nhỏ */}
+        <div className="hidden lg:block">
+          <EmojiPicker
+            onEmojiSelect={(emoji) => setMessage(message + emoji)}
+            disabled={sending || uploading}
+          />
+        </div>
 
-        {/* Image Upload Button */}
+        {/* Mobile/Tablet: Dropdown menu gộp tất cả */}
+        <div className="lg:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                disabled={sending || uploading}
+                type="button"
+              >
+                <Plus className="w-5 h-5 text-gray-500" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                onClick={() => fileInputRef.current?.click()}
+                disabled={selectedImages.length >= 10}
+              >
+                <ImageIcon className="w-4 h-4 mr-2 text-green-500" />
+                Gửi ảnh
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => videoInputRef.current?.click()}
+                disabled={selectedVideo !== null}
+              >
+                <Video className="w-4 h-4 mr-2 text-purple-500" />
+                Gửi video
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => docInputRef.current?.click()}
+                disabled={selectedFiles.length >= 5}
+              >
+                <Paperclip className="w-4 h-4 mr-2 text-orange-500" />
+                Gửi tài liệu
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Desktop: Các nút riêng lẻ */}
         <Button
           onClick={() => fileInputRef.current?.click()}
           disabled={sending || uploading || selectedImages.length >= 10}
           size="icon"
           variant="ghost"
-          className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
+          className="hidden lg:flex h-8 w-8"
           type="button"
           title="Gửi ảnh"
         >
-          <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
+          <ImageIcon className="w-4 h-4 text-green-500" />
         </Button>
 
-        {/* Video Upload Button */}
         <Button
           onClick={() => videoInputRef.current?.click()}
           disabled={sending || uploading || selectedVideo !== null}
           size="icon"
           variant="ghost"
-          className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
+          className="hidden lg:flex h-8 w-8"
           type="button"
           title="Gửi video (tối đa 100MB)"
         >
-          <Video className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
+          <Video className="w-4 h-4 text-purple-500" />
         </Button>
 
-        {/* File Upload Button */}
         <Button
           onClick={() => docInputRef.current?.click()}
           disabled={sending || uploading || selectedFiles.length >= 5}
           size="icon"
           variant="ghost"
-          className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
+          className="hidden lg:flex h-8 w-8"
           type="button"
           title="Gửi tài liệu (PDF, DOC, XLS... tối đa 25MB)"
         >
-          <Paperclip className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
+          <Paperclip className="w-4 h-4 text-orange-500" />
         </Button>
 
         {/* Send Button */}
@@ -615,7 +661,7 @@ export function MessageInput({ conversation }: MessageInputProps) {
             uploading
           }
           size="icon"
-          className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 bg-primary hover:bg-primary/90"
+          className="h-8 w-8 bg-primary hover:bg-primary/90"
         >
           {uploading ? (
             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
